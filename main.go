@@ -2,16 +2,19 @@ package main
 
 import (
 	"embed"
-
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"godesk-client/internal"
 )
 
 //go:embed all:frontend/dist
 var assets embed.FS
 
 func main() {
+	// 初始化服务
+	go internal.NewService()
+
 	// Create an instance of the app structure
 	app := NewApp()
 
