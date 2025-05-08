@@ -5,6 +5,7 @@ go 1.22.0
 toolchain go1.22.7
 
 require (
+	github.com/up-zero/gotool v0.0.0-20250424084133-5ca462645a53
 	github.com/wailsapp/wails/v2 v2.9.2
 	go.uber.org/zap v1.27.0
 	google.golang.org/grpc v1.70.0

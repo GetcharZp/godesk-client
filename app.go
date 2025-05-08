@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"godesk-client/internal/service/device"
 )
 
 // App struct
@@ -24,4 +25,24 @@ func (a *App) startup(ctx context.Context) {
 // Greet returns a greeting for the given name
 func (a *App) Greet(name string) string {
 	return fmt.Sprintf("Hello %s, It's show time!", name)
+}
+
+func resp(data any, err error) any {
+	if err == nil {
+		return map[string]any{
+			"code": 200,
+			"msg":  "success",
+			"data": data,
+		}
+	} else {
+		return map[string]any{
+			"code": -1,
+			"msg":  err.Error(),
+		}
+	}
+}
+
+// DeviceInfo 设备信息
+func (a *App) DeviceInfo() any {
+	return resp((&device.Service{}).Info())
 }
