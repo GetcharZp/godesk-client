@@ -6,6 +6,7 @@ import (
 	"godesk-client/internal/logger"
 	"godesk-client/internal/service/channel"
 	"godesk-client/internal/service/device"
+	"godesk-client/internal/service/user"
 	pb "godesk-client/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
@@ -36,6 +37,7 @@ func newRpcClient() {
 	}
 
 	(&device.Service{}).ClientInit()
+	(&user.Service{}).ClientInit()
 	(&channel.Service{}).ClientInit(pb.NewChannelServiceClient(define.GrpcConn))
 }
 

@@ -1,6 +1,8 @@
 package define
 
-import "google.golang.org/grpc"
+import (
+	"google.golang.org/grpc"
+)
 
 var (
 	DateTimeMilli = "2006-01-02 15:04:05.000"

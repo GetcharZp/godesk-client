@@ -2,17 +2,14 @@ package device
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"github.com/up-zero/gotool/fileutil"
 	"github.com/up-zero/gotool/randomutil"
 	"go.uber.org/zap"
 	"godesk-client/internal/define"
 	"godesk-client/internal/logger"
+	"godesk-client/internal/service/common"
 	pb "godesk-client/proto"
 	"io/fs"
-	"os"
-	"path/filepath"
 	"runtime"
 )
 
@@ -21,15 +18,10 @@ func (in *Service) ClientInit() {
 	client = pb.NewDeviceServiceClient(define.GrpcConn)
 }
 
+// Info 设备信息
 func (in *Service) Info() (*Info, error) {
-	home, err := os.UserHomeDir()
+	sysConfig, err := common.GetSysConfig()
 	if err != nil {
-		logger.Error("[sys] get user home dir error.", zap.Error(err))
-		return nil, err
-	}
-	configPath := filepath.Join(home, define.DefaultConfig.AppName, "sys_config.json")
-	sysConfig := new(define.SysConfig)
-	if err := fileutil.FileRead(configPath, sysConfig); err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			// 配置文件不存在
 			password := randomutil.RandomAlphaNumber(8)
@@ -41,12 +33,12 @@ func (in *Service) Info() (*Info, error) {
 				return nil, err
 			}
 			// 保存配置文件
-			b, _ := json.Marshal(define.SysConfig{
-				Password: password,
+			if err := common.SaveSysConfig(&define.SysConfig{
 				Uuid:     response.GetUuid(),
-			})
-			if err := fileutil.FileSave(configPath, b); err != nil {
+				Password: password,
+			}); err != nil {
 				logger.Error("[sys] save sys config error.", zap.Error(err))
+				return nil, err
 			}
 			// 返回结果
 			return &Info{

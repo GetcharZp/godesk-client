@@ -5,7 +5,7 @@
       <div class="user-info">
         <h2>GoDesk 远程控制</h2>
         <div class="user-detail">
-          <p class="username">getcharzp</p>
+          <UserInfo/>
         </div>
       </div>
 
@@ -36,6 +36,7 @@
 
 <script setup>
 
+import UserInfo from "./components/UserInfo.vue";
 </script>
 
 <style>
@@ -75,11 +76,6 @@
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.username {
-  font-size: 14px;
-  font-weight: 500;
 }
 
 .main-nav {
