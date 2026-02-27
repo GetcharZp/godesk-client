@@ -1,5 +1,51 @@
 export namespace godesk {
 	
+	export class AddDeviceRequest {
+	    code?: number;
+	    password?: string;
+	    remark?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new AddDeviceRequest(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.code = source["code"];
+	        this.password = source["password"];
+	        this.remark = source["remark"];
+	    }
+	}
+	export class DeleteDeviceRequest {
+	    uuid?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new DeleteDeviceRequest(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.uuid = source["uuid"];
+	    }
+	}
+	export class EditDeviceRequest {
+	    uuid?: string;
+	    code?: number;
+	    password?: string;
+	    remark?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new EditDeviceRequest(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.uuid = source["uuid"];
+	        this.code = source["code"];
+	        this.password = source["password"];
+	        this.remark = source["remark"];
+	    }
+	}
 	export class UserLoginRequest {
 	    username?: string;
 	    password?: string;

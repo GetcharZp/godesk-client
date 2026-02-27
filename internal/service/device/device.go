@@ -3,14 +3,15 @@ package device
 import (
 	"context"
 	"errors"
-	"github.com/up-zero/gotool/randomutil"
-	"go.uber.org/zap"
 	"godesk-client/internal/define"
 	"godesk-client/internal/logger"
 	"godesk-client/internal/service/common"
 	pb "godesk-client/proto"
 	"io/fs"
 	"runtime"
+
+	"github.com/up-zero/gotool/randomutil"
+	"go.uber.org/zap"
 )
 
 func (in *Service) ClientInit() {
@@ -66,4 +67,58 @@ func (in *Service) Info() (*Info, error) {
 		Password: sysConfig.Password,
 		Uuid:     sysConfig.Uuid,
 	}, nil
+}
+
+// List 获取设备列表
+func (in *Service) List() ([]*pb.DeviceListItem, error) {
+	authCtx := common.WithAuthorization(ctx)
+
+	response, err := client.GetDeviceList(authCtx, &pb.DeviceListRequest{
+		Base: &pb.BaseRequest{},
+	})
+	if err != nil {
+		logger.Error("[sys] get device list error.", zap.Error(err))
+		return nil, err
+	}
+
+	return response.GetList(), nil
+}
+
+// Add 添加设备
+func (in *Service) Add(req *pb.AddDeviceRequest) error {
+	authCtx := common.WithAuthorization(ctx)
+
+	_, err := client.AddDevice(authCtx, req)
+	if err != nil {
+		logger.Error("[sys] add device error.", zap.Error(err))
+		return err
+	}
+
+	return nil
+}
+
+// Edit 编辑设备
+func (in *Service) Edit(req *pb.EditDeviceRequest) error {
+	authCtx := common.WithAuthorization(ctx)
+
+	_, err := client.EditDevice(authCtx, req)
+	if err != nil {
+		logger.Error("[sys] edit device error.", zap.Error(err))
+		return err
+	}
+
+	return nil
+}
+
+// Delete 删除设备
+func (in *Service) Delete(req *pb.DeleteDeviceRequest) error {
+	authCtx := common.WithAuthorization(ctx)
+
+	_, err := client.DeleteDevice(authCtx, req)
+	if err != nil {
+		logger.Error("[sys] delete device error.", zap.Error(err))
+		return err
+	}
+
+	return nil
 }

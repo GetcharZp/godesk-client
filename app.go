@@ -68,3 +68,23 @@ func (a *App) UserRegister(req *pb.UserRegisterRequest) any {
 func (a *App) UserLogout() any {
 	return resp((&user.Service{}).Logout())
 }
+
+// GetDeviceList 获取设备列表
+func (a *App) GetDeviceList() any {
+	return resp((&device.Service{}).List())
+}
+
+// AddDevice 添加设备
+func (a *App) AddDevice(req *pb.AddDeviceRequest) any {
+	return resp(nil, (&device.Service{}).Add(req))
+}
+
+// EditDevice 编辑设备
+func (a *App) EditDevice(req *pb.EditDeviceRequest) any {
+	return resp(nil, (&device.Service{}).Edit(req))
+}
+
+// DeleteDevice 删除设备
+func (a *App) DeleteDevice(req *pb.DeleteDeviceRequest) any {
+	return resp(nil, (&device.Service{}).Delete(req))
+}
