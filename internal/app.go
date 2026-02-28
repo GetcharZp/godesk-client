@@ -1,18 +1,20 @@
 package internal
 
 import (
-	"go.uber.org/zap"
 	"godesk-client/internal/define"
 	"godesk-client/internal/logger"
 	"godesk-client/internal/service/channel"
+	"godesk-client/internal/service/common"
 	"godesk-client/internal/service/device"
 	"godesk-client/internal/service/user"
 	pb "godesk-client/proto"
+	"sync"
+	"time"
+
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
-	"sync"
-	"time"
 )
 
 var rpcClientOnce sync.Once
@@ -29,8 +31,14 @@ func NewService() {
 }
 
 func newRpcClient() {
-	var err error
-	define.GrpcConn, err = grpc.NewClient(define.DefaultConfig.ServiceAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// 从配置中获取服务地址
+	sysConfig, err := common.GetSysConfig()
+	if err != nil {
+		logger.Error("[sys] get sys config error.", zap.Error(err))
+		return
+	}
+
+	define.GrpcConn, err = grpc.NewClient(sysConfig.ServiceAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.Error("[sys] new client connection error.", zap.Error(err))
 		return

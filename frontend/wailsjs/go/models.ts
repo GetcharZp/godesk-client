@@ -1,3 +1,28 @@
+export namespace define {
+	
+	export class SysConfig {
+	    username: string;
+	    token: string;
+	    uuid: string;
+	    password: string;
+	    service_address: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new SysConfig(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.username = source["username"];
+	        this.token = source["token"];
+	        this.uuid = source["uuid"];
+	        this.password = source["password"];
+	        this.service_address = source["service_address"];
+	    }
+	}
+
+}
+
 export namespace godesk {
 	
 	export class AddDeviceRequest {

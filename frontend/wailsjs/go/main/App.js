@@ -22,12 +22,24 @@ export function GetDeviceList() {
   return window['go']['main']['App']['GetDeviceList']();
 }
 
+export function GetSysConfig() {
+  return window['go']['main']['App']['GetSysConfig']();
+}
+
 export function GetUserInfo() {
   return window['go']['main']['App']['GetUserInfo']();
 }
 
 export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
+}
+
+export function Reconnect() {
+  return window['go']['main']['App']['Reconnect']();
+}
+
+export function SaveSysConfig(arg1) {
+  return window['go']['main']['App']['SaveSysConfig'](arg1);
 }
 
 export function UserLogin(arg1) {

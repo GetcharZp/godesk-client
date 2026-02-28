@@ -1,11 +1,12 @@
 package common
 
 import (
-	"github.com/up-zero/gotool/fileutil"
 	"godesk-client/internal/define"
 	"os"
 	"path/filepath"
 	"sync"
+
+	"github.com/up-zero/gotool/fileutil"
 )
 
 var (
@@ -27,6 +28,12 @@ func GetSysConfig() (*define.SysConfig, error) {
 		return nil, err
 	}
 	sysConfig = cfg
+
+	// 配置默认值
+	if sysConfig.ServiceAddress == "" {
+		sysConfig.ServiceAddress = define.DefaultConfig.ServiceAddress
+	}
+
 	return sysConfig, nil
 }
 

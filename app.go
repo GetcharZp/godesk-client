@@ -3,6 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"godesk-client/internal"
+	"godesk-client/internal/define"
+	"godesk-client/internal/service/common"
 	"godesk-client/internal/service/device"
 	"godesk-client/internal/service/user"
 	pb "godesk-client/proto"
@@ -87,4 +90,20 @@ func (a *App) EditDevice(req *pb.EditDeviceRequest) any {
 // DeleteDevice 删除设备
 func (a *App) DeleteDevice(req *pb.DeleteDeviceRequest) any {
 	return resp(nil, (&device.Service{}).Delete(req))
+}
+
+// GetSysConfig 获取系统配置
+func (a *App) GetSysConfig() any {
+	return resp(common.GetSysConfig())
+}
+
+// SaveSysConfig 保存系统配置
+func (a *App) SaveSysConfig(cfg *define.SysConfig) any {
+	return resp(nil, common.SaveSysConfig(cfg))
+}
+
+// Reconnect 重新连接服务
+func (a *App) Reconnect() any {
+	internal.Reconnect()
+	return resp(nil, nil)
 }

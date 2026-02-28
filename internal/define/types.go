@@ -7,8 +7,9 @@ type Config struct {
 }
 
 type SysConfig struct {
-	Username string `json:"username"` // 用户名
-	Token    string `json:"token"`    // token
-	Uuid     string `json:"uuid"`     // 设备唯一标识
-	Password string `json:"password"` // 设备密码
+	Username       string `json:"username"`        // 用户名
+	Token          string `json:"token"`           // token
+	Uuid           string `json:"uuid"`            // 设备唯一标识
+	Password       string `json:"password"`        // 设备密码
+	ServiceAddress string `json:"service_address"` // 服务地址
 }

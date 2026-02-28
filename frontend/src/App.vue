@@ -24,6 +24,13 @@
         >
           设备列表
         </router-link>
+        <router-link
+            to="/system-settings"
+            class="nav-item"
+            :class="{ active: $route.path === '/system-settings' }"
+        >
+          系统设置
+        </router-link>
       </nav>
     </div>
 
