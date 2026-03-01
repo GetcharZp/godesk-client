@@ -1,5 +1,5 @@
 import {request} from "../utils/request.js";
-import {GetSysConfig, Reconnect, SaveSysConfig} from "../../wailsjs/go/main/App.js";
+import {GetSysConfig, Reconnect, SaveSysConfig, GetConnectionStatus} from "../../wailsjs/go/main/App.js";
 
 // 获取系统配置
 export const getSysConfig = () => {
@@ -14,4 +14,9 @@ export const saveSysConfig = (config) => {
 // 重新连接服务
 export const reconnect = () => {
     return Reconnect()
+}
+
+// 获取连接状态
+export const getConnectionStatus = () => {
+    return GetConnectionStatus()
 }

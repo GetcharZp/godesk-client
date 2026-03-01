@@ -32,6 +32,12 @@
           系统设置
         </router-link>
       </nav>
+
+      <!-- 连接状态 -->
+      <div class="connection-status">
+        <div class="status-indicator" :class="{ connected: isConnected }"></div>
+        <span class="status-text">{{ isConnected ? '已连接' : '未连接' }}</span>
+      </div>
     </div>
 
     <!-- 主内容区 -->
@@ -42,8 +48,39 @@
 </template>
 
 <script setup>
+import { ref, onMounted, onUnmounted } from 'vue'
+import UserInfo from "./components/UserInfo.vue"
+import { getConnectionStatus } from "./api/sys.js"
 
-import UserInfo from "./components/UserInfo.vue";
+// 连接状态
+const isConnected = ref(false)
+let statusTimer = null
+
+// 获取连接状态
+const fetchConnectionStatus = async () => {
+  try {
+    const res = await getConnectionStatus()
+    if (res && res.code === 200) {
+      isConnected.value = res.data === true
+    }
+  } catch (error) {
+    isConnected.value = false
+  }
+}
+
+onMounted(() => {
+  // 立即获取一次状态
+  fetchConnectionStatus()
+  // 定时获取连接状态（每3秒）
+  statusTimer = setInterval(fetchConnectionStatus, 3000)
+})
+
+onUnmounted(() => {
+  // 清除定时器
+  if (statusTimer) {
+    clearInterval(statusTimer)
+  }
+})
 </script>
 
 <style>
@@ -90,6 +127,7 @@ import UserInfo from "./components/UserInfo.vue";
   flex-direction: column;
   gap: 15px;
   margin-bottom: 30px;
+  flex: 1;
 }
 
 .nav-item {
@@ -108,6 +146,35 @@ import UserInfo from "./components/UserInfo.vue";
   background-color: #ECF5FF;
   color: #409EFF;
   font-weight: 500;
+}
+
+/* 连接状态样式 */
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 15px;
+  margin-top: auto;
+  border-top: 1px solid #e8e8e8;
+  font-size: 13px;
+  color: #666;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #ff4d4f;
+  transition: background-color 0.3s;
+}
+
+.status-indicator.connected {
+  background-color: #52c41a;
+}
+
+.status-text {
+  font-size: 13px;
+  color: #666;
 }
 
 .main-content {

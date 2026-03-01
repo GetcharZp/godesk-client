@@ -18,6 +18,10 @@ export function EditDevice(arg1) {
   return window['go']['main']['App']['EditDevice'](arg1);
 }
 
+export function GetConnectionStatus() {
+  return window['go']['main']['App']['GetConnectionStatus']();
+}
+
 export function GetDeviceList() {
   return window['go']['main']['App']['GetDeviceList']();
 }

@@ -11,6 +11,8 @@ export function DeviceInfo():Promise<any>;
 
 export function EditDevice(arg1:godesk.EditDeviceRequest):Promise<any>;
 
+export function GetConnectionStatus():Promise<any>;
+
 export function GetDeviceList():Promise<any>;
 
 export function GetSysConfig():Promise<any>;

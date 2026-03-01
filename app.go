@@ -7,6 +7,7 @@ import (
 	"godesk-client/internal/define"
 	"godesk-client/internal/service/common"
 	"godesk-client/internal/service/device"
+	"godesk-client/internal/service/sys"
 	"godesk-client/internal/service/user"
 	pb "godesk-client/proto"
 )
@@ -106,4 +107,9 @@ func (a *App) SaveSysConfig(cfg *define.SysConfig) any {
 func (a *App) Reconnect() any {
 	internal.Reconnect()
 	return resp(nil, nil)
+}
+
+// GetConnectionStatus 获取连接状态
+func (a *App) GetConnectionStatus() any {
+	return resp((&sys.Service{}).GetConnectionStatus(), nil)
 }
