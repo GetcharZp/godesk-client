@@ -17,7 +17,11 @@
             <span class="device-code">{{ device.code }}</span>
             <span class="device-remark">{{ device.remark || '未命名设备' }}</span>
             <span class="device-os">{{ device.os }}</span>
+            <span class="device-status" :class="{ online: device.online }">
+              {{ device.online ? '在线' : '离线' }}
+            </span>
             <div class="device-actions">
+              <button class="btn-control" @click="handleRemoteControl(device)">远程控制</button>
               <button class="btn-edit" @click="openEditModal(device)">编辑</button>
               <button class="btn-delete" @click="handleDelete(device)">删除</button>
             </div>
@@ -42,10 +46,12 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { getDeviceList, addDevice, editDevice, deleteDevice } from '../api/device.js'
 import { message, Modal } from 'ant-design-vue'
 import DeviceFormModal from './DeviceFormModal.vue'
 
+const router = useRouter()
 const deviceList = ref([])
 const searchKeyword = ref('')
 
@@ -98,6 +104,23 @@ const openEditModal = (device) => {
     remark: device.remark || ''
   }
   modalVisible.value = true
+}
+
+// 远程控制
+const handleRemoteControl = (device) => {
+  if (!device.online) {
+    message.warning('设备离线，无法远程控制')
+    return
+  }
+  // 跳转到远程控制页面，传递设备信息（包括设备码和密码）
+  router.push({
+    path: '/remote-control',
+    query: {
+      targetCode: device.code,
+      targetName: device.remark || device.code,
+      targetPassword: device.password
+    }
+  })
 }
 
 // 弹窗确认
@@ -252,18 +275,79 @@ onMounted(() => {
 .device-os {
   color: #666;
   font-size: 12px;
+  min-width: 80px;
+}
+
+.device-status {
+  font-size: 12px;
   padding: 2px 8px;
-  background-color: #e6f7ff;
+  border-radius: 10px;
+  background-color: #f5f5f5;
+  color: #999;
+}
+
+.device-status.online {
+  background-color: #f6ffed;
+  color: #52c41a;
+}
+
+.device-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-control {
+  padding: 5px 12px;
+  background-color: #52c41a;
+  color: white;
+  border: none;
   border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.3s;
+}
+
+.btn-control:hover {
+  background-color: #73d13d;
+}
+
+.btn-edit {
+  padding: 5px 12px;
+  background-color: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.3s;
+}
+
+.btn-edit:hover {
+  background-color: #40a9ff;
+}
+
+.btn-delete {
+  padding: 5px 12px;
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.3s;
+}
+
+.btn-delete:hover {
+  background-color: #ff7875;
 }
 
 .empty-tip {
   text-align: center;
   color: #999;
-  padding: 30px;
+  padding: 40px;
+  font-size: 14px;
 }
 
-/* Header */
 .header {
   display: flex;
   justify-content: space-between;
@@ -277,49 +361,12 @@ onMounted(() => {
   color: white;
   border: none;
   border-radius: 4px;
-  font-size: 14px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  font-size: 14px;
+  transition: all 0.3s;
 }
 
 .add-btn:hover {
   background-color: #40a9ff;
 }
-
-/* Device Actions */
-.device-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.btn-edit {
-  padding: 4px 12px;
-  background-color: #52c41a;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.btn-edit:hover {
-  background-color: #73d13d;
-}
-
-.btn-delete {
-  padding: 4px 12px;
-  background-color: #ff4d4f;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.btn-delete:hover {
-  background-color: #ff7875;
-}
-
 </style>

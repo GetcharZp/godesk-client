@@ -12,4 +12,6 @@ type SysConfig struct {
 	Uuid           string `json:"uuid"`            // 设备唯一标识
 	Password       string `json:"password"`        // 设备密码
 	ServiceAddress string `json:"service_address"` // 服务地址
+	Code           uint64 `json:"code"`            // 设备码
+	Sessions       string `json:"sessions"`        // 会话信息（JSON格式）
 }

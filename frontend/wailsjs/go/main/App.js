@@ -6,6 +6,10 @@ export function AddDevice(arg1) {
   return window['go']['main']['App']['AddDevice'](arg1);
 }
 
+export function CreateSession(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['CreateSession'](arg1, arg2, arg3, arg4);
+}
+
 export function DeleteDevice(arg1) {
   return window['go']['main']['App']['DeleteDevice'](arg1);
 }
@@ -18,12 +22,28 @@ export function EditDevice(arg1) {
   return window['go']['main']['App']['EditDevice'](arg1);
 }
 
+export function GetAllSessions() {
+  return window['go']['main']['App']['GetAllSessions']();
+}
+
 export function GetConnectionStatus() {
   return window['go']['main']['App']['GetConnectionStatus']();
 }
 
 export function GetDeviceList() {
   return window['go']['main']['App']['GetDeviceList']();
+}
+
+export function GetSession(arg1) {
+  return window['go']['main']['App']['GetSession'](arg1);
+}
+
+export function GetSessionByDeviceCode(arg1) {
+  return window['go']['main']['App']['GetSessionByDeviceCode'](arg1);
+}
+
+export function GetSessionImage(arg1) {
+  return window['go']['main']['App']['GetSessionImage'](arg1);
 }
 
 export function GetSysConfig() {
@@ -42,8 +62,24 @@ export function Reconnect() {
   return window['go']['main']['App']['Reconnect']();
 }
 
+export function RemoveSession(arg1) {
+  return window['go']['main']['App']['RemoveSession'](arg1);
+}
+
 export function SaveSysConfig(arg1) {
   return window['go']['main']['App']['SaveSysConfig'](arg1);
+}
+
+export function SendControlRequest(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SendControlRequest'](arg1, arg2, arg3);
+}
+
+export function SendDisconnectNotify(arg1, arg2) {
+  return window['go']['main']['App']['SendDisconnectNotify'](arg1, arg2);
+}
+
+export function StopScreenStream(arg1) {
+  return window['go']['main']['App']['StopScreenStream'](arg1);
 }
 
 export function UserLogin(arg1) {

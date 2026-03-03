@@ -1,35 +1,136 @@
 <template>
-  <div class="remote-control">
-    <h2 class="page-title">远程控制</h2>
+  <div class="remote-control-page" :class="{ 'has-session': activeSessions.length > 0 }">
+    <div class="header">
+      <h2 class="page-title">远程控制</h2>
+    </div>
 
-    <div class="control-panel">
-      <div class="control-section">
-        <label class="control-option">
-          允许控制本设备
-        </label>
+    <div class="content-wrapper">
+      <div class="main-section" :class="{ centered: activeSessions.length === 0 }">
+        <div class="section-card">
+          <h3>本机设备</h3>
+          <div class="device-info-row">
+            <span class="info-label">设备码</span>
+            <span class="info-value">{{ myDeviceInfo.code || '-' }}</span>
+            <button class="btn-copy" @click="copyToClipboard(myDeviceInfo.code)" :disabled="!myDeviceInfo.code">
+              复制
+            </button>
+          </div>
+          <div class="device-info-row">
+            <span class="info-label">密码</span>
+            <span class="info-value password">{{ showPassword ? myDeviceInfo.password : '******' }}</span>
+            <button class="btn-toggle" @click="showPassword = !showPassword">
+              {{ showPassword ? '隐藏' : '显示' }}
+            </button>
+            <button class="btn-copy" @click="copyToClipboard(myDeviceInfo.password)" :disabled="!myDeviceInfo.password">
+              复制
+            </button>
+          </div>
+        </div>
 
-        <div class="device-code">
-          <p>本设备识别码</p>
-          <p class="code">{{deviceInfo.code}}</p>
+        <div class="section-card">
+          <h3>远程连接</h3>
+          <div class="connect-form">
+            <div class="form-row">
+              <div class="form-item">
+                <label>设备码</label>
+                <input
+                  type="text"
+                  v-model="remoteDeviceCode"
+                  placeholder="输入对方设备码"
+                />
+              </div>
+              <div class="form-item">
+                <label>密码</label>
+                <input
+                  :type="showRemotePassword ? 'text' : 'password'"
+                  v-model="remotePassword"
+                  placeholder="输入对方密码"
+                />
+                <button class="btn-toggle-pwd" @click="showRemotePassword = !showRemotePassword">
+                  {{ showRemotePassword ? '隐藏' : '显示' }}
+                </button>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn-primary" @click="startRemoteControl" :disabled="connecting">
+                {{ connecting ? '连接中...' : '远程控制' }}
+              </button>
+              <button class="btn-secondary" @click="startRemoteFile" :disabled="connecting">
+                远程文件
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card sessions-card" v-if="activeSessions.length > 0">
+          <h3>活跃会话 ({{ activeSessions.length }})</h3>
+          <div class="session-list">
+            <div
+              v-for="session in activeSessions"
+              :key="session.sessionId"
+              class="session-item"
+              :class="{ active: currentSessionId === session.sessionId }"
+              @click="selectSession(session.sessionId)"
+            >
+              <span class="session-code">{{ session.deviceName }}</span>
+              <span class="session-status" :class="session.status">
+                {{ getStatusText(session.status) }}
+              </span>
+              <div class="session-actions">
+                <button class="btn-view" @click.stop="selectSession(session.sessionId)">查看</button>
+                <button class="btn-disconnect" @click.stop="closeSession(session.sessionId)">断开</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="auth-section">
-        <p>验证码</p>
-        <div class="auth-codes">
-          <span class="code">{{ deviceInfo.password }}</span>
+      <div class="screen-section" v-if="activeSessions.length > 0">
+        <div class="screen-header">
+          <div class="session-tabs">
+            <div
+              v-for="session in activeSessions"
+              :key="session.sessionId"
+              class="session-tab"
+              :class="{ active: currentSessionId === session.sessionId }"
+              @click="selectSession(session.sessionId)"
+            >
+              <span class="tab-name">{{ session.deviceName }}</span>
+              <span class="tab-status" :class="session.status"></span>
+              <button class="tab-close" @click.stop="closeSession(session.sessionId)">×</button>
+            </div>
+          </div>
+          <div class="screen-toolbar" v-if="currentSession">
+            <button class="toolbar-btn" :class="{ active: currentSession.viewOnly }" @click="toggleViewOnly">
+              仅查看
+            </button>
+            <button class="toolbar-btn" @click="toggleFullscreen">
+              {{ isFullscreen ? '退出全屏' : '全屏' }}
+            </button>
+            <button class="toolbar-btn" @click="refreshScreen">刷新</button>
+            <button class="toolbar-btn danger" @click="disconnectCurrent">断开</button>
+          </div>
         </div>
-      </div>
-
-      <div class="remote-operate">
-        <h3>远程控制设备</h3>
-        <div class="input-group">
-          <input type="text" placeholder="请输入伙伴识别码">
-          <input type="text" placeholder="验证码">
-        </div>
-        <div class="action-buttons">
-          <button class="btn remote-desktop">远程桌面</button>
-          <button class="btn remote-files">远程文件</button>
+        <div class="screen-wrapper" ref="screenWrapper">
+          <template v-if="currentSession">
+            <canvas
+              ref="screenCanvas"
+              class="screen-canvas"
+              :width="currentSession.screenWidth || 1920"
+              :height="currentSession.screenHeight || 1080"
+            ></canvas>
+            <div v-if="currentSession.status === 'connecting'" class="screen-overlay">
+              <div class="loading-spinner"></div>
+              <p>正在连接...</p>
+            </div>
+            <div v-if="currentSession.status === 'error'" class="screen-overlay error">
+              <p>连接失败</p>
+              <button class="btn-retry" @click="reconnect">重新连接</button>
+            </div>
+          </template>
+          <div v-else class="screen-overlay">
+            <p>请选择一个会话</p>
+          </div>
         </div>
       </div>
     </div>
@@ -37,133 +138,899 @@
 </template>
 
 <script setup>
-import {onMounted, ref} from "vue";
-import {getDeviceInfo} from "../api/device.js"
+import { ref, computed, onMounted, watch, onUnmounted, nextTick } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { message } from 'ant-design-vue'
+import { sendControlRequest, disconnectControl } from '../api/channel.js'
+import { getDeviceInfo, getDeviceList } from '../api/device.js'
+import { getAllSessions, createSession, removeSession, getSessionByDeviceCode } from '../api/session.js'
+import { startScreenStream } from '../api/screen.js'
 
-const deviceInfo = ref('')
+const route = useRoute()
+const router = useRouter()
 
-onMounted(async () => {
-  getDeviceInfo().then(res => {
-    if (res) {
-      deviceInfo.value = res.data
-    }
-  })
+const myDeviceInfo = ref({ code: '', password: '' })
+const showPassword = ref(false)
+
+const remoteDeviceCode = ref('')
+const remotePassword = ref('')
+const showRemotePassword = ref(false)
+const connecting = ref(false)
+
+const activeSessions = ref([])
+const currentSessionId = ref(null)
+const screenCanvas = ref(null)
+const screenWrapper = ref(null)
+const isFullscreen = ref(false)
+const deviceList = ref([])
+const screenStreamStopFns = ref(new Map()) // sessionId -> stopFunction
+
+const currentSession = computed(() => {
+  return activeSessions.value.find(s => s.sessionId === currentSessionId.value)
 })
 
+// 获取设备显示名称（优先显示备注）
+const getDeviceDisplayName = (deviceCode) => {
+  const device = deviceList.value.find(d => d.code === deviceCode)
+  if (device && device.remark) {
+    return device.remark
+  }
+  return String(deviceCode)
+}
+
+const getStatusText = (status) => {
+  const statusMap = {
+    'connecting': '连接中',
+    'connected': '已连接',
+    'error': '失败',
+    'disconnected': '已断开'
+  }
+  return statusMap[status] || status
+}
+
+const copyToClipboard = (text) => {
+  if (!text) return
+  navigator.clipboard.writeText(text).then(() => {
+    message.success('已复制')
+  }).catch(() => {
+    message.error('复制失败')
+  })
+}
+
+const fetchMyDeviceInfo = async () => {
+  try {
+    const res = await getDeviceInfo()
+    if (res && res.code === 200 && res.data) {
+      myDeviceInfo.value = {
+        code: res.data.code || '',
+        password: res.data.password || ''
+      }
+    }
+  } catch (error) {
+    console.error('获取设备信息失败:', error)
+  }
+}
+
+const fetchDeviceList = async () => {
+  try {
+    const res = await getDeviceList()
+    if (res && res.code === 200 && res.data) {
+      deviceList.value = res.data || []
+    }
+  } catch (error) {
+    console.error('获取设备列表失败:', error)
+  }
+}
+
+const loadSessions = async () => {
+  try {
+    const res = await getAllSessions()
+    if (res && res.code === 200 && res.data) {
+      activeSessions.value = res.data || []
+    }
+  } catch (error) {
+    console.error('加载会话失败:', error)
+  }
+}
+
+const findSessionByDeviceCode = async (deviceCode) => {
+  try {
+    const res = await getSessionByDeviceCode(deviceCode)
+    if (res && res.code === 200 && res.data) {
+      return res.data
+    }
+  } catch (error) {
+    console.error('查找会话失败:', error)
+  }
+  return null
+}
+
+const doConnect = async (deviceCode, password) => {
+  const existingSession = await findSessionByDeviceCode(deviceCode)
+  if (existingSession) {
+    await loadSessions()
+    currentSessionId.value = existingSession.sessionId
+    message.info('该设备已连接，已切换到该会话')
+    return true
+  }
+
+  connecting.value = true
+  try {
+    const res = await sendControlRequest({
+      targetDeviceCode: deviceCode,
+      targetPassword: password,
+      requestControl: true
+    })
+
+    console.log('sendControlRequest response:', res)
+
+    if (res && res.code === 200 && res.data && res.data.accepted) {
+      const sessionId = res.data.sessionId
+      
+      // 获取设备显示名称（优先显示备注）
+      const deviceName = getDeviceDisplayName(deviceCode)
+
+      // 先添加一个临时会话到列表中
+      const tempSession = {
+        sessionId: sessionId,
+        deviceCode: deviceCode,
+        deviceName: deviceName,
+        viewOnly: false,
+        status: 'connecting',
+        screenWidth: res.data.targetInfo?.screenWidth || 1920,
+        screenHeight: res.data.targetInfo?.screenHeight || 1080,
+        createdAt: Date.now() / 1000,
+        updatedAt: Date.now() / 1000
+      }
+      
+      // 检查是否已存在（按 deviceCode 去重）
+      const existingIndex = activeSessions.value.findIndex(s => s.deviceCode === deviceCode)
+      if (existingIndex === -1) {
+        activeSessions.value.push(tempSession)
+      } else {
+        // 如果已存在，更新现有会话的 sessionId 和名称
+        activeSessions.value[existingIndex].sessionId = sessionId
+        activeSessions.value[existingIndex].deviceName = deviceName
+        activeSessions.value[existingIndex].status = 'connecting'
+      }
+      
+      // 立即设置当前会话ID
+      currentSessionId.value = sessionId
+      
+      // 等待 Vue 更新计算属性
+      await nextTick()
+      
+      console.log('After setting currentSessionId:', currentSessionId.value, 'currentSession:', currentSession.value)
+      
+      // 然后从后端加载完整数据（但不覆盖当前选中的会话）
+      const res2 = await getAllSessions()
+      if (res2 && res2.code === 200 && res2.data) {
+        // 合并后端数据，保留当前选中的会话
+        const backendSessions = res2.data || []
+        backendSessions.forEach(backendSess => {
+          const idx = activeSessions.value.findIndex(s => s.deviceCode === backendSess.deviceCode)
+          if (idx !== -1) {
+            // 更新现有会话
+            activeSessions.value[idx] = { ...activeSessions.value[idx], ...backendSess }
+          } else {
+            // 添加新会话
+            activeSessions.value.push(backendSess)
+          }
+        })
+      }
+      
+      message.success('连接成功')
+      return true
+    } else {
+      message.error(res?.msg || '连接被拒绝')
+      return false
+    }
+  } catch (error) {
+    message.error('连接失败: ' + error.message)
+    return false
+  } finally {
+    connecting.value = false
+  }
+}
+
+const startRemoteControl = async () => {
+  if (!remoteDeviceCode.value) {
+    message.error('请输入设备码')
+    return
+  }
+  if (!remotePassword.value) {
+    message.error('请输入密码')
+    return
+  }
+
+  const deviceCode = parseInt(remoteDeviceCode.value)
+  const success = await doConnect(deviceCode, remotePassword.value)
+  
+  if (success) {
+    remoteDeviceCode.value = ''
+    remotePassword.value = ''
+  }
+}
+
+const startRemoteFile = () => {
+  if (!remoteDeviceCode.value || !remotePassword.value) {
+    message.error('请输入设备码和密码')
+    return
+  }
+  message.info('远程文件功能开发中...')
+}
+
+const selectSession = (sessionId) => {
+  currentSessionId.value = sessionId
+  // 启动该会话的屏幕流
+  startSessionScreenStream(sessionId)
+}
+
+// 启动会话的屏幕流
+const startSessionScreenStream = (sessionId) => {
+  // 如果已经在接收，先停止
+  if (screenStreamStopFns.value.has(sessionId)) {
+    return // 已经在接收
+  }
+
+  const stopFn = startScreenStream(sessionId, (imageUrl, data) => {
+    // 更新会话的图像数据
+    const session = activeSessions.value.find(s => s.sessionId === sessionId)
+    if (session) {
+      session.lastImageUrl = imageUrl
+      session.screenWidth = data.width || session.screenWidth
+      session.screenHeight = data.height || session.screenHeight
+      
+      // 如果是当前选中的会话，渲染到 canvas
+      if (currentSessionId.value === sessionId && screenCanvas.value) {
+        renderImageToCanvas(imageUrl)
+      }
+    }
+  })
+
+  screenStreamStopFns.value.set(sessionId, stopFn)
+}
+
+// 停止会话的屏幕流
+const stopSessionScreenStream = (sessionId) => {
+  const stopFn = screenStreamStopFns.value.get(sessionId)
+  if (stopFn) {
+    stopFn()
+    screenStreamStopFns.value.delete(sessionId)
+  }
+}
+
+// 渲染图像到 canvas
+const renderImageToCanvas = (imageUrl) => {
+  if (!screenCanvas.value) return
+  
+  const ctx = screenCanvas.value.getContext('2d')
+  const img = new Image()
+  img.onload = () => {
+    // 自适应 canvas 大小
+    const canvas = screenCanvas.value
+    const container = canvas.parentElement
+    if (container) {
+      const scale = Math.min(
+        container.clientWidth / img.width,
+        container.clientHeight / img.height,
+        1
+      )
+      canvas.width = img.width * scale
+      canvas.height = img.height * scale
+    }
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+  }
+  img.src = imageUrl
+}
+
+const closeSession = async (sessionId) => {
+  const session = activeSessions.value.find(s => s.sessionId === sessionId)
+  if (session) {
+    try {
+      await disconnectControl({
+        sessionId: sessionId,
+        targetDeviceCode: session.deviceCode
+      })
+    } catch (error) {
+      console.error('断开连接失败:', error)
+    }
+  }
+
+  // 停止屏幕流
+  stopSessionScreenStream(sessionId)
+  await removeSession(sessionId)
+  await loadSessions()
+
+  if (currentSessionId.value === sessionId) {
+    currentSessionId.value = activeSessions.value.length > 0 ? activeSessions.value[0].sessionId : null
+  }
+  message.success('已断开连接')
+}
+
+const toggleViewOnly = () => {
+  if (currentSession.value) {
+    currentSession.value.viewOnly = !currentSession.value.viewOnly
+    message.info(currentSession.value.viewOnly ? '仅查看模式' : '控制模式')
+  }
+}
+
+const toggleFullscreen = () => {
+  if (!screenWrapper.value) return
+
+  if (!document.fullscreenElement) {
+    screenWrapper.value.requestFullscreen().then(() => {
+      isFullscreen.value = true
+    }).catch(err => {
+      message.error('无法进入全屏模式')
+    })
+  } else {
+    document.exitFullscreen().then(() => {
+      isFullscreen.value = false
+    })
+  }
+}
+
+const refreshScreen = () => {
+  message.info('刷新屏幕')
+}
+
+const disconnectCurrent = () => {
+  if (currentSessionId.value) {
+    closeSession(currentSessionId.value)
+  }
+}
+
+const reconnect = () => {
+  if (currentSession.value) {
+    currentSession.value.status = 'connecting'
+  }
+}
+
+const handleFullscreenChange = () => {
+  isFullscreen.value = !!document.fullscreenElement
+}
+
+const handleRouteQuery = async () => {
+  const { targetCode, targetPassword } = route.query
+  if (targetCode && targetPassword) {
+    const deviceCode = parseInt(targetCode)
+    const success = await doConnect(deviceCode, targetPassword)
+    if (success) {
+      // 清除路由参数，避免刷新时重复连接
+      router.replace({ path: '/remote-control' })
+    }
+  }
+}
+
+onMounted(async () => {
+  await fetchMyDeviceInfo()
+  await fetchDeviceList() // 加载设备列表用于获取备注
+  // 先处理路由参数（连接新设备），然后再加载会话列表
+  // 这样可以确保新连接的会话被正确添加到列表中
+  document.addEventListener('fullscreenchange', handleFullscreenChange)
+  await handleRouteQuery()
+  // 最后再加载会话列表（包含新连接的会话）
+  await loadSessions()
+})
+
+onUnmounted(() => {
+  document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  // 停止所有屏幕流
+  screenStreamStopFns.value.forEach((stopFn) => stopFn())
+  screenStreamStopFns.value.clear()
+})
+
+// 监听当前会话变化，启动屏幕流
+watch(currentSessionId, (newSessionId) => {
+  if (newSessionId) {
+    startSessionScreenStream(newSessionId)
+  }
+})
 </script>
 
 <style scoped>
-.remote-control {
-  max-width: 800px;
+.remote-control-page {
+  max-width: 1200px;
   margin: 0 auto;
+  height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+}
+
+.remote-control-page.has-session {
+  max-width: none;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-shrink: 0;
 }
 
 .page-title {
   color: #333;
-  margin-bottom: 20px;
+  margin: 0;
   font-size: 20px;
 }
 
-.control-panel {
+.content-wrapper {
+  display: flex;
+  gap: 20px;
+  flex: 1;
+  min-height: 0;
+}
+
+.main-section {
+  width: 400px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.main-section.centered {
+  width: 480px;
+  margin: 0 auto;
+}
+
+.sessions-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sessions-card h3 {
+  flex-shrink: 0;
+}
+
+.sessions-card .session-list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.screen-section {
+  flex: 1;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.screen-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-bottom: 1px solid #eee;
+  background-color: #fafafa;
+  flex-shrink: 0;
+}
+
+.session-tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  flex: 1;
+}
+
+.session-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.session-tab:hover {
+  background-color: #e0e0e0;
+}
+
+.session-tab.active {
+  background-color: #1890ff;
+  color: white;
+}
+
+.tab-name {
+  font-size: 13px;
+}
+
+.tab-status {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #999;
+}
+
+.tab-status.connected {
+  background-color: #52c41a;
+}
+
+.tab-status.connecting {
+  background-color: #faad14;
+}
+
+.tab-status.error,
+.tab-status.disconnected {
+  background-color: #ff4d4f;
+}
+
+.tab-close {
+  width: 14px;
+  height: 14px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: inherit;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+  margin-left: 4px;
+  opacity: 0.6;
+}
+
+.tab-close:hover {
+  opacity: 1;
+}
+
+.screen-toolbar {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.toolbar-btn {
+  padding: 4px 12px;
+  font-size: 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.toolbar-btn:hover {
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
+.toolbar-btn.active {
+  background-color: #1890ff;
+  color: white;
+  border-color: #1890ff;
+}
+
+.toolbar-btn.danger {
+  color: #ff4d4f;
+  border-color: #ffccc7;
+}
+
+.toolbar-btn.danger:hover {
+  background-color: #ff4d4f;
+  color: white;
+}
+
+.screen-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #1a1a1a;
+  position: relative;
+  overflow: auto;
+  min-height: 0;
+}
+
+.screen-wrapper:-webkit-full-screen {
+  background-color: #1a1a1a;
+}
+
+.screen-canvas {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.screen-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+}
+
+.screen-overlay.error {
+  color: #ff4d4f;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #1890ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.btn-retry {
+  margin-top: 12px;
+  padding: 8px 20px;
+  background-color: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-retry:hover {
+  background-color: #40a9ff;
+}
+
+.section-card {
   background-color: white;
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
-.control-section {
-  margin-bottom: 25px;
-  padding-bottom: 20px;
+.section-card h3 {
+  font-size: 16px;
+  color: #333;
+  margin: 0 0 15px 0;
+  padding-bottom: 10px;
   border-bottom: 1px solid #eee;
 }
 
-.control-option {
+.device-info-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 20px;
-  font-size: 16px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
-.device-code p:first-child {
-  color: #666;
+.device-info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-label {
   font-size: 14px;
-  margin-bottom: 5px;
+  color: #666;
+  min-width: 50px;
 }
 
-.device-code .code {
-  font-size: 22px;
+.info-value {
+  flex: 1;
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
   font-weight: 600;
   color: #333;
+  background-color: #f5f5f5;
+  padding: 8px 12px;
+  border-radius: 4px;
 }
 
-.auth-section p:first-child {
+.info-value.password {
+  letter-spacing: 2px;
+}
+
+.btn-copy, .btn-toggle {
+  padding: 6px 12px;
+  font-size: 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
   color: #666;
-  font-size: 14px;
-  margin-bottom: 10px;
+  transition: all 0.3s;
 }
 
-.auth-codes {
+.btn-copy:hover, .btn-toggle:hover {
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
+.btn-copy:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.connect-form {
   display: flex;
-  gap: 15px;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.auth-codes .code {
-  font-family: monospace;
-  font-size: 16px;
-  color: #333;
-}
-
-.remote-operate {
-  margin-top: 30px;
-}
-
-.remote-operate h3 {
-  font-size: 16px;
-  margin-bottom: 15px;
-  color: #333;
-}
-
-.input-group {
+.form-row {
   display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
+  gap: 12px;
 }
 
-.input-group input {
+.form-item {
   flex: 1;
-  padding: 10px 15px;
-  border: 1px solid #ddd;
+  position: relative;
+}
+
+.form-item label {
+  display: block;
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+.form-item input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d9d9d9;
   border-radius: 4px;
   font-size: 14px;
+  box-sizing: border-box;
 }
 
-.input-group input::placeholder {
+.form-item input:focus {
+  border-color: #1890ff;
+  outline: none;
+}
+
+.btn-toggle-pwd {
+  position: absolute;
+  right: 8px;
+  top: 28px;
+  padding: 2px 8px;
+  font-size: 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
   color: #999;
 }
 
-.action-buttons {
+.form-actions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
 }
 
-.btn {
+.btn-primary {
   flex: 1;
-  padding: 10px;
+  padding: 10px 16px;
+  background-color: #1890ff;
+  color: white;
   border: none;
   border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
   cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
 }
 
-.remote-desktop {
-  background-color: #409EFF;
-  color: white;
+.btn-primary:hover:not(:disabled) {
+  background-color: #40a9ff;
 }
 
-.remote-files {
+.btn-primary:disabled {
+  background-color: #d9d9d9;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  flex: 1;
+  padding: 10px 16px;
+  background-color: white;
+  color: #666;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
+.session-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.session-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background-color: #fafafa;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border-left: 3px solid transparent;
+}
+
+.session-item:hover {
   background-color: #f0f0f0;
+}
+
+.session-item.active {
+  border-left-color: #1890ff;
+  background-color: #e6f7ff;
+}
+
+.session-code {
+  flex: 1;
+  font-size: 14px;
   color: #333;
+}
+
+.session-status {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.session-status.connected {
+  background-color: #f6ffed;
+  color: #52c41a;
+}
+
+.session-status.connecting {
+  background-color: #fffbe6;
+  color: #faad14;
+}
+
+.session-status.error,
+.session-status.disconnected {
+  background-color: #fff2f0;
+  color: #ff4d4f;
+}
+
+.session-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-view, .btn-disconnect {
+  padding: 4px 12px;
+  font-size: 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-view:hover {
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
+.btn-disconnect {
+  color: #ff4d4f;
+  border-color: #ffccc7;
+}
+
+.btn-disconnect:hover {
+  background-color: #fff2f0;
 }
 </style>

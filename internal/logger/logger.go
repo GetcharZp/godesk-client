@@ -63,6 +63,10 @@ func Error(msg string, fields ...zap.Field) {
 	LOGGER.Error(msg, appendFileLine(fields)...)
 }
 
+func Debug(msg string, fields ...zap.Field) {
+	LOGGER.Debug(msg, appendFileLine(fields)...)
+}
+
 func appendFileLine(fields []zap.Field) []zap.Field {
 	_, file, line, _ := runtime.Caller(2)
 	arr := strings.Split(file, define.DefaultConfig.AppName)

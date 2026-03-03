@@ -3,16 +3,262 @@ syntax = "proto3";
 package godesk;
 option go_package = "./;godesk";
 
+// ==================== 基础消息 ====================
+
+// ChannelRequest DataStream 双向数据流的基础消息
+// key 字段定义了消息类型，data 字段包含具体的数据（JSON 格式）
 message ChannelRequest {
   // 客户端唯一标识
   string client_uuid = 1;
-  // 数据类型
+  // 数据类型（key 定义见下方注释）
   string key = 2;
-  // 数据
+  // 数据（JSON 格式，具体结构见各 key 的说明）
   bytes data = 3;
 }
 
+// DataStream Key 定义：
+// ==================== 设备管理 ====================
+// "register"      - 设备注册（被控端 -> 服务器）
+//                   data: RegisterData
+// "heartbeat"     - 心跳（被控端 -> 服务器）
+//                   data: HeartbeatData
+// "control_started" - 控制开始通知（服务器 -> 被控端）
+//                   data: ControlStartedData
+// "control_ended"   - 控制结束通知（服务器 -> 被控端）
+//                   data: ControlEndedData
+//
+// ==================== 屏幕流 ====================
+// "screen_stream_data"   - 屏幕流数据（被控端 -> 服务器 -> 控制端）
+//                          data: ScreenStreamData
+// "screen_stream_status" - 屏幕流状态（被控端 -> 服务器 -> 控制端）
+//                          data: ScreenStreamStatusData
+// "start_screen_stream"  - 开始屏幕流（服务器 -> 被控端）
+//                          data: ScreenStreamRequest
+// "pause_screen_stream"  - 暂停屏幕流（服务器 -> 被控端）
+//                          data: ScreenStreamRequest
+// "resume_screen_stream" - 恢复屏幕流（服务器 -> 被控端）
+//                          data: ScreenStreamRequest
+// "stop_screen_stream"   - 停止屏幕流（服务器 -> 被控端）
+//                          data: ScreenStreamRequest
+//
+// ==================== 状态报告 ====================
+// "status_report" - 状态报告（被控端 -> 服务器）
+//                   data: StatusReportData
+
+// ==================== DataStream 数据格式定义 ====================
+
+// RegisterData 设备注册数据（key = "register"）
+// 方向：被控端 -> 服务器
+message RegisterData {
+  // 设备 UUID
+  string uuid = 1;
+  // 操作系统：windows, darwin, linux
+  string os = 2;
+  // 设备名称
+  string device_name = 3;
+}
+
+// HeartbeatData 心跳数据（key = "heartbeat"）
+// 方向：被控端 -> 服务器
+message HeartbeatData {
+  // 时间戳
+  int64 timestamp = 1;
+  // 可选：当前会话ID（如果有）
+  string session_id = 2;
+}
+
+// ControlStartedData 控制开始通知数据（key = "control_started"）
+// 方向：服务器 -> 被控端
+message ControlStartedData {
+  // 会话ID
+  string session_id = 1;
+  // 控制端 UUID
+  string controller_uuid = 2;
+  // 控制端名称
+  string controller_name = 3;
+  // 是否请求完全控制权限
+  bool request_control = 4;
+  // 时间戳
+  int64 timestamp = 5;
+}
+
+// ControlEndedData 控制结束通知数据（key = "control_ended"）
+// 方向：服务器 -> 被控端
+message ControlEndedData {
+  // 会话ID
+  string session_id = 1;
+  // 断开原因: 0=主动断开, 1=连接超时, 2=网络错误, 3=被踢出, 4=程序退出
+  int32 reason = 2;
+  // 原因描述
+  string reason_desc = 3;
+  // 时间戳
+  int64 timestamp = 4;
+}
+
+// ScreenStreamStatusData 屏幕流状态数据（key = "screen_stream_status"）
+// 方向：被控端 -> 服务器 -> 控制端
+message ScreenStreamStatusData {
+  // 会话ID
+  string session_id = 1;
+  // 状态: started, stopped, paused, error
+  string status = 2;
+  // 状态描述/错误信息
+  string message = 3;
+  // 时间戳
+  int64 timestamp = 4;
+}
+
+// StatusReportData 状态报告数据（key = "status_report"）
+// 方向：被控端 -> 服务器
+message StatusReportData {
+  // 会话ID（可选）
+  string session_id = 1;
+  // 状态: online, busy, error
+  string status = 2;
+  // 状态信息
+  string info = 3;
+  // 时间戳
+  int64 timestamp = 4;
+}
+
+// ==================== 控制请求相关消息 ====================
+
+// ControlRequest 发起控制请求（控制端 -> 服务器）
+message ControlRequest {
+  // 请求ID
+  string request_id = 1;
+  // 控制端设备UUID
+  string controller_uuid = 2;
+  // 控制端设备码
+  uint64 controller_code = 3;
+  // 控制端设备名称
+  string controller_name = 4;
+  // 被控端设备码
+  uint64 target_device_code = 5;
+  // 被控端密码
+  string target_password = 6;
+  // 请求时间戳
+  int64 timestamp = 7;
+  // 是否请求完全控制权限（true=控制，false=仅查看）
+  bool request_control = 8;
+}
+
+// ControlResponse 控制请求响应
+message ControlResponse {
+  // 请求ID
+  string request_id = 1;
+  // 是否接受请求
+  bool accepted = 2;
+  // 响应码: 0=接受, 1=拒绝, 2=设备忙, 3=密码错误, 4=设备不存在, 5=设备离线
+  int32 response_code = 3;
+  // 响应消息
+  string message = 4;
+  // 会话ID（接受时返回）
+  string session_id = 5;
+  // 响应时间戳
+  int64 timestamp = 6;
+  // 被控端设备信息
+  TargetDeviceInfo target_info = 7;
+}
+
+// TargetDeviceInfo 被控端设备信息
+message TargetDeviceInfo {
+  string uuid = 1;
+  uint64 code = 2;
+  string os = 3;
+  string name = 4;
+  int32 screen_width = 5;
+  int32 screen_height = 6;
+}
+
+// ==================== 断开连接相关消息 ====================
+
+// DisconnectNotify 断开连接通知（控制端 -> 服务器）
+message DisconnectNotify {
+  // 通知ID
+  string notify_id = 1;
+  // 会话ID
+  string session_id = 2;
+  // 控制端UUID
+  string controller_uuid = 3;
+  // 被控端设备码
+  uint64 target_device_code = 4;
+  // 断开原因: 0=主动断开, 1=连接超时, 2=网络错误, 3=被踢出, 4=程序退出
+  int32 reason = 5;
+  // 原因描述
+  string reason_desc = 6;
+  // 通知时间戳
+  int64 timestamp = 7;
+}
+
+// DisconnectResponse 断开连接响应
+message DisconnectResponse {
+  // 通知ID
+  string notify_id = 1;
+  // 会话ID
+  string session_id = 2;
+  // 是否成功处理
+  bool success = 3;
+  // 响应消息
+  string message = 4;
+  // 响应时间戳
+  int64 timestamp = 5;
+}
+
+// ==================== 屏幕流相关消息（用于实时传输） ====================
+
+// ScreenStreamRequest 屏幕流请求
+message ScreenStreamRequest {
+  // 会话ID
+  string session_id = 1;
+  // 图像质量 1-100
+  int32 quality = 2;
+  // 目标FPS
+  int32 target_fps = 3;
+  // 操作: start, stop, pause, resume, update_params
+  string action = 4;
+}
+
+// ScreenStreamData 屏幕流数据
+message ScreenStreamData {
+  // 会话ID
+  string session_id = 1;
+  // 图像数据
+  bytes image_data = 2;
+  // 格式
+  string format = 3;
+  // 宽度
+  int32 width = 4;
+  // 高度
+  int32 height = 5;
+  // 时间戳
+  int64 timestamp = 6;
+  // 序列号
+  int64 sequence = 7;
+}
+
+// ==================== 服务定义 ====================
 
 service ChannelService {
+  // DataStream 双向数据流（用于设备注册、心跳、事件转发）
+  // Key 定义和数据格式见 ChannelRequest 注释
   rpc DataStream(stream ChannelRequest) returns (stream ChannelRequest) {}
+
+  // ==================== 控制请求服务 ====================
+  
+  // SendControlRequest 发起控制请求（同步返回结果）
+  // 会验证设备密码，检查设备是否在线，创建会话
+  rpc SendControlRequest(ControlRequest) returns (ControlResponse) {}
+
+  // ==================== 断开连接服务 ====================
+  
+  // SendDisconnectNotify 发送断开通知（同步返回结果）
+  // 会通知被控端，清理会话
+  rpc SendDisconnectNotify(DisconnectNotify) returns (DisconnectResponse) {}
+
+  // ==================== 屏幕流服务 ====================
+  
+  // StartScreenStream 启动屏幕流（双向流）
+  // 控制端通过此流接收屏幕数据，发送控制命令
+  rpc StartScreenStream(stream ScreenStreamRequest) returns (stream ScreenStreamData) {}
 }

@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import RemoteControl from "../components/RemoteControl.vue";
+import RemoteSession from "../components/RemoteSession.vue";
 import DeviceList from "../components/DeviceList.vue";
 import SystemSettings from "../components/SystemSettings.vue";
 
@@ -14,6 +15,12 @@ const router = createRouter({
             path: '/remote-control',
             name: 'RemoteControl',
             component: RemoteControl,
+        },
+        {
+            path: '/remote-session/:sessionId?',
+            name: 'RemoteSession',
+            component: RemoteSession,
+            props: true,
         },
         {
             path: '/device-list',

@@ -2,11 +2,12 @@ package user
 
 import (
 	"context"
-	"go.uber.org/zap"
 	"godesk-client/internal/define"
 	"godesk-client/internal/logger"
 	"godesk-client/internal/service/common"
 	pb "godesk-client/proto"
+
+	"go.uber.org/zap"
 )
 
 func (in *Service) ClientInit() {

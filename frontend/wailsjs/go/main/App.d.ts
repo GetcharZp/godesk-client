@@ -5,15 +5,25 @@ import {define} from '../models';
 
 export function AddDevice(arg1:godesk.AddDeviceRequest):Promise<any>;
 
+export function CreateSession(arg1:string,arg2:number,arg3:string,arg4:boolean):Promise<any>;
+
 export function DeleteDevice(arg1:godesk.DeleteDeviceRequest):Promise<any>;
 
 export function DeviceInfo():Promise<any>;
 
 export function EditDevice(arg1:godesk.EditDeviceRequest):Promise<any>;
 
+export function GetAllSessions():Promise<any>;
+
 export function GetConnectionStatus():Promise<any>;
 
 export function GetDeviceList():Promise<any>;
+
+export function GetSession(arg1:string):Promise<any>;
+
+export function GetSessionByDeviceCode(arg1:number):Promise<any>;
+
+export function GetSessionImage(arg1:string):Promise<any>;
 
 export function GetSysConfig():Promise<any>;
 
@@ -23,7 +33,15 @@ export function Greet(arg1:string):Promise<string>;
 
 export function Reconnect():Promise<any>;
 
+export function RemoveSession(arg1:string):Promise<any>;
+
 export function SaveSysConfig(arg1:define.SysConfig):Promise<any>;
+
+export function SendControlRequest(arg1:number,arg2:string,arg3:boolean):Promise<any>;
+
+export function SendDisconnectNotify(arg1:string,arg2:number):Promise<any>;
+
+export function StopScreenStream(arg1:string):Promise<any>;
 
 export function UserLogin(arg1:godesk.UserLoginRequest):Promise<any>;
 

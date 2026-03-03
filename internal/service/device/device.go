@@ -85,6 +85,14 @@ func (in *Service) List() ([]*pb.DeviceListItem, error) {
 	return response.GetList(), nil
 }
 
+// GetDeviceList 获取设备列表（供其他包调用）
+func GetDeviceList() ([]*pb.DeviceListItem, error) {
+	if client == nil {
+		(&Service{}).ClientInit()
+	}
+	return (&Service{}).List()
+}
+
 // Add 添加设备
 func (in *Service) Add(req *pb.AddDeviceRequest) error {
 	authCtx := common.WithAuthorization(ctx)

@@ -6,6 +6,8 @@ export namespace define {
 	    uuid: string;
 	    password: string;
 	    service_address: string;
+	    code: number;
+	    sessions: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new SysConfig(source);
@@ -18,6 +20,8 @@ export namespace define {
 	        this.uuid = source["uuid"];
 	        this.password = source["password"];
 	        this.service_address = source["service_address"];
+	        this.code = source["code"];
+	        this.sessions = source["sessions"];
 	    }
 	}
 

@@ -2,11 +2,14 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"godesk-client/internal"
 	"godesk-client/internal/define"
 	"godesk-client/internal/service/common"
+	"godesk-client/internal/service/control"
 	"godesk-client/internal/service/device"
+	"godesk-client/internal/service/session"
 	"godesk-client/internal/service/sys"
 	"godesk-client/internal/service/user"
 	pb "godesk-client/proto"
@@ -112,4 +115,67 @@ func (a *App) Reconnect() any {
 // GetConnectionStatus 获取连接状态
 func (a *App) GetConnectionStatus() any {
 	return resp((&sys.Service{}).GetConnectionStatus(), nil)
+}
+
+// SendControlRequest 发送控制请求
+func (a *App) SendControlRequest(targetDeviceCode uint64, targetPassword string, requestControl bool) any {
+	return resp((&control.Service{}).SendControlRequest(targetDeviceCode, targetPassword, requestControl))
+}
+
+// SendDisconnectNotify 发送断开连接通知
+func (a *App) SendDisconnectNotify(sessionId string, targetDeviceCode uint64) any {
+	return resp(nil, (&control.Service{}).SendDisconnectNotify(sessionId, targetDeviceCode))
+}
+
+// StopScreenStream 停止屏幕流
+func (a *App) StopScreenStream(sessionId string) any {
+	return resp(nil, (&control.Service{}).StopScreenStream(sessionId))
+}
+
+// GetAllSessions 获取所有会话
+func (a *App) GetAllSessions() any {
+	return resp(session.GetAllSessions(), nil)
+}
+
+// GetSession 获取单个会话
+func (a *App) GetSession(sessionId string) any {
+	return resp(session.GetSession(sessionId), nil)
+}
+
+// GetSessionByDeviceCode 根据设备码获取会话
+func (a *App) GetSessionByDeviceCode(deviceCode uint64) any {
+	return resp(session.GetSessionByDeviceCode(deviceCode), nil)
+}
+
+// CreateSession 创建会话
+func (a *App) CreateSession(sessionId string, deviceCode uint64, deviceName string, viewOnly bool) any {
+	return resp(session.CreateSession(sessionId, deviceCode, deviceName, viewOnly), nil)
+}
+
+// RemoveSession 移除会话
+func (a *App) RemoveSession(sessionId string) any {
+	session.RemoveSession(sessionId)
+	return resp(nil, nil)
+}
+
+// GetSessionImage 获取会话的最新图像数据
+func (a *App) GetSessionImage(sessionId string) any {
+	sess := session.GetSession(sessionId)
+	if sess == nil {
+		return resp(nil, nil)
+	}
+
+	imageData := sess.GetLastImageData()
+	if imageData == nil {
+		return resp(nil, nil)
+	}
+
+	// 返回 base64 编码的图像数据
+	return resp(map[string]any{
+		"sessionId": sess.SessionId,
+		"imageData": base64.StdEncoding.EncodeToString(imageData),
+		"sequence":  sess.UpdatedAt,
+		"width":     sess.ScreenWidth,
+		"height":    sess.ScreenHeight,
+	}, nil)
 }
