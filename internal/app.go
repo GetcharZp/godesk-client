@@ -5,7 +5,6 @@ import (
 	"godesk-client/internal/logger"
 	"godesk-client/internal/service/channel"
 	"godesk-client/internal/service/common"
-	"godesk-client/internal/service/control"
 	"godesk-client/internal/service/device"
 	"godesk-client/internal/service/session"
 	"godesk-client/internal/service/user"
@@ -52,7 +51,6 @@ func newRpcClient() {
 	(&device.Service{}).ClientInit()
 	(&user.Service{}).ClientInit()
 	(&channel.Service{}).ClientInit(pb.NewChannelServiceClient(define.GrpcConn))
-	(&control.Service{}).ClientInit(pb.NewChannelServiceClient(define.GrpcConn))
 }
 
 func handleReconnect() {

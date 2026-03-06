@@ -19,28 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ChannelService_DataStream_FullMethodName           = "/godesk.ChannelService/DataStream"
-	ChannelService_SendControlRequest_FullMethodName   = "/godesk.ChannelService/SendControlRequest"
-	ChannelService_SendDisconnectNotify_FullMethodName = "/godesk.ChannelService/SendDisconnectNotify"
-	ChannelService_StartScreenStream_FullMethodName    = "/godesk.ChannelService/StartScreenStream"
+	ChannelService_DataStream_FullMethodName = "/godesk.ChannelService/DataStream"
 )
 
 // ChannelServiceClient is the client API for ChannelService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ChannelServiceClient interface {
-	// DataStream 双向数据流（用于设备注册、心跳、事件转发）
-	// Key 定义和数据格式见 ChannelRequest 注释
+	// DataStream 双向数据流
 	DataStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[ChannelRequest, ChannelRequest], error)
-	// SendControlRequest 发起控制请求（同步返回结果）
-	// 会验证设备密码，检查设备是否在线，创建会话
-	SendControlRequest(ctx context.Context, in *ControlRequest, opts ...grpc.CallOption) (*ControlResponse, error)
-	// SendDisconnectNotify 发送断开通知（同步返回结果）
-	// 会通知被控端，清理会话
-	SendDisconnectNotify(ctx context.Context, in *DisconnectNotify, opts ...grpc.CallOption) (*DisconnectResponse, error)
-	// StartScreenStream 启动屏幕流（双向流）
-	// 控制端通过此流接收屏幕数据，发送控制命令
-	StartScreenStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[ScreenStreamRequest, ScreenStreamData], error)
 }
 
 type channelServiceClient struct {
@@ -64,58 +51,16 @@ func (c *channelServiceClient) DataStream(ctx context.Context, opts ...grpc.Call
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type ChannelService_DataStreamClient = grpc.BidiStreamingClient[ChannelRequest, ChannelRequest]
 
-func (c *channelServiceClient) SendControlRequest(ctx context.Context, in *ControlRequest, opts ...grpc.CallOption) (*ControlResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ControlResponse)
-	err := c.cc.Invoke(ctx, ChannelService_SendControlRequest_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *channelServiceClient) SendDisconnectNotify(ctx context.Context, in *DisconnectNotify, opts ...grpc.CallOption) (*DisconnectResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DisconnectResponse)
-	err := c.cc.Invoke(ctx, ChannelService_SendDisconnectNotify_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *channelServiceClient) StartScreenStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[ScreenStreamRequest, ScreenStreamData], error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &ChannelService_ServiceDesc.Streams[1], ChannelService_StartScreenStream_FullMethodName, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &grpc.GenericClientStream[ScreenStreamRequest, ScreenStreamData]{ClientStream: stream}
-	return x, nil
-}
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type ChannelService_StartScreenStreamClient = grpc.BidiStreamingClient[ScreenStreamRequest, ScreenStreamData]
-
 // ChannelServiceServer is the server API for ChannelService service.
-// All implementations should embed UnimplementedChannelServiceServer
+// All implementations must embed UnimplementedChannelServiceServer
 // for forward compatibility.
 type ChannelServiceServer interface {
-	// DataStream 双向数据流（用于设备注册、心跳、事件转发）
-	// Key 定义和数据格式见 ChannelRequest 注释
+	// DataStream 双向数据流
 	DataStream(grpc.BidiStreamingServer[ChannelRequest, ChannelRequest]) error
-	// SendControlRequest 发起控制请求（同步返回结果）
-	// 会验证设备密码，检查设备是否在线，创建会话
-	SendControlRequest(context.Context, *ControlRequest) (*ControlResponse, error)
-	// SendDisconnectNotify 发送断开通知（同步返回结果）
-	// 会通知被控端，清理会话
-	SendDisconnectNotify(context.Context, *DisconnectNotify) (*DisconnectResponse, error)
-	// StartScreenStream 启动屏幕流（双向流）
-	// 控制端通过此流接收屏幕数据，发送控制命令
-	StartScreenStream(grpc.BidiStreamingServer[ScreenStreamRequest, ScreenStreamData]) error
+	mustEmbedUnimplementedChannelServiceServer()
 }
 
-// UnimplementedChannelServiceServer should be embedded to have
+// UnimplementedChannelServiceServer must be embedded to have
 // forward compatible implementations.
 //
 // NOTE: this should be embedded by value instead of pointer to avoid a nil
@@ -125,16 +70,8 @@ type UnimplementedChannelServiceServer struct{}
 func (UnimplementedChannelServiceServer) DataStream(grpc.BidiStreamingServer[ChannelRequest, ChannelRequest]) error {
 	return status.Error(codes.Unimplemented, "method DataStream not implemented")
 }
-func (UnimplementedChannelServiceServer) SendControlRequest(context.Context, *ControlRequest) (*ControlResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method SendControlRequest not implemented")
-}
-func (UnimplementedChannelServiceServer) SendDisconnectNotify(context.Context, *DisconnectNotify) (*DisconnectResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method SendDisconnectNotify not implemented")
-}
-func (UnimplementedChannelServiceServer) StartScreenStream(grpc.BidiStreamingServer[ScreenStreamRequest, ScreenStreamData]) error {
-	return status.Error(codes.Unimplemented, "method StartScreenStream not implemented")
-}
-func (UnimplementedChannelServiceServer) testEmbeddedByValue() {}
+func (UnimplementedChannelServiceServer) mustEmbedUnimplementedChannelServiceServer() {}
+func (UnimplementedChannelServiceServer) testEmbeddedByValue()                        {}
 
 // UnsafeChannelServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to ChannelServiceServer will
@@ -161,75 +98,17 @@ func _ChannelService_DataStream_Handler(srv interface{}, stream grpc.ServerStrea
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type ChannelService_DataStreamServer = grpc.BidiStreamingServer[ChannelRequest, ChannelRequest]
 
-func _ChannelService_SendControlRequest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ControlRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ChannelServiceServer).SendControlRequest(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ChannelService_SendControlRequest_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChannelServiceServer).SendControlRequest(ctx, req.(*ControlRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ChannelService_SendDisconnectNotify_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DisconnectNotify)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ChannelServiceServer).SendDisconnectNotify(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ChannelService_SendDisconnectNotify_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChannelServiceServer).SendDisconnectNotify(ctx, req.(*DisconnectNotify))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ChannelService_StartScreenStream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(ChannelServiceServer).StartScreenStream(&grpc.GenericServerStream[ScreenStreamRequest, ScreenStreamData]{ServerStream: stream})
-}
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type ChannelService_StartScreenStreamServer = grpc.BidiStreamingServer[ScreenStreamRequest, ScreenStreamData]
-
 // ChannelService_ServiceDesc is the grpc.ServiceDesc for ChannelService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var ChannelService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "godesk.ChannelService",
 	HandlerType: (*ChannelServiceServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "SendControlRequest",
-			Handler:    _ChannelService_SendControlRequest_Handler,
-		},
-		{
-			MethodName: "SendDisconnectNotify",
-			Handler:    _ChannelService_SendDisconnectNotify_Handler,
-		},
-	},
+	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "DataStream",
 			Handler:       _ChannelService_DataStream_Handler,
-			ServerStreams: true,
-			ClientStreams: true,
-		},
-		{
-			StreamName:    "StartScreenStream",
-			Handler:       _ChannelService_StartScreenStream_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},

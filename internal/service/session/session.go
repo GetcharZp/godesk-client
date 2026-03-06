@@ -1,9 +1,7 @@
 package session
 
 import (
-	"context"
 	"godesk-client/internal/logger"
-	pb "godesk-client/proto"
 	"sync"
 	"time"
 
@@ -21,12 +19,10 @@ type Session struct {
 	LastImageData []byte `json:"-"`
 	CreatedAt     int64  `json:"createdAt"`
 	UpdatedAt     int64  `json:"updatedAt"`
+	TargetUUID    string `json:"targetUuid"` // 被控端UUID，用于接收屏幕数据
 
 	// 运行时字段，不序列化
-	StreamClient pb.ChannelService_StartScreenStreamClient `json:"-"`
-	CancelFunc   context.CancelFunc                        `json:"-"`
-	cancelMux    sync.Mutex                                `json:"-"`
-	imageMux     sync.RWMutex                              `json:"-"`
+	imageMux sync.RWMutex `json:"-"`
 }
 
 var (
@@ -88,6 +84,17 @@ func GetSessionByDeviceCode(deviceCode uint64) *Session {
 	return nil
 }
 
+func GetSessionByTargetUUID(targetUUID string) *Session {
+	sessionsMux.RLock()
+	defer sessionsMux.RUnlock()
+	for _, session := range sessions {
+		if session.TargetUUID == targetUUID {
+			return session
+		}
+	}
+	return nil
+}
+
 func GetAllSessions() []*Session {
 	sessionsMux.RLock()
 	defer sessionsMux.RUnlock()
@@ -103,23 +110,10 @@ func RemoveSession(sessionId string) {
 	sessionsMux.Lock()
 	defer sessionsMux.Unlock()
 
-	if session, exists := sessions[sessionId]; exists {
-		if session.CancelFunc != nil {
-			session.CancelFunc()
-		}
-	}
-
 	delete(sessions, sessionId)
 	saveSessions()
 
 	logger.Info("[session] removed.", zap.String("sessionId", sessionId))
-}
-
-// SetCancelFunc 设置取消函数
-func (s *Session) SetCancelFunc(cancel context.CancelFunc) {
-	s.cancelMux.Lock()
-	defer s.cancelMux.Unlock()
-	s.CancelFunc = cancel
 }
 
 // SetLastImageData 设置最后的图像数据

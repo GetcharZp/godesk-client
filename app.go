@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"godesk-client/internal"
 	"godesk-client/internal/define"
+	"godesk-client/internal/logger"
+	"godesk-client/internal/service/channel"
 	"godesk-client/internal/service/common"
 	"godesk-client/internal/service/control"
 	"godesk-client/internal/service/device"
@@ -13,6 +15,8 @@ import (
 	"godesk-client/internal/service/sys"
 	"godesk-client/internal/service/user"
 	pb "godesk-client/proto"
+
+	"go.uber.org/zap"
 )
 
 // App struct
@@ -29,6 +33,9 @@ func NewApp() *App {
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+	(&device.Service{}).ClientInit()
+	(&user.Service{}).ClientInit()
+	(&channel.Service{}).ClientInit(pb.NewChannelServiceClient(define.GrpcConn))
 }
 
 // Greet returns a greeting for the given name
@@ -124,12 +131,21 @@ func (a *App) SendControlRequest(targetDeviceCode uint64, targetPassword string,
 
 // SendDisconnectNotify 发送断开连接通知
 func (a *App) SendDisconnectNotify(sessionId string, targetDeviceCode uint64) any {
-	return resp(nil, (&control.Service{}).SendDisconnectNotify(sessionId, targetDeviceCode))
+	// 获取会话，获取被控端UUID
+	sess := session.GetSession(sessionId)
+	if sess != nil && sess.TargetUUID != "" {
+		// 发送控制结束请求给被控端
+		if err := channel.SendControlEndedRequest(targetDeviceCode, sess.TargetUUID); err != nil {
+			logger.Error("[app] send disconnect notify error.", zap.Error(err))
+		}
+	}
+	return resp(nil, nil)
 }
 
 // StopScreenStream 停止屏幕流
 func (a *App) StopScreenStream(sessionId string) any {
-	return resp(nil, (&control.Service{}).StopScreenStream(sessionId))
+	// TODO: 实现停止屏幕流
+	return resp(nil, nil)
 }
 
 // GetAllSessions 获取所有会话

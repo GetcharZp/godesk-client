@@ -1,11 +1,20 @@
 <template>
-  <div class="remote-control-page" :class="{ 'has-session': activeSessions.length > 0 }">
+  <div class="remote-control-page" :class="{ 'has-session': activeSessions.length > 0, 'sidebar-collapsed': isSidebarCollapsed && activeSessions.length > 0 }">
     <div class="header">
       <h2 class="page-title">远程控制</h2>
     </div>
 
     <div class="content-wrapper">
-      <div class="main-section" :class="{ centered: activeSessions.length === 0 }">
+      <div class="main-section" :class="{ centered: activeSessions.length === 0, collapsed: isSidebarCollapsed && activeSessions.length > 0 }">
+        <!-- 收起/展开按钮 -->
+        <button
+          v-if="activeSessions.length > 0"
+          class="sidebar-toggle"
+          @click="isSidebarCollapsed = !isSidebarCollapsed"
+          :title="isSidebarCollapsed ? '展开' : '收起'"
+        >
+          {{ isSidebarCollapsed ? '→' : '←' }}
+        </button>
         <div class="section-card">
           <h3>本机设备</h3>
           <div class="device-info-row">
@@ -164,6 +173,7 @@ const screenWrapper = ref(null)
 const isFullscreen = ref(false)
 const deviceList = ref([])
 const screenStreamStopFns = ref(new Map()) // sessionId -> stopFunction
+const isSidebarCollapsed = ref(false) // 左侧导航栏是否收起
 
 const currentSession = computed(() => {
   return activeSessions.value.find(s => s.sessionId === currentSessionId.value)
@@ -226,7 +236,11 @@ const loadSessions = async () => {
   try {
     const res = await getAllSessions()
     if (res && res.code === 200 && res.data) {
-      activeSessions.value = res.data || []
+      // 为每个会话设置 deviceName
+      activeSessions.value = (res.data || []).map(sess => ({
+        ...sess,
+        deviceName: getDeviceDisplayName(sess.deviceCode)
+      }))
     }
   } catch (error) {
     console.error('加载会话失败:', error)
@@ -264,8 +278,8 @@ const doConnect = async (deviceCode, password) => {
 
     console.log('sendControlRequest response:', res)
 
-    if (res && res.code === 200 && res.data && res.data.accepted) {
-      const sessionId = res.data.sessionId
+    if (res && res.code === 200 && res.data) {
+      const sessionId = res.data
       
       // 获取设备显示名称（优先显示备注）
       const deviceName = getDeviceDisplayName(deviceCode)
@@ -310,10 +324,13 @@ const doConnect = async (deviceCode, password) => {
         backendSessions.forEach(backendSess => {
           const idx = activeSessions.value.findIndex(s => s.deviceCode === backendSess.deviceCode)
           if (idx !== -1) {
-            // 更新现有会话
+            // 更新现有会话，但保留前端的 deviceName
+            const existingDeviceName = activeSessions.value[idx].deviceName
             activeSessions.value[idx] = { ...activeSessions.value[idx], ...backendSess }
+            activeSessions.value[idx].deviceName = existingDeviceName
           } else {
-            // 添加新会话
+            // 添加新会话，设置 deviceName
+            backendSess.deviceName = getDeviceDisplayName(backendSess.deviceCode)
             activeSessions.value.push(backendSess)
           }
         })
@@ -381,6 +398,11 @@ const startSessionScreenStream = (sessionId) => {
       session.screenWidth = data.width || session.screenWidth
       session.screenHeight = data.height || session.screenHeight
       
+      // 收到屏幕数据，更新状态为已连接
+      if (session.status === 'connecting') {
+        session.status = 'connected'
+      }
+      
       // 如果是当前选中的会话，渲染到 canvas
       if (currentSessionId.value === sessionId && screenCanvas.value) {
         renderImageToCanvas(imageUrl)
@@ -403,23 +425,32 @@ const stopSessionScreenStream = (sessionId) => {
 // 渲染图像到 canvas
 const renderImageToCanvas = (imageUrl) => {
   if (!screenCanvas.value) return
-  
+
   const ctx = screenCanvas.value.getContext('2d')
   const img = new Image()
   img.onload = () => {
-    // 自适应 canvas 大小
     const canvas = screenCanvas.value
     const container = canvas.parentElement
+
+    // 设置 canvas 为原始图像分辨率（保持清晰）
+    canvas.width = img.width
+    canvas.height = img.height
+
+    // 使用 CSS 缩放来适应容器
     if (container) {
       const scale = Math.min(
         container.clientWidth / img.width,
         container.clientHeight / img.height,
         1
       )
-      canvas.width = img.width * scale
-      canvas.height = img.height * scale
+      canvas.style.width = `${img.width * scale}px`
+      canvas.style.height = `${img.height * scale}px`
     }
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+
+    // 使用高质量缩放
+    ctx.imageSmoothingEnabled = true
+    ctx.imageSmoothingQuality = 'high'
+    ctx.drawImage(img, 0, 0)
   }
   img.src = imageUrl
 }
@@ -571,11 +602,50 @@ watch(currentSessionId, (newSessionId) => {
   gap: 20px;
   max-height: 100%;
   overflow-y: auto;
+  position: relative;
+  transition: width 0.3s ease;
 }
 
 .main-section.centered {
   width: 480px;
   margin: 0 auto;
+}
+
+.main-section.collapsed {
+  width: 40px;
+  overflow: hidden;
+}
+
+.main-section.collapsed .section-card,
+.main-section.collapsed .sessions-card {
+  display: none;
+}
+
+.sidebar-toggle {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: background-color 0.2s;
+}
+
+.sidebar-toggle:hover {
+  background-color: #e0e0e0;
+}
+
+.main-section.collapsed .sidebar-toggle {
+  right: 8px;
+  top: 8px;
 }
 
 .sessions-card {

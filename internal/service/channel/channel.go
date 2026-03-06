@@ -2,6 +2,7 @@ package channel
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"godesk-client/internal/logger"
 	"godesk-client/internal/service/common"
@@ -19,6 +20,7 @@ var (
 	ctx            context.Context
 	cancelFunc     context.CancelFunc
 	heartbeatTimer *time.Timer
+	myUUID         string // 本机UUID
 )
 
 func (in *Service) ClientInit(c pb.ChannelServiceClient) {
@@ -30,8 +32,9 @@ func (in *Service) ClientInit(c pb.ChannelServiceClient) {
 		return
 	}
 
-	// 设置屏幕流数据发送函数
-	screen.SetSendScreenStreamDataFunc(in.sendScreenStreamData)
+	// 获取本机UUID
+	sysConfig, _ := common.GetSysConfig()
+	myUUID = sysConfig.Uuid
 
 	// 发送设备注册消息
 	in.sendRegister()
@@ -43,42 +46,6 @@ func (in *Service) ClientInit(c pb.ChannelServiceClient) {
 	go in.startHeartbeat()
 }
 
-// sendScreenStreamData 发送屏幕流数据到指定控制端
-func (in *Service) sendScreenStreamData(controllerUUID string, data *pb.ScreenStreamData) {
-	logger.Debug("[sys] sendScreenStreamData called.",
-		zap.String("controllerUUID", controllerUUID),
-		zap.String("sessionId", data.SessionId),
-		zap.Int("imageDataSize", len(data.ImageData)))
-
-	if stream == nil {
-		logger.Error("[sys] stream is nil, cannot send screen data")
-		return
-	}
-
-	logger.Debug("[sys] marshaling screen stream data...")
-	dataJSON, err := json.Marshal(data)
-	if err != nil {
-		logger.Error("[sys] marshal screen stream data error.", zap.Error(err))
-		return
-	}
-
-	logger.Debug("[sys] screen stream data marshaled.", zap.Int("jsonSize", len(dataJSON)))
-
-	req := &pb.ChannelRequest{
-		ClientUuid: controllerUUID,
-		Key:        "screen_stream_data",
-		Data:       dataJSON,
-	}
-
-	logger.Debug("[sys] sending screen stream data to stream...")
-	if err := stream.Send(req); err != nil {
-		logger.Error("[sys] send screen stream data error.", zap.Error(err))
-		return
-	}
-
-	logger.Debug("[sys] screen stream data sent successfully.")
-}
-
 // sendRegister 发送设备注册消息
 func (in *Service) sendRegister() {
 	sysConfig, err := common.GetSysConfig()
@@ -88,7 +55,6 @@ func (in *Service) sendRegister() {
 	}
 
 	registerData := &pb.RegisterData{
-		Uuid:       sysConfig.Uuid,
 		Os:         runtime.GOOS,
 		DeviceName: sysConfig.Username,
 	}
@@ -100,16 +66,17 @@ func (in *Service) sendRegister() {
 	}
 
 	req := &pb.ChannelRequest{
-		ClientUuid: sysConfig.Uuid,
-		Key:        "register",
-		Data:       data,
+		SendClientUuid:   sysConfig.Uuid,
+		TargetClientUuid: "", // 服务器
+		Key:              "register",
+		Data:             data,
 	}
 
 	in.SendMessage(req)
-	logger.Info("[sys] device register sent.", zap.String("uuid", sysConfig.Uuid))
+	logger.Info("[sys] device registered.", zap.String("uuid", sysConfig.Uuid))
 }
 
-// startHeartbeat 启动心跳定时发送
+// startHeartbeat 启动心跳定时器
 func (in *Service) startHeartbeat() {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
@@ -124,7 +91,7 @@ func (in *Service) startHeartbeat() {
 	}
 }
 
-// sendHeartbeat 发送心跳消息
+// sendHeartbeat 发送心跳
 func (in *Service) sendHeartbeat() {
 	sysConfig, err := common.GetSysConfig()
 	if err != nil {
@@ -133,7 +100,7 @@ func (in *Service) sendHeartbeat() {
 	}
 
 	heartbeatData := &pb.HeartbeatData{
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now().UnixMilli(),
 	}
 
 	data, err := json.Marshal(heartbeatData)
@@ -143,9 +110,10 @@ func (in *Service) sendHeartbeat() {
 	}
 
 	req := &pb.ChannelRequest{
-		ClientUuid: sysConfig.Uuid,
-		Key:        "heartbeat",
-		Data:       data,
+		SendClientUuid:   sysConfig.Uuid,
+		TargetClientUuid: "",
+		Key:              "heartbeat",
+		Data:             data,
 	}
 
 	in.SendMessage(req)
@@ -172,141 +140,267 @@ func (in *Service) ReceiveDataHandle() {
 // handleMessage 处理接收到的消息
 func (in *Service) handleMessage(req *pb.ChannelRequest) {
 	switch req.Key {
-	case "control_started":
-		in.handleControlStarted(req.Data)
-	case "control_ended":
-		in.handleControlEnded(req.Data)
-	case "start_screen_stream":
-		in.handleStartScreenStream(req.Data)
-	case "stop_screen_stream":
-		in.handleStopScreenStream(req.Data)
-	case "pause_screen_stream":
-		in.handlePauseScreenStream(req.Data)
-	case "resume_screen_stream":
-		in.handleResumeScreenStream(req.Data)
+	case "control_started_request":
+		in.handleControlStartedRequest(req)
+	case "control_started_response":
+		in.handleControlStartedResponse(req)
+	case "control_ended_request":
+		in.handleControlEndedRequest(req)
+	case "control_ended_response":
+		in.handleControlEndedResponse(req)
 	case "screen_stream_data":
-		in.handleScreenStreamData(req.Data)
+		in.handleScreenStreamData(req)
 	default:
 		logger.Info("[sys] unknown message key.", zap.String("key", req.Key))
 	}
 }
 
-// handleControlStarted 处理控制开始通知
-func (in *Service) handleControlStarted(data []byte) {
-	var controlData pb.ControlStartedData
-	if err := json.Unmarshal(data, &controlData); err != nil {
-		logger.Error("[sys] unmarshal control started data error.", zap.Error(err))
-		return
-	}
-	logger.Info("[sys] control started.", zap.String("session_id", controlData.SessionId))
-
-	// 启动屏幕共享
-	manager := screen.GetManager()
-	if err := manager.StartSharing(
-		controlData.SessionId,
-		controlData.ControllerUuid,
-		controlData.ControllerName,
-		controlData.RequestControl,
-	); err != nil {
-		logger.Error("[sys] start screen sharing error.", zap.Error(err))
+// handleControlStartedRequest 处理控制开始请求（被控端收到）
+func (in *Service) handleControlStartedRequest(req *pb.ChannelRequest) {
+	var data pb.ControlStartedRequestData
+	if err := json.Unmarshal(req.Data, &data); err != nil {
+		logger.Error("[sys] unmarshal control started request error.", zap.Error(err))
 		return
 	}
 
-	// 发送屏幕流状态通知
-	statusData := &pb.ScreenStreamStatusData{
-		SessionId: controlData.SessionId,
-		Status:    "started",
-		Message:   "屏幕共享已开始",
-		Timestamp: time.Now().Unix(),
+	logger.Info("[sys] received control started request.",
+		zap.Uint64("targetCode", data.TargetCode),
+		zap.Bool("requestControl", data.RequestControl))
+
+	// 验证密码
+	sysConfig, _ := common.GetSysConfig()
+	if data.TargetPassword != sysConfig.Password {
+		logger.Warn("[sys] password verification failed.")
+		// 发送拒绝响应
+		in.sendControlStartedResponse(req.SendClientUuid, 2, "")
+		return
 	}
-	statusJSON, _ := json.Marshal(statusData)
+
+	// 启动屏幕捕获
+	manager := screen.GetScreenManager()
+	manager.StartCapture(func(imageData string, width, height int) {
+		in.sendScreenStreamData(req.SendClientUuid, imageData, width, height)
+	})
+
+	// 发送接受响应
+	in.sendControlStartedResponse(req.SendClientUuid, 0, sysConfig.Uuid)
+}
+
+// sendControlStartedResponse 发送控制开始响应
+func (in *Service) sendControlStartedResponse(targetUUID string, code int32, uuid string) {
+	resp := &pb.ControlStartedResponseData{
+		Code:       code,
+		Uuid:       uuid,
+		TargetCode: 0,
+	}
+
+	data, _ := json.Marshal(resp)
+	req := &pb.ChannelRequest{
+		SendClientUuid:   myUUID,
+		TargetClientUuid: targetUUID,
+		Key:              "control_started_response",
+		Data:             data,
+	}
+
+	in.SendMessage(req)
+	logger.Info("[sys] control started response sent.", zap.Int32("code", code))
+}
+
+// handleControlStartedResponse 处理控制开始响应（控制端收到）
+func (in *Service) handleControlStartedResponse(req *pb.ChannelRequest) {
+	var data pb.ControlStartedResponseData
+	if err := json.Unmarshal(req.Data, &data); err != nil {
+		logger.Error("[sys] unmarshal control started response error.", zap.Error(err))
+		return
+	}
+
+	logger.Info("[sys] received control started response.", zap.Int32("code", data.Code), zap.String("uuid", data.Uuid))
+
+	if data.Code == 0 {
+		// 控制开始成功，更新会话状态
+		// 根据 deviceCode 查找会话并设置 TargetUUID
+		sess := session.GetSessionByDeviceCode(data.TargetCode)
+		if sess != nil {
+			sess.TargetUUID = data.Uuid
+			sess.Status = "connected"
+			logger.Info("[sys] session updated with target UUID.", zap.String("sessionId", sess.SessionId), zap.String("targetUUID", data.Uuid))
+		} else {
+			logger.Warn("[sys] no session found for device code.", zap.Uint64("deviceCode", data.TargetCode))
+		}
+	} else {
+		logger.Warn("[sys] control started failed.", zap.Int32("code", data.Code))
+	}
+}
+
+// handleControlEndedRequest 处理控制结束请求
+func (in *Service) handleControlEndedRequest(req *pb.ChannelRequest) {
+	logger.Info("[sys] received control ended request.")
+	// 停止屏幕捕获
+	manager := screen.GetScreenManager()
+	manager.StopCapture()
+
+	// 发送响应
+	resp := &pb.ControlEndedResponseData{Code: 0}
+	data, _ := json.Marshal(resp)
 	in.SendMessage(&pb.ChannelRequest{
-		ClientUuid: controlData.ControllerUuid,
-		Key:        "screen_stream_status",
-		Data:       statusJSON,
+		SendClientUuid:   myUUID,
+		TargetClientUuid: req.SendClientUuid,
+		Key:              "control_ended_response",
+		Data:             data,
 	})
 }
 
-// handleControlEnded 处理控制结束通知
-func (in *Service) handleControlEnded(data []byte) {
-	var controlData pb.ControlEndedData
-	if err := json.Unmarshal(data, &controlData); err != nil {
-		logger.Error("[sys] unmarshal control ended data error.", zap.Error(err))
+// handleControlEndedResponse 处理控制结束响应
+func (in *Service) handleControlEndedResponse(req *pb.ChannelRequest) {
+	logger.Info("[sys] received control ended response.")
+}
+
+// sendScreenStreamData 发送屏幕流数据（被控端调用）
+func (in *Service) sendScreenStreamData(targetUUID, imageData string, width, height int) {
+	streamData := &pb.ScreenStreamData{
+		ImageData: imageData,
+		Format:    "jpeg",
+		Width:     int32(width),
+		Height:    int32(height),
+		Timestamp: time.Now().UnixMilli(),
+	}
+
+	data, err := json.Marshal(streamData)
+	if err != nil {
+		logger.Error("[sys] marshal screen stream data error.", zap.Error(err))
 		return
 	}
-	logger.Info("[sys] control ended.", zap.String("session_id", controlData.SessionId))
 
-	// 停止屏幕共享
-	manager := screen.GetManager()
-	manager.StopSharing(controlData.SessionId)
-}
-
-// handleStartScreenStream 处理开始屏幕流请求
-func (in *Service) handleStartScreenStream(data []byte) {
-	var request pb.ScreenStreamRequest
-	if err := json.Unmarshal(data, &request); err != nil {
-		logger.Error("[sys] unmarshal screen stream request error.", zap.Error(err))
-		return
+	req := &pb.ChannelRequest{
+		SendClientUuid:   myUUID,
+		TargetClientUuid: targetUUID,
+		Key:              "screen_stream_data",
+		Data:             data,
 	}
-	logger.Info("[sys] start screen stream.", zap.String("session_id", request.SessionId))
-	// TODO: 启动屏幕捕获和传输
+
+	if err := in.SendMessage(req); err != nil {
+		logger.Error("[sys] send screen stream data error.", zap.Error(err))
+	} else {
+		logger.Debug("[sys] screen stream data sent.", zap.String("target", targetUUID))
+	}
 }
 
-// handleStopScreenStream 处理停止屏幕流请求
-func (in *Service) handleStopScreenStream(data []byte) {
-	logger.Info("[sys] stop screen stream.")
-	// TODO: 停止屏幕捕获
-}
-
-// handlePauseScreenStream 处理暂停屏幕流请求
-func (in *Service) handlePauseScreenStream(data []byte) {
-	logger.Info("[sys] pause screen stream.")
-	// TODO: 暂停屏幕捕获
-}
-
-// handleResumeScreenStream 处理恢复屏幕流请求
-func (in *Service) handleResumeScreenStream(data []byte) {
-	logger.Info("[sys] resume screen stream.")
-	// TODO: 恢复屏幕捕获
-}
-
-// handleScreenStreamData 处理屏幕流数据（控制端接收被控端发送的数据）
-func (in *Service) handleScreenStreamData(data []byte) {
-	var streamData pb.ScreenStreamData
-	if err := json.Unmarshal(data, &streamData); err != nil {
+// handleScreenStreamData 处理屏幕流数据（控制端收到）
+func (in *Service) handleScreenStreamData(req *pb.ChannelRequest) {
+	var data pb.ScreenStreamData
+	if err := json.Unmarshal(req.Data, &data); err != nil {
 		logger.Error("[sys] unmarshal screen stream data error.", zap.Error(err))
 		return
 	}
 
-	logger.Info("[sys] received screen stream data.",
-		zap.String("sessionId", streamData.SessionId),
-		zap.Int("dataSize", len(streamData.ImageData)),
-		zap.Int32("width", streamData.Width),
-		zap.Int32("height", streamData.Height))
+	logger.Debug("[sys] received screen stream data.",
+		zap.Int("width", int(data.Width)),
+		zap.Int("height", int(data.Height)),
+		zap.Int("dataSize", len(data.ImageData)))
 
-	// 保存图像数据到会话
-	sess := session.GetSession(streamData.SessionId)
+	// 解码Base64图像数据
+	imageBytes, err := base64.StdEncoding.DecodeString(data.ImageData)
+	if err != nil {
+		logger.Error("[sys] decode base64 image error.", zap.Error(err))
+		return
+	}
+
+	// 保存到会话（使用发送方UUID查找会话）
+	sess := session.GetSessionByTargetUUID(req.SendClientUuid)
 	if sess != nil {
-		sess.SetLastImageData(streamData.ImageData)
-		sess.ScreenWidth = streamData.Width
-		sess.ScreenHeight = streamData.Height
-		logger.Info("[sys] screen data saved to session.",
-			zap.String("sessionId", streamData.SessionId),
-			zap.Int("imageSize", len(streamData.ImageData)))
+		sess.SetLastImageData(imageBytes)
+		sess.ScreenWidth = data.Width
+		sess.ScreenHeight = data.Height
+		logger.Debug("[sys] screen data saved to session.", zap.String("targetUUID", req.SendClientUuid))
 	} else {
-		logger.Warn("[sys] session not found for screen data.", zap.String("sessionId", streamData.SessionId))
+		logger.Warn("[sys] no session found for target UUID.", zap.String("targetUUID", req.SendClientUuid))
 	}
 }
 
-func (in *Service) SendMessage(req *pb.ChannelRequest) {
+func (in *Service) SendMessage(req *pb.ChannelRequest) error {
 	if stream == nil {
 		logger.Error("[sys] stream is nil")
-		return
+		return nil
 	}
 	if err := stream.Send(req); err != nil {
 		logger.Error("[sys] stream send message error.", zap.Error(err))
-		return
+		return err
 	}
+	return nil
+}
+
+// SendControlStartedRequest 发送控制开始请求（供control服务调用）
+func SendControlStartedRequest(targetDeviceCode uint64, targetPassword string, requestControl bool) error {
+	if stream == nil {
+		logger.Error("[sys] stream is nil, cannot send control request")
+		return nil
+	}
+
+	reqData := &pb.ControlStartedRequestData{
+		TargetCode:     targetDeviceCode,
+		TargetPassword: targetPassword,
+		RequestControl: requestControl,
+		Timestamp:      time.Now().UnixMilli(),
+	}
+
+	data, err := json.Marshal(reqData)
+	if err != nil {
+		logger.Error("[sys] marshal control started request error.", zap.Error(err))
+		return err
+	}
+
+	req := &pb.ChannelRequest{
+		SendClientUuid:   myUUID,
+		TargetClientUuid: "", // 服务器会根据target_code查找被控端
+		Key:              "control_started_request",
+		Data:             data,
+	}
+
+	if err := stream.Send(req); err != nil {
+		logger.Error("[sys] send control started request error.", zap.Error(err))
+		return err
+	}
+
+	logger.Info("[sys] control started request sent.",
+		zap.Uint64("targetCode", targetDeviceCode),
+		zap.Bool("requestControl", requestControl))
+	return nil
+}
+
+// SendControlEndedRequest 发送控制结束请求（供control服务调用）
+func SendControlEndedRequest(targetDeviceCode uint64, targetUUID string) error {
+	if stream == nil {
+		logger.Error("[sys] stream is nil, cannot send control ended request")
+		return nil
+	}
+
+	reqData := &pb.ControlEndedRequestData{
+		TargetCode: targetDeviceCode,
+		Timestamp:  time.Now().UnixMilli(),
+	}
+
+	data, err := json.Marshal(reqData)
+	if err != nil {
+		logger.Error("[sys] marshal control ended request error.", zap.Error(err))
+		return err
+	}
+
+	req := &pb.ChannelRequest{
+		SendClientUuid:   myUUID,
+		TargetClientUuid: targetUUID,
+		Key:              "control_ended_request",
+		Data:             data,
+	}
+
+	if err := stream.Send(req); err != nil {
+		logger.Error("[sys] send control ended request error.", zap.Error(err))
+		return err
+	}
+
+	logger.Info("[sys] control ended request sent.",
+		zap.Uint64("targetCode", targetDeviceCode),
+		zap.String("targetUUID", targetUUID))
+	return nil
 }
 
 // Close 关闭连接
