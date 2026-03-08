@@ -55,3 +55,27 @@ export const stopScreenStream = (sessionId) => {
         code: 200
     })
 }
+
+// 发送鼠标移动事件
+export const sendMouseMove = (sessionId, x, y) => {
+    if (window.go?.main?.App?.SendMouseMove) {
+        return window.go.main.App.SendMouseMove(sessionId, x, y)
+    }
+    return Promise.resolve({ code: 200 })
+}
+
+// 发送鼠标点击事件
+export const sendMouseClick = (sessionId, x, y, button, action) => {
+    if (window.go?.main?.App?.SendMouseClick) {
+        return window.go.main.App.SendMouseClick(sessionId, x, y, button, action)
+    }
+    return Promise.resolve({ code: 200 })
+}
+
+// 发送鼠标滚轮事件
+export const sendMouseScroll = (sessionId, x, y, deltaX, deltaY) => {
+    if (window.go?.main?.App?.SendMouseScroll) {
+        return window.go.main.App.SendMouseScroll(sessionId, x, y, deltaX, deltaY)
+    }
+    return Promise.resolve({ code: 200 })
+}

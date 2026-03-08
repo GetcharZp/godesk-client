@@ -195,3 +195,30 @@ func (a *App) GetSessionImage(sessionId string) any {
 		"height":    sess.ScreenHeight,
 	}, nil)
 }
+
+// SendMouseMove 发送鼠标移动事件
+func (a *App) SendMouseMove(sessionId string, x, y int32) any {
+	sess := session.GetSession(sessionId)
+	if sess == nil || sess.TargetUUID == "" {
+		return resp(nil, nil)
+	}
+	return resp(nil, channel.SendMouseMove(sess.TargetUUID, x, y))
+}
+
+// SendMouseClick 发送鼠标点击事件
+func (a *App) SendMouseClick(sessionId string, x, y int32, button int32, action string) any {
+	sess := session.GetSession(sessionId)
+	if sess == nil || sess.TargetUUID == "" {
+		return resp(nil, nil)
+	}
+	return resp(nil, channel.SendMouseClick(sess.TargetUUID, x, y, button, action))
+}
+
+// SendMouseScroll 发送鼠标滚轮事件
+func (a *App) SendMouseScroll(sessionId string, x, y int32, deltaX, deltaY float64) any {
+	sess := session.GetSession(sessionId)
+	if sess == nil || sess.TargetUUID == "" {
+		return resp(nil, nil)
+	}
+	return resp(nil, channel.SendMouseScroll(sess.TargetUUID, x, y, deltaX, deltaY))
+}

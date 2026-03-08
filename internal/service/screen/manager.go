@@ -6,8 +6,6 @@ import (
 	"godesk-client/internal/service/capture"
 	"sync"
 	"sync/atomic"
-
-	"go.uber.org/zap"
 )
 
 // ScreenManager 屏幕管理器
@@ -45,12 +43,12 @@ func (m *ScreenManager) StartCapture(onFrame func(imageData string, width, heigh
 	m.captureService.Start(func(data []byte, width, height int) {
 		// 将图片数据编码为Base64
 		imageData := base64.StdEncoding.EncodeToString(data)
-		
-		logger.Debug("[screen] frame captured.", 
-			zap.Int("width", width), 
-			zap.Int("height", height),
-			zap.Int("dataSize", len(data)),
-			zap.Int("base64Size", len(imageData)))
+
+		// logger.Debug("[screen] frame captured.",
+		// 	zap.Int("width", width),
+		// 	zap.Int("height", height),
+		// 	zap.Int("dataSize", len(data)),
+		// 	zap.Int("base64Size", len(imageData)))
 
 		// 调用回调发送数据
 		if m.onFrame != nil {

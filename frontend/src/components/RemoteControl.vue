@@ -127,6 +127,11 @@
               class="screen-canvas"
               :width="currentSession.screenWidth || 1920"
               :height="currentSession.screenHeight || 1080"
+              @mousemove="handleMouseMove"
+              @mousedown="handleMouseDown"
+              @mouseup="handleMouseUp"
+              @wheel="handleMouseWheel"
+              :class="{ 'control-mode': !currentSession.viewOnly && currentSession.status === 'connected' }"
             ></canvas>
             <div v-if="currentSession.status === 'connecting'" class="screen-overlay">
               <div class="loading-spinner"></div>
@@ -150,7 +155,7 @@
 import { ref, computed, onMounted, watch, onUnmounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { sendControlRequest, disconnectControl } from '../api/channel.js'
+import { sendControlRequest, disconnectControl, sendMouseMove, sendMouseClick, sendMouseScroll } from '../api/channel.js'
 import { getDeviceInfo, getDeviceList } from '../api/device.js'
 import { getAllSessions, createSession, removeSession, getSessionByDeviceCode } from '../api/session.js'
 import { startScreenStream } from '../api/screen.js'
@@ -520,6 +525,59 @@ const reconnect = () => {
 
 const handleFullscreenChange = () => {
   isFullscreen.value = !!document.fullscreenElement
+}
+
+// 将 canvas 坐标转换为原始屏幕坐标
+const convertToScreenCoordinates = (clientX, clientY) => {
+  if (!screenCanvas.value || !currentSession.value) return { x: 0, y: 0 }
+
+  const canvas = screenCanvas.value
+  const rect = canvas.getBoundingClientRect()
+
+  // 计算在 canvas 中的相对位置（0-1 之间）
+  const relativeX = (clientX - rect.left) / rect.width
+  const relativeY = (clientY - rect.top) / rect.height
+
+  // 转换为原始屏幕坐标
+  const screenX = Math.round(relativeX * currentSession.value.screenWidth)
+  const screenY = Math.round(relativeY * currentSession.value.screenHeight)
+
+  return { x: screenX, y: screenY }
+}
+
+// 鼠标移动事件处理
+const handleMouseMove = (e) => {
+  if (!currentSession.value || currentSession.value.viewOnly || currentSession.value.status !== 'connected') return
+
+  const { x, y } = convertToScreenCoordinates(e.clientX, e.clientY)
+  sendMouseMove(currentSession.value.sessionId, x, y)
+}
+
+// 鼠标按下事件处理
+const handleMouseDown = (e) => {
+  if (!currentSession.value || currentSession.value.viewOnly || currentSession.value.status !== 'connected') return
+
+  const { x, y } = convertToScreenCoordinates(e.clientX, e.clientY)
+  const button = e.button // 0=左键, 1=中键, 2=右键
+  sendMouseClick(currentSession.value.sessionId, x, y, button, 'down')
+}
+
+// 鼠标释放事件处理
+const handleMouseUp = (e) => {
+  if (!currentSession.value || currentSession.value.viewOnly || currentSession.value.status !== 'connected') return
+
+  const { x, y } = convertToScreenCoordinates(e.clientX, e.clientY)
+  const button = e.button
+  sendMouseClick(currentSession.value.sessionId, x, y, button, 'up')
+}
+
+// 鼠标滚轮事件处理
+const handleMouseWheel = (e) => {
+  if (!currentSession.value || currentSession.value.viewOnly || currentSession.value.status !== 'connected') return
+
+  e.preventDefault()
+  const { x, y } = convertToScreenCoordinates(e.clientX, e.clientY)
+  sendMouseScroll(currentSession.value.sessionId, x, y, e.deltaX, e.deltaY)
 }
 
 const handleRouteQuery = async () => {

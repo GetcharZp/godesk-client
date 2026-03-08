@@ -107,7 +107,6 @@ func (s *Service) captureLoop() {
 		case <-s.stopChan:
 			return
 		case <-ticker.C:
-			logger.Debug("[capture] ticker triggered.", zap.Bool("isRunning", s.IsRunning()))
 			if !s.IsRunning() {
 				return
 			}
@@ -118,12 +117,12 @@ func (s *Service) captureLoop() {
 
 // captureFrame 捕获一帧
 func (s *Service) captureFrame() {
-	logger.Debug("[capture] capturing frame...")
+	// logger.Debug("[capture] capturing frame...")
 
 	// 获取主显示器截图
 	bounds := screenshot.GetDisplayBounds(0)
 	width, height := bounds.Dx(), bounds.Dy()
-	logger.Debug("[capture] display bounds.", zap.Int("x", bounds.Min.X), zap.Int("y", bounds.Min.Y), zap.Int("width", width), zap.Int("height", height))
+	// logger.Debug("[capture] display bounds.", zap.Int("x", bounds.Min.X), zap.Int("y", bounds.Min.Y), zap.Int("width", width), zap.Int("height", height))
 
 	img, err := screenshot.CaptureDisplay(0)
 	if err != nil {
@@ -131,7 +130,7 @@ func (s *Service) captureFrame() {
 		return
 	}
 
-	logger.Debug("[capture] display captured.", zap.Int("width", img.Bounds().Dx()), zap.Int("height", img.Bounds().Dy()))
+	// logger.Debug("[capture] display captured.", zap.Int("width", img.Bounds().Dx()), zap.Int("height", img.Bounds().Dy()))
 
 	// 编码为 JPEG
 	data, err := s.encodeJPEG(img)
@@ -140,7 +139,7 @@ func (s *Service) captureFrame() {
 		return
 	}
 
-	logger.Debug("[capture] frame encoded.", zap.Int("size", len(data)))
+	// logger.Debug("[capture] frame encoded.", zap.Int("size", len(data)))
 
 	// 保存最后一帧
 	s.lastFrameMu.Lock()
@@ -149,7 +148,7 @@ func (s *Service) captureFrame() {
 
 	// 发送帧数据
 	if s.sendFrame != nil {
-		logger.Debug("[capture] sending frame.", zap.Int("dataSize", len(data)))
+		// logger.Debug("[capture] sending frame.", zap.Int("dataSize", len(data)))
 		go s.sendFrame(data, width, height) // 使用 goroutine 避免阻塞
 	} else {
 		logger.Warn("[capture] sendFrame is nil!")

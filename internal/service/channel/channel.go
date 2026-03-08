@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/go-vgo/robotgo"
 	"go.uber.org/zap"
 )
 
@@ -117,7 +118,7 @@ func (in *Service) sendHeartbeat() {
 	}
 
 	in.SendMessage(req)
-	logger.Debug("[sys] heartbeat sent.")
+	// logger.Debug("[sys] heartbeat sent.")
 }
 
 func (in *Service) ReceiveDataHandle() {
@@ -131,7 +132,6 @@ func (in *Service) ReceiveDataHandle() {
 				logger.Error("[sys] stream receive error.", zap.Error(err))
 				return
 			}
-			logger.Info("[sys] stream receive message.", zap.String("key", req.Key))
 			in.handleMessage(req)
 		}
 	}
@@ -150,6 +150,12 @@ func (in *Service) handleMessage(req *pb.ChannelRequest) {
 		in.handleControlEndedResponse(req)
 	case "screen_stream_data":
 		in.handleScreenStreamData(req)
+	case "mouse_move":
+		in.handleMouseMove(req)
+	case "mouse_click":
+		in.handleMouseClick(req)
+	case "mouse_scroll":
+		in.handleMouseScroll(req)
 	default:
 		logger.Info("[sys] unknown message key.", zap.String("key", req.Key))
 	}
@@ -281,7 +287,7 @@ func (in *Service) sendScreenStreamData(targetUUID, imageData string, width, hei
 	if err := in.SendMessage(req); err != nil {
 		logger.Error("[sys] send screen stream data error.", zap.Error(err))
 	} else {
-		logger.Debug("[sys] screen stream data sent.", zap.String("target", targetUUID))
+		// logger.Debug("[sys] screen stream data sent.", zap.String("target", targetUUID))
 	}
 }
 
@@ -293,10 +299,10 @@ func (in *Service) handleScreenStreamData(req *pb.ChannelRequest) {
 		return
 	}
 
-	logger.Debug("[sys] received screen stream data.",
-		zap.Int("width", int(data.Width)),
-		zap.Int("height", int(data.Height)),
-		zap.Int("dataSize", len(data.ImageData)))
+	// logger.Debug("[sys] received screen stream data.",
+	// 	zap.Int("width", int(data.Width)),
+	// 	zap.Int("height", int(data.Height)),
+	// 	zap.Int("dataSize", len(data.ImageData)))
 
 	// 解码Base64图像数据
 	imageBytes, err := base64.StdEncoding.DecodeString(data.ImageData)
@@ -311,9 +317,81 @@ func (in *Service) handleScreenStreamData(req *pb.ChannelRequest) {
 		sess.SetLastImageData(imageBytes)
 		sess.ScreenWidth = data.Width
 		sess.ScreenHeight = data.Height
-		logger.Debug("[sys] screen data saved to session.", zap.String("targetUUID", req.SendClientUuid))
+		// logger.Debug("[sys] screen data saved to session.", zap.String("targetUUID", req.SendClientUuid))
 	} else {
 		logger.Warn("[sys] no session found for target UUID.", zap.String("targetUUID", req.SendClientUuid))
+	}
+}
+
+// handleMouseMove 处理鼠标移动事件（被控端收到）
+func (in *Service) handleMouseMove(req *pb.ChannelRequest) {
+	var data pb.MouseMoveData
+	if err := json.Unmarshal(req.Data, &data); err != nil {
+		logger.Error("[sys] unmarshal mouse move error.", zap.Error(err))
+		return
+	}
+
+	logger.Debug("[sys] received mouse move.", zap.Int32("x", data.X), zap.Int32("y", data.Y))
+
+	// 使用 robotgo 移动鼠标
+	robotgo.Move(int(data.X), int(data.Y))
+}
+
+// handleMouseClick 处理鼠标点击事件（被控端收到）
+func (in *Service) handleMouseClick(req *pb.ChannelRequest) {
+	var data pb.MouseClickData
+	if err := json.Unmarshal(req.Data, &data); err != nil {
+		logger.Error("[sys] unmarshal mouse click error.", zap.Error(err))
+		return
+	}
+
+	logger.Debug("[sys] received mouse click.",
+		zap.Int32("x", data.X),
+		zap.Int32("y", data.Y),
+		zap.Int32("button", data.Button),
+		zap.String("action", data.Action))
+
+	// 使用 robotgo 执行鼠标点击
+	// 先移动鼠标到指定位置
+	robotgo.Move(int(data.X), int(data.Y))
+
+	// 根据按钮和动作执行点击
+	switch data.Button {
+	case 0: // 左键
+		if data.Action == "down" {
+			robotgo.MouseDown("left")
+		} else {
+			robotgo.MouseUp("left")
+		}
+	case 1: // 中键
+		if data.Action == "down" {
+			robotgo.MouseDown("center")
+		} else {
+			robotgo.MouseUp("center")
+		}
+	case 2: // 右键
+		if data.Action == "down" {
+			robotgo.MouseDown("right")
+		} else {
+			robotgo.MouseUp("right")
+		}
+	}
+}
+
+// handleMouseScroll 处理鼠标滚轮事件（被控端收到）
+func (in *Service) handleMouseScroll(req *pb.ChannelRequest) {
+	var data pb.MouseScrollData
+	if err := json.Unmarshal(req.Data, &data); err != nil {
+		logger.Error("[sys] unmarshal mouse scroll error.", zap.Error(err))
+		return
+	}
+
+	logger.Debug("[sys] received mouse scroll.",
+		zap.Int32("deltaY", data.DeltaY))
+
+	// 使用 robotgo 执行鼠标滚轮
+	if data.DeltaY != 0 {
+		robotgo.Scroll(int(data.DeltaY), int(data.X), int(data.Y))
 	}
 }
 
@@ -400,6 +478,114 @@ func SendControlEndedRequest(targetDeviceCode uint64, targetUUID string) error {
 	logger.Info("[sys] control ended request sent.",
 		zap.Uint64("targetCode", targetDeviceCode),
 		zap.String("targetUUID", targetUUID))
+	return nil
+}
+
+// SendMouseMove 发送鼠标移动事件
+func SendMouseMove(targetUUID string, x, y int32) error {
+	if stream == nil {
+		logger.Error("[sys] stream is nil, cannot send mouse move")
+		return nil
+	}
+
+	reqData := &pb.MouseMoveData{
+		X:         x,
+		Y:         y,
+		Timestamp: time.Now().UnixMilli(),
+	}
+
+	data, err := json.Marshal(reqData)
+	if err != nil {
+		logger.Error("[sys] marshal mouse move error.", zap.Error(err))
+		return err
+	}
+
+	req := &pb.ChannelRequest{
+		SendClientUuid:   myUUID,
+		TargetClientUuid: targetUUID,
+		Key:              "mouse_move",
+		Data:             data,
+	}
+
+	if err := stream.Send(req); err != nil {
+		logger.Error("[sys] send mouse move error.", zap.Error(err))
+		return err
+	}
+
+	logger.Debug("[sys] mouse move sent.", zap.String("targetUUID", targetUUID), zap.Int32("x", x), zap.Int32("y", y))
+	return nil
+}
+
+// SendMouseClick 发送鼠标点击事件
+func SendMouseClick(targetUUID string, x, y, button int32, action string) error {
+	if stream == nil {
+		logger.Error("[sys] stream is nil, cannot send mouse click")
+		return nil
+	}
+
+	reqData := &pb.MouseClickData{
+		X:         x,
+		Y:         y,
+		Button:    button,
+		Action:    action,
+		Timestamp: time.Now().UnixMilli(),
+	}
+
+	data, err := json.Marshal(reqData)
+	if err != nil {
+		logger.Error("[sys] marshal mouse click error.", zap.Error(err))
+		return err
+	}
+
+	req := &pb.ChannelRequest{
+		SendClientUuid:   myUUID,
+		TargetClientUuid: targetUUID,
+		Key:              "mouse_click",
+		Data:             data,
+	}
+
+	if err := stream.Send(req); err != nil {
+		logger.Error("[sys] send mouse click error.", zap.Error(err))
+		return err
+	}
+
+	logger.Debug("[sys] mouse click sent.", zap.String("targetUUID", targetUUID), zap.Int32("x", x), zap.Int32("y", y), zap.String("action", action))
+	return nil
+}
+
+// SendMouseScroll 发送鼠标滚轮事件
+func SendMouseScroll(targetUUID string, x, y int32, deltaX, deltaY float64) error {
+	if stream == nil {
+		logger.Error("[sys] stream is nil, cannot send mouse scroll")
+		return nil
+	}
+
+	reqData := &pb.MouseScrollData{
+		X:         x,
+		Y:         y,
+		DeltaY:    int32(deltaY),
+		Timestamp: time.Now().UnixMilli(),
+	}
+
+	data, err := json.Marshal(reqData)
+	if err != nil {
+		logger.Error("[sys] marshal mouse scroll error.", zap.Error(err))
+		return err
+	}
+
+	req := &pb.ChannelRequest{
+		SendClientUuid:   myUUID,
+		TargetClientUuid: targetUUID,
+		Key:              "mouse_scroll",
+		Data:             data,
+	}
+
+	if err := stream.Send(req); err != nil {
+		logger.Error("[sys] send mouse scroll error.", zap.Error(err))
+		return err
+	}
+
+	logger.Debug("[sys] mouse scroll sent.", zap.String("targetUUID", targetUUID), zap.Int32("deltaX", int32(deltaX)), zap.Int32("deltaY", int32(deltaY)))
 	return nil
 }
 

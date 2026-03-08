@@ -41,6 +41,12 @@ export function SendControlRequest(arg1:number,arg2:string,arg3:boolean):Promise
 
 export function SendDisconnectNotify(arg1:string,arg2:number):Promise<any>;
 
+export function SendMouseClick(arg1:string,arg2:number,arg3:number,arg4:number,arg5:string):Promise<any>;
+
+export function SendMouseMove(arg1:string,arg2:number,arg3:number):Promise<any>;
+
+export function SendMouseScroll(arg1:string,arg2:number,arg3:number,arg4:number,arg5:number):Promise<any>;
+
 export function StopScreenStream(arg1:string):Promise<any>;
 
 export function UserLogin(arg1:godesk.UserLoginRequest):Promise<any>;

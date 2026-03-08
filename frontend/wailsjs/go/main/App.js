@@ -78,6 +78,18 @@ export function SendDisconnectNotify(arg1, arg2) {
   return window['go']['main']['App']['SendDisconnectNotify'](arg1, arg2);
 }
 
+export function SendMouseClick(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['App']['SendMouseClick'](arg1, arg2, arg3, arg4, arg5);
+}
+
+export function SendMouseMove(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SendMouseMove'](arg1, arg2, arg3);
+}
+
+export function SendMouseScroll(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['App']['SendMouseScroll'](arg1, arg2, arg3, arg4, arg5);
+}
+
 export function StopScreenStream(arg1) {
   return window['go']['main']['App']['StopScreenStream'](arg1);
 }
