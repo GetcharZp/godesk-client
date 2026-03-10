@@ -78,6 +78,14 @@ export function SendDisconnectNotify(arg1, arg2) {
   return window['go']['main']['App']['SendDisconnectNotify'](arg1, arg2);
 }
 
+export function SendKeyDown(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SendKeyDown'](arg1, arg2, arg3);
+}
+
+export function SendKeyUp(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SendKeyUp'](arg1, arg2, arg3);
+}
+
 export function SendMouseClick(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['main']['App']['SendMouseClick'](arg1, arg2, arg3, arg4, arg5);
 }

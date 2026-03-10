@@ -131,6 +131,9 @@
               @mousedown="handleMouseDown"
               @mouseup="handleMouseUp"
               @wheel="handleMouseWheel"
+              @keydown="handleKeyDown"
+              @keyup="handleKeyUp"
+              tabindex="0"
               :class="{ 'control-mode': !currentSession.viewOnly && currentSession.status === 'connected' }"
             ></canvas>
             <div v-if="currentSession.status === 'connecting'" class="screen-overlay">
@@ -155,7 +158,7 @@
 import { ref, computed, onMounted, watch, onUnmounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { sendControlRequest, disconnectControl, sendMouseMove, sendMouseClick, sendMouseScroll } from '../api/channel.js'
+import { sendControlRequest, disconnectControl, sendMouseMove, sendMouseClick, sendMouseScroll, sendKeyDown, sendKeyUp } from '../api/channel.js'
 import { getDeviceInfo, getDeviceList } from '../api/device.js'
 import { getAllSessions, createSession, removeSession, getSessionByDeviceCode } from '../api/session.js'
 import { startScreenStream } from '../api/screen.js'
@@ -578,6 +581,70 @@ const handleMouseWheel = (e) => {
   e.preventDefault()
   const { x, y } = convertToScreenCoordinates(e.clientX, e.clientY)
   sendMouseScroll(currentSession.value.sessionId, x, y, e.deltaX, e.deltaY)
+}
+
+// 键盘映射表：将 JavaScript key 转换为 robotgo 支持的键名
+const keyMapping = {
+  // 字母键
+  'a': 'a', 'b': 'b', 'c': 'c', 'd': 'd', 'e': 'e', 'f': 'f', 'g': 'g', 'h': 'h',
+  'i': 'i', 'j': 'j', 'k': 'k', 'l': 'l', 'm': 'm', 'n': 'n', 'o': 'o', 'p': 'p',
+  'q': 'q', 'r': 'r', 's': 's', 't': 't', 'u': 'u', 'v': 'v', 'w': 'w', 'x': 'x',
+  'y': 'y', 'z': 'z',
+  // 数字键
+  '0': '0', '1': '1', '2': '2', '3': '3', '4': '4',
+  '5': '5', '6': '6', '7': '7', '8': '8', '9': '9',
+  // 功能键
+  'F1': 'f1', 'F2': 'f2', 'F3': 'f3', 'F4': 'f4', 'F5': 'f5',
+  'F6': 'f6', 'F7': 'f7', 'F8': 'f8', 'F9': 'f9', 'F10': 'f10',
+  'F11': 'f11', 'F12': 'f12',
+  // 控制键
+  'Enter': 'enter', 'Tab': 'tab', 'Backspace': 'backspace', 'Escape': 'esc',
+  'Space': 'space', 'Delete': 'delete', 'Insert': 'insert',
+  'Home': 'home', 'End': 'end', 'PageUp': 'pageup', 'PageDown': 'pagedown',
+  // 方向键
+  'ArrowUp': 'up', 'ArrowDown': 'down', 'ArrowLeft': 'left', 'ArrowRight': 'right',
+  // 修饰键
+  'Control': 'ctrl', 'Alt': 'alt', 'Shift': 'shift', 'Meta': 'cmd',
+  // 特殊字符
+  '-': '-', '=': '=', '[': '[', ']': ']', '\\': '\\', ';': ';', "'": "'",
+  ',': ',', '.': '.', '/': '/', '`': '`'
+}
+
+// 获取修饰键列表
+const getModifiers = (e) => {
+  const modifiers = []
+  if (e.ctrlKey) modifiers.push('ctrl')
+  if (e.altKey) modifiers.push('alt')
+  if (e.shiftKey) modifiers.push('shift')
+  if (e.metaKey) modifiers.push('cmd')
+  return modifiers
+}
+
+// 键盘按下事件处理
+const handleKeyDown = (e) => {
+  if (!currentSession.value || currentSession.value.viewOnly || currentSession.value.status !== 'connected') return
+
+  // 阻止默认行为（如页面滚动）
+  e.preventDefault()
+
+  const key = keyMapping[e.key] || e.key.toLowerCase()
+  if (!key) return
+
+  const modifiers = getModifiers(e)
+  sendKeyDown(currentSession.value.sessionId, key, modifiers)
+}
+
+// 键盘释放事件处理
+const handleKeyUp = (e) => {
+  if (!currentSession.value || currentSession.value.viewOnly || currentSession.value.status !== 'connected') return
+
+  e.preventDefault()
+
+  const key = keyMapping[e.key] || e.key.toLowerCase()
+  if (!key) return
+
+  const modifiers = getModifiers(e)
+  sendKeyUp(currentSession.value.sessionId, key, modifiers)
 }
 
 const handleRouteQuery = async () => {

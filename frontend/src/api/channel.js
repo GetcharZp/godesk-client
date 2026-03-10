@@ -79,3 +79,19 @@ export const sendMouseScroll = (sessionId, x, y, deltaX, deltaY) => {
     }
     return Promise.resolve({ code: 200 })
 }
+
+// 发送键盘按下事件
+export const sendKeyDown = (sessionId, key, modifiers = []) => {
+    if (window.go?.main?.App?.SendKeyDown) {
+        return window.go.main.App.SendKeyDown(sessionId, key, modifiers)
+    }
+    return Promise.resolve({ code: 200 })
+}
+
+// 发送键盘释放事件
+export const sendKeyUp = (sessionId, key, modifiers = []) => {
+    if (window.go?.main?.App?.SendKeyUp) {
+        return window.go.main.App.SendKeyUp(sessionId, key, modifiers)
+    }
+    return Promise.resolve({ code: 200 })
+}

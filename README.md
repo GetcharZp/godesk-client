@@ -40,4 +40,4 @@ wails build
 
 + 远程控制界面
 
-![remote-control](assets/remote-control.png)
+    ![remote-control](assets/remote-control.png)

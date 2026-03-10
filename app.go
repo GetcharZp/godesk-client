@@ -222,3 +222,21 @@ func (a *App) SendMouseScroll(sessionId string, x, y int32, deltaX, deltaY float
 	}
 	return resp(nil, channel.SendMouseScroll(sess.TargetUUID, x, y, deltaX, deltaY))
 }
+
+// SendKeyDown 发送键盘按下事件
+func (a *App) SendKeyDown(sessionId string, key string, modifiers []string) any {
+	sess := session.GetSession(sessionId)
+	if sess == nil || sess.TargetUUID == "" {
+		return resp(nil, nil)
+	}
+	return resp(nil, channel.SendKeyDown(sess.TargetUUID, key, modifiers))
+}
+
+// SendKeyUp 发送键盘释放事件
+func (a *App) SendKeyUp(sessionId string, key string, modifiers []string) any {
+	sess := session.GetSession(sessionId)
+	if sess == nil || sess.TargetUUID == "" {
+		return resp(nil, nil)
+	}
+	return resp(nil, channel.SendKeyUp(sess.TargetUUID, key, modifiers))
+}

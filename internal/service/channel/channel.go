@@ -156,6 +156,10 @@ func (in *Service) handleMessage(req *pb.ChannelRequest) {
 		in.handleMouseClick(req)
 	case "mouse_scroll":
 		in.handleMouseScroll(req)
+	case "key_down":
+		in.handleKeyDown(req)
+	case "key_up":
+		in.handleKeyUp(req)
 	default:
 		logger.Info("[sys] unknown message key.", zap.String("key", req.Key))
 	}
@@ -395,6 +399,42 @@ func (in *Service) handleMouseScroll(req *pb.ChannelRequest) {
 	}
 }
 
+// handleKeyDown 处理键盘按下事件（被控端收到）
+func (in *Service) handleKeyDown(req *pb.ChannelRequest) {
+	var data pb.KeyDownData
+	if err := json.Unmarshal(req.Data, &data); err != nil {
+		logger.Error("[sys] unmarshal key down error.", zap.Error(err))
+		return
+	}
+
+	logger.Debug("[sys] received key down.", zap.String("key", data.Key), zap.Strings("modifiers", data.Modifiers))
+
+	// 使用 robotgo 执行键盘按下
+	args := []interface{}{"down"}
+	for _, m := range data.Modifiers {
+		args = append(args, m)
+	}
+	robotgo.KeyToggle(data.Key, args...)
+}
+
+// handleKeyUp 处理键盘释放事件（被控端收到）
+func (in *Service) handleKeyUp(req *pb.ChannelRequest) {
+	var data pb.KeyUpData
+	if err := json.Unmarshal(req.Data, &data); err != nil {
+		logger.Error("[sys] unmarshal key up error.", zap.Error(err))
+		return
+	}
+
+	logger.Debug("[sys] received key up.", zap.String("key", data.Key), zap.Strings("modifiers", data.Modifiers))
+
+	// 使用 robotgo 执行键盘释放
+	args := []interface{}{"up"}
+	for _, m := range data.Modifiers {
+		args = append(args, m)
+	}
+	robotgo.KeyToggle(data.Key, args...)
+}
+
 func (in *Service) SendMessage(req *pb.ChannelRequest) error {
 	if stream == nil {
 		logger.Error("[sys] stream is nil")
@@ -586,6 +626,76 @@ func SendMouseScroll(targetUUID string, x, y int32, deltaX, deltaY float64) erro
 	}
 
 	logger.Debug("[sys] mouse scroll sent.", zap.String("targetUUID", targetUUID), zap.Int32("deltaX", int32(deltaX)), zap.Int32("deltaY", int32(deltaY)))
+	return nil
+}
+
+// SendKeyDown 发送键盘按下事件
+func SendKeyDown(targetUUID string, key string, modifiers []string) error {
+	if stream == nil {
+		logger.Error("[sys] stream is nil, cannot send key down")
+		return nil
+	}
+
+	reqData := &pb.KeyDownData{
+		Key:       key,
+		Modifiers: modifiers,
+		Timestamp: time.Now().UnixMilli(),
+	}
+
+	data, err := json.Marshal(reqData)
+	if err != nil {
+		logger.Error("[sys] marshal key down error.", zap.Error(err))
+		return err
+	}
+
+	req := &pb.ChannelRequest{
+		SendClientUuid:   myUUID,
+		TargetClientUuid: targetUUID,
+		Key:              "key_down",
+		Data:             data,
+	}
+
+	if err := stream.Send(req); err != nil {
+		logger.Error("[sys] send key down error.", zap.Error(err))
+		return err
+	}
+
+	logger.Debug("[sys] key down sent.", zap.String("targetUUID", targetUUID), zap.String("key", key), zap.Strings("modifiers", modifiers))
+	return nil
+}
+
+// SendKeyUp 发送键盘释放事件
+func SendKeyUp(targetUUID string, key string, modifiers []string) error {
+	if stream == nil {
+		logger.Error("[sys] stream is nil, cannot send key up")
+		return nil
+	}
+
+	reqData := &pb.KeyUpData{
+		Key:       key,
+		Modifiers: modifiers,
+		Timestamp: time.Now().UnixMilli(),
+	}
+
+	data, err := json.Marshal(reqData)
+	if err != nil {
+		logger.Error("[sys] marshal key up error.", zap.Error(err))
+		return err
+	}
+
+	req := &pb.ChannelRequest{
+		SendClientUuid:   myUUID,
+		TargetClientUuid: targetUUID,
+		Key:              "key_up",
+		Data:             data,
+	}
+
+	if err := stream.Send(req); err != nil {
+		logger.Error("[sys] send key up error.", zap.Error(err))
+		return err
+	}
+
+	logger.Debug("[sys] key up sent.", zap.String("targetUUID", targetUUID), zap.String("key", key), zap.Strings("modifiers", modifiers))
 	return nil
 }
 
