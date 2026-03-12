@@ -2,7 +2,6 @@ package channel
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"godesk-client/internal/logger"
 	"godesk-client/internal/service/common"
@@ -188,8 +187,8 @@ func (in *Service) handleControlStartedRequest(req *pb.ChannelRequest) {
 
 	// 启动屏幕捕获
 	manager := screen.GetScreenManager()
-	manager.StartCapture(func(imageData string, width, height int) {
-		in.sendScreenStreamData(req.SendClientUuid, imageData, width, height)
+	manager.StartCapture(func(frame *screen.FrameData) {
+		in.sendScreenStreamData(req.SendClientUuid, frame)
 	})
 
 	// 发送接受响应
@@ -266,13 +265,16 @@ func (in *Service) handleControlEndedResponse(req *pb.ChannelRequest) {
 }
 
 // sendScreenStreamData 发送屏幕流数据（被控端调用）
-func (in *Service) sendScreenStreamData(targetUUID, imageData string, width, height int) {
+func (in *Service) sendScreenStreamData(targetUUID string, frame *screen.FrameData) {
 	streamData := &pb.ScreenStreamData{
-		ImageData: imageData,
-		Format:    "jpeg",
-		Width:     int32(width),
-		Height:    int32(height),
-		Timestamp: time.Now().UnixMilli(),
+		SequenceId: frame.SequenceID,
+		FrameData:  frame.FrameData,
+		Codec:      frame.Codec,
+		Width:      frame.Width,
+		Height:     frame.Height,
+		Timestamp:  frame.Timestamp,
+		FrameType:  frame.FrameType,
+		ExtraData:  frame.ExtraData,
 	}
 
 	data, err := json.Marshal(streamData)
@@ -291,7 +293,7 @@ func (in *Service) sendScreenStreamData(targetUUID, imageData string, width, hei
 	if err := in.SendMessage(req); err != nil {
 		logger.Error("[sys] send screen stream data error.", zap.Error(err))
 	} else {
-		// logger.Debug("[sys] screen stream data sent.", zap.String("target", targetUUID))
+		// logger.Debug("[sys] screen stream data sent.", zap.String("target", targetUUID), zap.Uint64("sequence", frame.SequenceID))
 	}
 }
 
@@ -304,21 +306,35 @@ func (in *Service) handleScreenStreamData(req *pb.ChannelRequest) {
 	}
 
 	// logger.Debug("[sys] received screen stream data.",
+	// 	zap.Uint64("sequence", data.SequenceId),
 	// 	zap.Int("width", int(data.Width)),
 	// 	zap.Int("height", int(data.Height)),
-	// 	zap.Int("dataSize", len(data.ImageData)))
-
-	// 解码Base64图像数据
-	imageBytes, err := base64.StdEncoding.DecodeString(data.ImageData)
-	if err != nil {
-		logger.Error("[sys] decode base64 image error.", zap.Error(err))
-		return
-	}
+	// 	zap.Int("dataSize", len(data.FrameData)))
 
 	// 保存到会话（使用发送方UUID查找会话）
 	sess := session.GetSessionByTargetUUID(req.SendClientUuid)
 	if sess != nil {
-		sess.SetLastImageData(imageBytes)
+		// 根据 codec 类型处理帧数据
+		switch data.Codec {
+		case "jpeg":
+			// JPEG 直接保存帧数据
+			sess.SetLastFrameData(&session.FrameData{
+				SequenceID: data.SequenceId,
+				FrameData:  data.FrameData,
+				Codec:      data.Codec,
+				Width:      data.Width,
+				Height:     data.Height,
+				Timestamp:  data.Timestamp,
+				FrameType:  data.FrameType,
+				ExtraData:  data.ExtraData,
+			})
+		case "h264", "h265":
+			// H.264/H.265 视频流数据（需要解码器支持）
+			// TODO: 实现视频解码
+			logger.Warn("[sys] video codec not supported yet.", zap.String("codec", data.Codec))
+		default:
+			logger.Warn("[sys] unknown codec.", zap.String("codec", data.Codec))
+		}
 		sess.ScreenWidth = data.Width
 		sess.ScreenHeight = data.Height
 		// logger.Debug("[sys] screen data saved to session.", zap.String("targetUUID", req.SendClientUuid))

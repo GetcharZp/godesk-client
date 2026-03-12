@@ -20,13 +20,15 @@ export const startScreenStream = (sessionId, onFrame) => {
         try {
             const res = await getSessionImage(sessionId)
             if (res && res.code === 200 && res.data) {
+                const data = res.data
+
                 // 检查是否是新帧
-                if (res.data.sequence > lastSequence || lastSequence === 0) {
-                    lastSequence = res.data.sequence || 0
-                    if (onFrame && res.data.imageData) {
-                        // 将 base64 数据转换为 URL
-                        const imageUrl = 'data:image/jpeg;base64,' + res.data.imageData
-                        onFrame(imageUrl, res.data)
+                if (data.sequence > lastSequence || lastSequence === 0) {
+                    lastSequence = data.sequence || 0
+
+                    if (onFrame && data.imageData) {
+                        const imageUrl = 'data:image/jpeg;base64,' + data.imageData
+                        onFrame(imageUrl, data)
                     }
                 }
             }

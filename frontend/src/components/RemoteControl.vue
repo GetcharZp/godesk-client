@@ -398,25 +398,52 @@ const startSessionScreenStream = (sessionId) => {
     return // 已经在接收
   }
 
+  // 获取 canvas 元素用于视频解码渲染
+  const canvas = currentSessionId.value === sessionId ? screenCanvas.value : null
+
   const stopFn = startScreenStream(sessionId, (imageUrl, data) => {
     // 更新会话的图像数据
     const session = activeSessions.value.find(s => s.sessionId === sessionId)
     if (session) {
-      session.lastImageUrl = imageUrl
-      session.screenWidth = data.width || session.screenWidth
-      session.screenHeight = data.height || session.screenHeight
-      
-      // 收到屏幕数据，更新状态为已连接
-      if (session.status === 'connecting') {
-        session.status = 'connected'
-      }
-      
-      // 如果是当前选中的会话，渲染到 canvas
-      if (currentSessionId.value === sessionId && screenCanvas.value) {
-        renderImageToCanvas(imageUrl)
+      // 根据数据类型处理
+      if (data.codec === 'h264' || data.codec === 'h265') {
+        // 视频流格式
+        session.screenWidth = data.width || session.screenWidth
+        session.screenHeight = data.height || session.screenHeight
+        session.codec = data.codec
+        session.sequence = data.sequence
+        
+        // 收到屏幕数据，更新状态为已连接
+        if (session.status === 'connecting') {
+          session.status = 'connected'
+        }
+        
+        // 视频帧已经通过解码器渲染到 canvas，无需额外处理
+        if (data.decoded) {
+          // 解码成功
+        } else if (data.error) {
+          console.warn('Video decode error:', data.error)
+        }
+      } else {
+        // JPEG 图像格式
+        session.lastImageUrl = imageUrl
+        session.screenWidth = data.width || session.screenWidth
+        session.screenHeight = data.height || session.screenHeight
+        session.codec = data.codec || 'jpeg'
+        session.sequence = data.sequence
+        
+        // 收到屏幕数据，更新状态为已连接
+        if (session.status === 'connecting') {
+          session.status = 'connected'
+        }
+        
+        // 如果是当前选中的会话，渲染到 canvas
+        if (currentSessionId.value === sessionId && screenCanvas.value && imageUrl) {
+          renderImageToCanvas(imageUrl)
+        }
       }
     }
-  })
+  }, canvas)
 
   screenStreamStopFns.value.set(sessionId, stopFn)
 }

@@ -181,6 +181,23 @@ func (a *App) GetSessionImage(sessionId string) any {
 		return resp(nil, nil)
 	}
 
+	// 获取帧数据
+	frameData := sess.GetLastFrameData()
+	if frameData != nil {
+		// 目前只支持 JPEG 格式
+		// 后续支持其他格式时，在这里添加相应的处理逻辑
+		return resp(map[string]any{
+			"sessionId": sess.SessionId,
+			"imageData": base64.StdEncoding.EncodeToString(frameData.FrameData),
+			"sequence":  frameData.SequenceID,
+			"width":     frameData.Width,
+			"height":    frameData.Height,
+			"codec":     frameData.Codec,
+			"timestamp": frameData.Timestamp,
+		}, nil)
+	}
+
+	// 兼容旧版本：获取图像数据
 	imageData := sess.GetLastImageData()
 	if imageData == nil {
 		return resp(nil, nil)
@@ -193,6 +210,7 @@ func (a *App) GetSessionImage(sessionId string) any {
 		"sequence":  sess.UpdatedAt,
 		"width":     sess.ScreenWidth,
 		"height":    sess.ScreenHeight,
+		"codec":     "jpeg",
 	}, nil)
 }
 

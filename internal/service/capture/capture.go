@@ -193,3 +193,10 @@ func GetScreenSize() (width, height int) {
 	bounds := screenshot.GetDisplayBounds(0)
 	return bounds.Dx(), bounds.Dy()
 }
+
+// StopChan 获取停止通道
+func (s *Service) StopChan() <-chan struct{} {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.stopChan
+}

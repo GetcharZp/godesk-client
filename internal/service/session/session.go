@@ -8,21 +8,37 @@ import (
 	"go.uber.org/zap"
 )
 
-type Session struct {
-	SessionId     string `json:"sessionId"`
-	DeviceCode    uint64 `json:"deviceCode"`
-	DeviceName    string `json:"deviceName"`
-	ViewOnly      bool   `json:"viewOnly"`
-	Status        string `json:"status"`
-	ScreenWidth   int32  `json:"screenWidth"`
-	ScreenHeight  int32  `json:"screenHeight"`
-	LastImageData []byte `json:"-"`
-	CreatedAt     int64  `json:"createdAt"`
-	UpdatedAt     int64  `json:"updatedAt"`
-	TargetUUID    string `json:"targetUuid"` // 被控端UUID，用于接收屏幕数据
+// FrameData 帧数据（支持多种编码格式）
+type FrameData struct {
+	SequenceID uint64 `json:"sequenceId"`
+	FrameData  []byte `json:"frameData"`
+	Codec      string `json:"codec"`
+	Width      int32  `json:"width"`
+	Height     int32  `json:"height"`
+	Timestamp  int64  `json:"timestamp"`
+	FrameType  int32  `json:"frameType"`
+	ExtraData  []byte `json:"extraData"`
+}
 
-	// 运行时字段，不序列化
-	imageMux sync.RWMutex `json:"-"`
+type Session struct {
+	SessionId    string `json:"sessionId"`
+	DeviceCode   uint64 `json:"deviceCode"`
+	DeviceName   string `json:"deviceName"`
+	ViewOnly     bool   `json:"viewOnly"`
+	Status       string `json:"status"`
+	ScreenWidth  int32  `json:"screenWidth"`
+	ScreenHeight int32  `json:"screenHeight"`
+	CreatedAt    int64  `json:"createdAt"`
+	UpdatedAt    int64  `json:"updatedAt"`
+	TargetUUID   string `json:"targetUuid"` // 被控端UUID，用于接收屏幕数据
+
+	// 帧数据（支持视频流）
+	lastFrameData *FrameData   `json:"-"`
+	frameMux      sync.RWMutex `json:"-"`
+
+	// 兼容旧版本的图像数据
+	LastImageData []byte       `json:"-"`
+	imageMux      sync.RWMutex `json:"-"`
 }
 
 var (
@@ -116,7 +132,7 @@ func RemoveSession(sessionId string) {
 	logger.Info("[session] removed.", zap.String("sessionId", sessionId))
 }
 
-// SetLastImageData 设置最后的图像数据
+// SetLastImageData 设置最后的图像数据（兼容旧版本）
 func (s *Session) SetLastImageData(data []byte) {
 	s.imageMux.Lock()
 	defer s.imageMux.Unlock()
@@ -124,11 +140,33 @@ func (s *Session) SetLastImageData(data []byte) {
 	s.UpdatedAt = time.Now().Unix()
 }
 
-// GetLastImageData 获取最后的图像数据
+// GetLastImageData 获取最后的图像数据（兼容旧版本）
 func (s *Session) GetLastImageData() []byte {
 	s.imageMux.RLock()
 	defer s.imageMux.RUnlock()
 	return s.LastImageData
+}
+
+// SetLastFrameData 设置最后的帧数据（支持视频流）
+func (s *Session) SetLastFrameData(frame *FrameData) {
+	s.frameMux.Lock()
+	defer s.frameMux.Unlock()
+	s.lastFrameData = frame
+	s.UpdatedAt = time.Now().Unix()
+
+	// 同时更新兼容字段（如果是 JPEG 格式）
+	if frame != nil && frame.Codec == "jpeg" {
+		s.imageMux.Lock()
+		s.LastImageData = frame.FrameData
+		s.imageMux.Unlock()
+	}
+}
+
+// GetLastFrameData 获取最后的帧数据（支持视频流）
+func (s *Session) GetLastFrameData() *FrameData {
+	s.frameMux.RLock()
+	defer s.frameMux.RUnlock()
+	return s.lastFrameData
 }
 
 func saveSessions() {
