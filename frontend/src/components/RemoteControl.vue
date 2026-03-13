@@ -133,6 +133,7 @@
               @wheel="handleMouseWheel"
               @keydown="handleKeyDown"
               @keyup="handleKeyUp"
+              @contextmenu.prevent="handleContextMenu"
               tabindex="0"
               :class="{ 'control-mode': !currentSession.viewOnly && currentSession.status === 'connected' }"
             ></canvas>
@@ -608,6 +609,21 @@ const handleMouseWheel = (e) => {
   e.preventDefault()
   const { x, y } = convertToScreenCoordinates(e.clientX, e.clientY)
   sendMouseScroll(currentSession.value.sessionId, x, y, e.deltaX, e.deltaY)
+}
+
+// 右键菜单事件处理 - 阻止默认菜单并发送右键点击
+const handleContextMenu = (e) => {
+  if (!currentSession.value || currentSession.value.viewOnly || currentSession.value.status !== 'connected') return
+
+  // 阻止默认右键菜单
+  e.preventDefault()
+
+  // 发送右键按下和释放事件
+  const { x, y } = convertToScreenCoordinates(e.clientX, e.clientY)
+  sendMouseClick(currentSession.value.sessionId, x, y, 2, 'down')
+  setTimeout(() => {
+    sendMouseClick(currentSession.value.sessionId, x, y, 2, 'up')
+  }, 50)
 }
 
 // 键盘映射表：将 JavaScript key 转换为 robotgo 支持的键名
