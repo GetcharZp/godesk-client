@@ -566,12 +566,17 @@ const convertToScreenCoordinates = (clientX, clientY) => {
   const rect = canvas.getBoundingClientRect()
 
   // 计算在 canvas 中的相对位置（0-1 之间）
+  // 使用 canvas 的 CSS 显示尺寸计算相对位置
   const relativeX = (clientX - rect.left) / rect.width
   const relativeY = (clientY - rect.top) / rect.height
 
   // 转换为原始屏幕坐标
-  const screenX = Math.round(relativeX * currentSession.value.screenWidth)
-  const screenY = Math.round(relativeY * currentSession.value.screenHeight)
+  // 使用 canvas 的实际分辨率（width/height 属性）进行映射
+  const canvasActualWidth = canvas.width
+  const canvasActualHeight = canvas.height
+
+  const screenX = Math.round(relativeX * canvasActualWidth)
+  const screenY = Math.round(relativeY * canvasActualHeight)
 
   return { x: screenX, y: screenY }
 }
