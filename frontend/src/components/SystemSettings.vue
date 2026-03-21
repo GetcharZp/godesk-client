@@ -15,6 +15,16 @@
         </div>
       </div>
 
+      <!-- AccessToken 配置 -->
+      <div class="form-item">
+        <label class="form-label">AccessToken</label>
+        <div class="form-input-wrapper">
+          <input type="password" v-model="config.access_token" placeholder="请输入 AccessToken"
+            class="form-input" />
+          <span class="input-hint">用于后端请求验证，为空时不发送</span>
+        </div>
+      </div>
+
       <div class="form-actions">
         <button class="btn-save" @click="handleSave">
           {{ '保存设置' }}
@@ -32,7 +42,8 @@ import { getSysConfig, saveSysConfig, reconnect } from '../api/sys.js'
 
 // 配置对象
 const config = reactive({
-  service_address: ''
+  service_address: '',
+  access_token: ''
 })
 
 onMounted(async () => {

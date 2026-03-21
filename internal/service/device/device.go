@@ -15,7 +15,7 @@ import (
 )
 
 func (in *Service) ClientInit() {
-	ctx = context.Background()
+	ctx = common.WithAuthorization(context.Background())
 	client = pb.NewDeviceServiceClient(define.GrpcConn)
 }
 
@@ -72,9 +72,7 @@ func (in *Service) Info() (*Info, error) {
 
 // List 获取设备列表
 func (in *Service) List() ([]*pb.DeviceListItem, error) {
-	authCtx := common.WithAuthorization(ctx)
-
-	response, err := client.GetDeviceList(authCtx, &pb.DeviceListRequest{
+	response, err := client.GetDeviceList(ctx, &pb.DeviceListRequest{
 		Base: &pb.BaseRequest{},
 	})
 	if err != nil {
@@ -95,9 +93,7 @@ func GetDeviceList() ([]*pb.DeviceListItem, error) {
 
 // Add 添加设备
 func (in *Service) Add(req *pb.AddDeviceRequest) error {
-	authCtx := common.WithAuthorization(ctx)
-
-	_, err := client.AddDevice(authCtx, req)
+	_, err := client.AddDevice(ctx, req)
 	if err != nil {
 		logger.Error("[sys] add device error.", zap.Error(err))
 		return err
@@ -108,9 +104,7 @@ func (in *Service) Add(req *pb.AddDeviceRequest) error {
 
 // Edit 编辑设备
 func (in *Service) Edit(req *pb.EditDeviceRequest) error {
-	authCtx := common.WithAuthorization(ctx)
-
-	_, err := client.EditDevice(authCtx, req)
+	_, err := client.EditDevice(ctx, req)
 	if err != nil {
 		logger.Error("[sys] edit device error.", zap.Error(err))
 		return err
@@ -121,9 +115,7 @@ func (in *Service) Edit(req *pb.EditDeviceRequest) error {
 
 // Delete 删除设备
 func (in *Service) Delete(req *pb.DeleteDeviceRequest) error {
-	authCtx := common.WithAuthorization(ctx)
-
-	_, err := client.DeleteDevice(authCtx, req)
+	_, err := client.DeleteDevice(ctx, req)
 	if err != nil {
 		logger.Error("[sys] delete device error.", zap.Error(err))
 		return err

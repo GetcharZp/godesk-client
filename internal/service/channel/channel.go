@@ -14,6 +14,7 @@ import (
 
 	"github.com/go-vgo/robotgo"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/metadata"
 )
 
 var (
@@ -26,16 +27,31 @@ var (
 
 func (in *Service) ClientInit(c pb.ChannelServiceClient) {
 	var err error
-	ctx, cancelFunc = context.WithCancel(context.Background())
+
+	// 获取系统配置
+	sysConfig, err := common.GetSysConfig()
+	if err != nil || sysConfig == nil {
+		logger.Error("[sys] get sys config error.", zap.Error(err))
+		return
+	}
+
+	myUUID = sysConfig.Uuid
+
+	// 创建带有 AccessToken 的 context
+	baseCtx := context.Background()
+	if sysConfig.AccessToken != "" {
+		md := metadata.New(map[string]string{
+			"accesstoken": sysConfig.AccessToken,
+		})
+		baseCtx = metadata.NewOutgoingContext(baseCtx, md)
+	}
+
+	ctx, cancelFunc = context.WithCancel(baseCtx)
 	stream, err = c.DataStream(ctx)
 	if err != nil {
 		logger.Error("[sys] stream init error.", zap.Error(err))
 		return
 	}
-
-	// 获取本机UUID
-	sysConfig, _ := common.GetSysConfig()
-	myUUID = sysConfig.Uuid
 
 	// 发送设备注册消息
 	in.sendRegister()

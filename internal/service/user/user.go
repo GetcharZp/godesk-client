@@ -11,7 +11,7 @@ import (
 )
 
 func (in *Service) ClientInit() {
-	ctx = context.Background()
+	ctx = common.WithAuthorization(context.Background())
 	client = pb.NewUserServiceClient(define.GrpcConn)
 }
 
@@ -23,7 +23,7 @@ func (in *Service) GetUserInfo() (*pb.UserInfoResponse, error) {
 		logger.Error("[sys] read sys config error.", zap.Error(err))
 		return reply, nil
 	}
-	response, err := client.GetUserInfo(common.WithAuthorization(ctx), &pb.EmptyRequest{})
+	response, err := client.GetUserInfo(ctx, &pb.EmptyRequest{})
 	if err != nil {
 		logger.Error("[sys] get user info error.", zap.Error(err))
 		return nil, err
