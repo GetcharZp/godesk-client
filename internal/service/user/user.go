@@ -2,8 +2,10 @@ package user
 
 import (
 	"context"
+	"errors"
 	"godesk-client/internal/define"
 	"godesk-client/internal/logger"
+	"godesk-client/internal/service/cache"
 	"godesk-client/internal/service/common"
 	pb "godesk-client/proto"
 
@@ -11,25 +13,25 @@ import (
 )
 
 func (in *Service) ClientInit() {
-	ctx = common.WithAuthorization(context.Background())
 	client = pb.NewUserServiceClient(define.GrpcConn)
 }
 
 // GetUserInfo 获取用户信息
 func (in *Service) GetUserInfo() (*pb.UserInfoResponse, error) {
 	reply := &pb.UserInfoResponse{}
-	sysConfig, err := common.GetSysConfig()
-	if err != nil || sysConfig.Token == "" {
-		logger.Error("[sys] read sys config error.", zap.Error(err))
-		return reply, nil
+	sysConfig := cache.GetSysConfig()
+
+	if sysConfig.Token == "" {
+		logger.Error("[sys] user token is empty.")
+		return reply, errors.New("user token is empty")
 	}
-	response, err := client.GetUserInfo(ctx, &pb.EmptyRequest{})
+	response, err := client.GetUserInfo(common.WithAuthorization(context.Background()), &pb.EmptyRequest{})
 	if err != nil {
 		logger.Error("[sys] get user info error.", zap.Error(err))
 		return nil, err
 	}
 	sysConfig.Token = response.Token
-	if err := common.SaveSysConfig(sysConfig); err != nil {
+	if err := sysConfig.Updates(); err != nil {
 		logger.Error("[sys] save sys config error.", zap.Error(err))
 		return nil, err
 	}
@@ -38,7 +40,7 @@ func (in *Service) GetUserInfo() (*pb.UserInfoResponse, error) {
 
 // Login 用户登录
 func (in *Service) Login(req *pb.UserLoginRequest) (*pb.UserInfoResponse, error) {
-	response, err := client.UserLogin(ctx, req)
+	response, err := client.UserLogin(common.WithAuthorization(context.Background()), req)
 	if err != nil {
 		logger.Error("[sys] user login error.", zap.Error(err))
 		return nil, err
@@ -51,7 +53,7 @@ func (in *Service) Login(req *pb.UserLoginRequest) (*pb.UserInfoResponse, error)
 
 // Register 用户注册
 func (in *Service) Register(req *pb.UserRegisterRequest) (*pb.UserInfoResponse, error) {
-	response, err := client.UserRegister(ctx, req)
+	response, err := client.UserRegister(common.WithAuthorization(context.Background()), req)
 	if err != nil {
 		logger.Error("[sys] user register error.", zap.Error(err))
 		return nil, err
@@ -72,16 +74,13 @@ func (in *Service) Logout() (any, error) {
 
 // updateSysConfig 更新系统配置
 func (in *Service) updateSysConfig(data *pb.UserInfoResponse) error {
-	sysConfig, err := common.GetSysConfig()
-	if err != nil {
-		logger.Error("[sys] read sys config error.", zap.Error(err))
-		return err
-	}
+	sysConfig := cache.GetSysConfig()
 	sysConfig.Username = data.Username
 	sysConfig.Token = data.Token
-	if err := common.SaveSysConfig(sysConfig); err != nil {
+	if err := sysConfig.Updates(); err != nil {
 		logger.Error("[sys] save sys config error.", zap.Error(err))
 		return err
 	}
+	cache.ClearSysConfig()
 	return nil
 }

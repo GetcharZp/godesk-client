@@ -2,10 +2,11 @@ package main
 
 import (
 	"embed"
+	"godesk-client/internal"
+
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
-	"godesk-client/internal"
 )
 
 //go:embed all:frontend/dist

@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"godesk-client/internal/logger"
-	"godesk-client/internal/service/common"
+	"godesk-client/internal/service/cache"
 	"godesk-client/internal/service/screen"
 	"godesk-client/internal/service/session"
 	"godesk-client/internal/utils"
@@ -29,11 +29,7 @@ func (in *Service) ClientInit(c pb.ChannelServiceClient) {
 	var err error
 
 	// 获取系统配置
-	sysConfig, err := common.GetSysConfig()
-	if err != nil || sysConfig == nil {
-		logger.Error("[sys] get sys config error.", zap.Error(err))
-		return
-	}
+	sysConfig := cache.GetSysConfig()
 
 	myUUID = sysConfig.Uuid
 
@@ -65,11 +61,7 @@ func (in *Service) ClientInit(c pb.ChannelServiceClient) {
 
 // sendRegister 发送设备注册消息
 func (in *Service) sendRegister() {
-	sysConfig, err := common.GetSysConfig()
-	if err != nil {
-		logger.Error("[sys] get sys config error.", zap.Error(err))
-		return
-	}
+	sysConfig := cache.GetSysConfig()
 
 	registerData := &pb.RegisterData{
 		Os:         runtime.GOOS,
@@ -110,11 +102,7 @@ func (in *Service) startHeartbeat() {
 
 // sendHeartbeat 发送心跳
 func (in *Service) sendHeartbeat() {
-	sysConfig, err := common.GetSysConfig()
-	if err != nil {
-		logger.Error("[sys] get sys config error.", zap.Error(err))
-		return
-	}
+	sysConfig := cache.GetSysConfig()
 
 	heartbeatData := &pb.HeartbeatData{
 		Timestamp: time.Now().UnixMilli(),
@@ -194,7 +182,7 @@ func (in *Service) handleControlStartedRequest(req *pb.ChannelRequest) {
 		zap.Bool("requestControl", data.RequestControl))
 
 	// 验证密码
-	sysConfig, _ := common.GetSysConfig()
+	sysConfig := cache.GetSysConfig()
 	if data.TargetPassword != sysConfig.Password {
 		logger.Warn("[sys] password verification failed.")
 		// 发送拒绝响应

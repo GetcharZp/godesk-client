@@ -3,7 +3,6 @@ package control
 import (
 	"godesk-client/internal/logger"
 	"godesk-client/internal/service/channel"
-	"godesk-client/internal/service/common"
 	"godesk-client/internal/service/session"
 	"time"
 
@@ -12,12 +11,6 @@ import (
 
 // SendControlRequest 发送控制请求
 func (in *Service) SendControlRequest(targetDeviceCode uint64, targetPassword string, requestControl bool) (string, error) {
-	_, err := common.GetSysConfig()
-	if err != nil {
-		logger.Error("[control] get sys config error.", zap.Error(err))
-		return "", err
-	}
-
 	// 生成请求ID
 	requestID := time.Now().Format("20060102150405") + string(rune(time.Now().UnixNano()%1000))
 

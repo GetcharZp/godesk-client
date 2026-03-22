@@ -3,9 +3,10 @@ package internal
 import (
 	"godesk-client/internal/define"
 	"godesk-client/internal/logger"
+	"godesk-client/internal/service/cache"
 	"godesk-client/internal/service/channel"
-	"godesk-client/internal/service/common"
 	"godesk-client/internal/service/device"
+	"godesk-client/internal/service/models"
 	"godesk-client/internal/service/session"
 	"godesk-client/internal/service/user"
 	pb "godesk-client/proto"
@@ -23,7 +24,8 @@ var rpcClientOnce sync.Once
 func NewService() {
 	// 初始化日志
 	logger.NewLogger()
-	// 初始化配置
+	// 初始化数据库
+	models.InitDB()
 
 	// 加载会话
 	session.LoadSessions()
@@ -36,11 +38,8 @@ func NewService() {
 
 func newRpcClient() {
 	// 从配置中获取服务地址
-	sysConfig, err := common.GetSysConfig()
-	if err != nil {
-		logger.Error("[sys] get sys config error.", zap.Error(err))
-		return
-	}
+	sysConfig := cache.GetSysConfig()
+	var err error
 
 	define.GrpcConn, err = grpc.NewClient(sysConfig.ServiceAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {

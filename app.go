@@ -7,10 +7,11 @@ import (
 	"godesk-client/internal"
 	"godesk-client/internal/define"
 	"godesk-client/internal/logger"
+	"godesk-client/internal/service/cache"
 	"godesk-client/internal/service/channel"
-	"godesk-client/internal/service/common"
 	"godesk-client/internal/service/control"
 	"godesk-client/internal/service/device"
+	"godesk-client/internal/service/models"
 	"godesk-client/internal/service/session"
 	"godesk-client/internal/service/sys"
 	"godesk-client/internal/service/user"
@@ -105,12 +106,14 @@ func (a *App) DeleteDevice(req *pb.DeleteDeviceRequest) any {
 
 // GetSysConfig 获取系统配置
 func (a *App) GetSysConfig() any {
-	return resp(common.GetSysConfig())
+	return resp(cache.GetSysConfig(), nil)
 }
 
 // SaveSysConfig 保存系统配置
-func (a *App) SaveSysConfig(cfg *define.SysConfig) any {
-	return resp(nil, common.SaveSysConfig(cfg))
+func (a *App) SaveSysConfig(cfg *models.SysConfig) any {
+	cfg.Updates()
+	cache.ClearSysConfig()
+	return resp(nil, nil)
 }
 
 // Reconnect 重新连接服务

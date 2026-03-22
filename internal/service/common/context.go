@@ -2,18 +2,14 @@ package common
 
 import (
 	"context"
-	"go.uber.org/zap"
-	"godesk-client/internal/logger"
+	"godesk-client/internal/service/cache"
+
 	"google.golang.org/grpc/metadata"
 )
 
 // WithAuthorization 添加认证信息
 func WithAuthorization(ctx context.Context) context.Context {
-	sysConfig, err := GetSysConfig()
-	if err != nil {
-		logger.Error("[sys] read sys config error.", zap.Error(err))
-		return ctx
-	}
+	sysConfig := cache.GetSysConfig()
 
 	// 添加 authorization token
 	if sysConfig.Token != "" {

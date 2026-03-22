@@ -2,12 +2,12 @@ package device
 
 import (
 	"context"
-	"errors"
 	"godesk-client/internal/define"
 	"godesk-client/internal/logger"
+	"godesk-client/internal/service/cache"
 	"godesk-client/internal/service/common"
+	"godesk-client/internal/service/models"
 	pb "godesk-client/proto"
-	"io/fs"
 	"runtime"
 
 	"github.com/up-zero/gotool/randomutil"
@@ -15,19 +15,17 @@ import (
 )
 
 func (in *Service) ClientInit() {
-	ctx = common.WithAuthorization(context.Background())
 	client = pb.NewDeviceServiceClient(define.GrpcConn)
 }
 
 // Info 设备信息
 func (in *Service) Info() (*Info, error) {
-	sysConfig, err := common.GetSysConfig()
-	if (err != nil && errors.Is(err, fs.ErrNotExist)) ||
-		sysConfig == nil || sysConfig.Uuid == "" {
+	sysConfig := cache.GetSysConfig()
+	if sysConfig == nil || sysConfig.Uuid == "" {
 
 		// 配置文件不存在
 		password := randomutil.RandomAlphaNumber(8)
-		response, err := client.CreateDevice(ctx, &pb.CreateDeviceRequest{
+		response, err := client.CreateDevice(common.WithAuthorization(context.Background()), &pb.CreateDeviceRequest{
 			Os: runtime.GOOS,
 		})
 		if err != nil {
@@ -35,10 +33,10 @@ func (in *Service) Info() (*Info, error) {
 			return nil, err
 		}
 		// 保存配置文件
-		if err := common.SaveSysConfig(&define.SysConfig{
+		if err := (&models.SysConfig{
 			Uuid:     response.GetUuid(),
 			Password: password,
-		}); err != nil {
+		}).Updates(); err != nil {
 			logger.Error("[sys] save sys config error.", zap.Error(err))
 			return nil, err
 		}
@@ -49,12 +47,9 @@ func (in *Service) Info() (*Info, error) {
 			Password: password,
 			Uuid:     response.GetUuid(),
 		}, nil
-	} else if err != nil {
-		logger.Error("[sys] read sys config error.", zap.Error(err))
-		return nil, err
 	}
 	// 获取设备信息
-	deviceInfo, err := client.GetDeviceInfo(ctx, &pb.DeviceInfoRequest{
+	deviceInfo, err := client.GetDeviceInfo(common.WithAuthorization(context.Background()), &pb.DeviceInfoRequest{
 		Uuid: sysConfig.Uuid,
 	})
 	if err != nil {
@@ -72,7 +67,7 @@ func (in *Service) Info() (*Info, error) {
 
 // List 获取设备列表
 func (in *Service) List() ([]*pb.DeviceListItem, error) {
-	response, err := client.GetDeviceList(ctx, &pb.DeviceListRequest{
+	response, err := client.GetDeviceList(common.WithAuthorization(context.Background()), &pb.DeviceListRequest{
 		Base: &pb.BaseRequest{},
 	})
 	if err != nil {
@@ -93,7 +88,7 @@ func GetDeviceList() ([]*pb.DeviceListItem, error) {
 
 // Add 添加设备
 func (in *Service) Add(req *pb.AddDeviceRequest) error {
-	_, err := client.AddDevice(ctx, req)
+	_, err := client.AddDevice(common.WithAuthorization(context.Background()), req)
 	if err != nil {
 		logger.Error("[sys] add device error.", zap.Error(err))
 		return err
@@ -104,7 +99,7 @@ func (in *Service) Add(req *pb.AddDeviceRequest) error {
 
 // Edit 编辑设备
 func (in *Service) Edit(req *pb.EditDeviceRequest) error {
-	_, err := client.EditDevice(ctx, req)
+	_, err := client.EditDevice(common.WithAuthorization(context.Background()), req)
 	if err != nil {
 		logger.Error("[sys] edit device error.", zap.Error(err))
 		return err
@@ -115,7 +110,7 @@ func (in *Service) Edit(req *pb.EditDeviceRequest) error {
 
 // Delete 删除设备
 func (in *Service) Delete(req *pb.DeleteDeviceRequest) error {
-	_, err := client.DeleteDevice(ctx, req)
+	_, err := client.DeleteDevice(common.WithAuthorization(context.Background()), req)
 	if err != nil {
 		logger.Error("[sys] delete device error.", zap.Error(err))
 		return err

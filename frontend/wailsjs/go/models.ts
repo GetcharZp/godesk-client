@@ -1,34 +1,3 @@
-export namespace define {
-	
-	export class SysConfig {
-	    username: string;
-	    token: string;
-	    uuid: string;
-	    password: string;
-	    service_address: string;
-	    access_token: string;
-	    code: number;
-	    sessions: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new SysConfig(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.username = source["username"];
-	        this.token = source["token"];
-	        this.uuid = source["uuid"];
-	        this.password = source["password"];
-	        this.service_address = source["service_address"];
-	        this.access_token = source["access_token"];
-	        this.code = source["code"];
-	        this.sessions = source["sessions"];
-	    }
-	}
-
-}
-
 export namespace godesk {
 	
 	export class AddDeviceRequest {
@@ -103,6 +72,39 @@ export namespace godesk {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.username = source["username"];
 	        this.password = source["password"];
+	    }
+	}
+
+}
+
+export namespace models {
+	
+	export class SysConfig {
+	    ID: number;
+	    username: string;
+	    token: string;
+	    uuid: string;
+	    password: string;
+	    service_address: string;
+	    access_token: string;
+	    code: number;
+	    sessions: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new SysConfig(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.ID = source["ID"];
+	        this.username = source["username"];
+	        this.token = source["token"];
+	        this.uuid = source["uuid"];
+	        this.password = source["password"];
+	        this.service_address = source["service_address"];
+	        this.access_token = source["access_token"];
+	        this.code = source["code"];
+	        this.sessions = source["sessions"];
 	    }
 	}
 
