@@ -22,7 +22,6 @@ func (in *Service) ClientInit() {
 func (in *Service) Info() (*Info, error) {
 	sysConfig := cache.GetSysConfig()
 	if sysConfig == nil || sysConfig.Uuid == "" {
-
 		// 配置文件不存在
 		password := randomutil.RandomAlphaNumber(8)
 		response, err := client.CreateDevice(common.WithAuthorization(context.Background()), &pb.CreateDeviceRequest{
@@ -33,10 +32,10 @@ func (in *Service) Info() (*Info, error) {
 			return nil, err
 		}
 		// 保存配置文件
-		if err := (&models.SysConfig{
+		if err := common.UpdateSysConfig(&models.SysConfig{
 			Uuid:     response.GetUuid(),
 			Password: password,
-		}).Updates(); err != nil {
+		}); err != nil {
 			logger.Error("[sys] save sys config error.", zap.Error(err))
 			return nil, err
 		}

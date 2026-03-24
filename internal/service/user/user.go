@@ -31,7 +31,7 @@ func (in *Service) GetUserInfo() (*pb.UserInfoResponse, error) {
 		return nil, err
 	}
 	sysConfig.Token = response.Token
-	if err := sysConfig.Updates(); err != nil {
+	if err := common.UpdateSysConfig(sysConfig); err != nil {
 		logger.Error("[sys] save sys config error.", zap.Error(err))
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (in *Service) updateSysConfig(data *pb.UserInfoResponse) error {
 	sysConfig := cache.GetSysConfig()
 	sysConfig.Username = data.Username
 	sysConfig.Token = data.Token
-	if err := sysConfig.Updates(); err != nil {
+	if err := common.UpdateSysConfig(sysConfig); err != nil {
 		logger.Error("[sys] save sys config error.", zap.Error(err))
 		return err
 	}

@@ -9,6 +9,7 @@ import (
 	"godesk-client/internal/logger"
 	"godesk-client/internal/service/cache"
 	"godesk-client/internal/service/channel"
+	"godesk-client/internal/service/common"
 	"godesk-client/internal/service/control"
 	"godesk-client/internal/service/device"
 	"godesk-client/internal/service/models"
@@ -111,9 +112,7 @@ func (a *App) GetSysConfig() any {
 
 // SaveSysConfig 保存系统配置
 func (a *App) SaveSysConfig(cfg *models.SysConfig) any {
-	cfg.Updates()
-	cache.ClearSysConfig()
-	return resp(nil, nil)
+	return resp(nil, common.UpdateSysConfig(cfg))
 }
 
 // Reconnect 重新连接服务
