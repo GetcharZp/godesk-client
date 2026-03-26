@@ -1,11 +1,10 @@
 <template>
   <div class="remote-control-page" :class="{ 'has-session': activeSessions.length > 0, 'sidebar-collapsed': isSidebarCollapsed && activeSessions.length > 0 }">
-    <div class="header">
-      <h2 class="page-title">远程控制</h2>
-    </div>
-
     <div class="content-wrapper">
       <div class="main-section" :class="{ centered: activeSessions.length === 0, collapsed: isSidebarCollapsed && activeSessions.length > 0 }">
+        <div class="header">
+          <h2 class="page-title">远程控制</h2>
+        </div>
         <!-- 收起/展开按钮 -->
         <button
           v-if="activeSessions.length > 0"
@@ -735,7 +734,7 @@ watch(currentSessionId, (newSessionId) => {
 
 <style scoped>
 .remote-control-page {
-  max-width: 1200px;
+  max-width: 800px;
   margin: 0 auto;
   height: calc(100vh - 40px);
   display: flex;
@@ -748,7 +747,7 @@ watch(currentSessionId, (newSessionId) => {
 
 .header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   margin-bottom: 20px;
   flex-shrink: 0;
@@ -768,7 +767,8 @@ watch(currentSessionId, (newSessionId) => {
 }
 
 .main-section {
-  width: 400px;
+  width: 100%;
+  max-width: 800px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -780,7 +780,8 @@ watch(currentSessionId, (newSessionId) => {
 }
 
 .main-section.centered {
-  width: 480px;
+  width: 100%;
+  max-width: 800px;
   margin: 0 auto;
 }
 
