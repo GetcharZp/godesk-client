@@ -8,6 +8,14 @@ export const getAllSessions = () => {
     return Promise.resolve({ code: 200, data: [] })
 }
 
+// 获取远程控制类型的会话
+export const getControlSessions = () => {
+    if (window.go?.main?.App?.GetControlSessions) {
+        return window.go.main.App.GetControlSessions()
+    }
+    return Promise.resolve({ code: 200, data: [] })
+}
+
 // 获取单个会话
 export const getSession = (sessionId) => {
     if (window.go?.main?.App?.GetSession) {
@@ -24,10 +32,26 @@ export const getSessionByDeviceCode = (deviceCode) => {
     return Promise.resolve({ code: 200, data: null })
 }
 
+// 根据设备码获取远程控制类型的会话
+export const getControlSessionByDeviceCode = (deviceCode) => {
+    if (window.go?.main?.App?.GetControlSessionByDeviceCode) {
+        return window.go.main.App.GetControlSessionByDeviceCode(deviceCode)
+    }
+    return Promise.resolve({ code: 200, data: null })
+}
+
+// 根据设备码获取文件访问类型的会话
+export const getFileSessionByDeviceCode = (deviceCode) => {
+    if (window.go?.main?.App?.GetFileSessionByDeviceCode) {
+        return window.go.main.App.GetFileSessionByDeviceCode(deviceCode)
+    }
+    return Promise.resolve({ code: 200, data: null })
+}
+
 // 创建会话
-export const createSession = (sessionId, deviceCode, deviceName, viewOnly) => {
+export const createSession = (sessionId, deviceCode, deviceName, viewOnly, sessionType) => {
     if (window.go?.main?.App?.CreateSession) {
-        return window.go.main.App.CreateSession(sessionId, deviceCode, deviceName, viewOnly)
+        return window.go.main.App.CreateSession(sessionId, deviceCode, deviceName, viewOnly, sessionType)
     }
     return Promise.resolve({ code: 200, data: { sessionId } })
 }

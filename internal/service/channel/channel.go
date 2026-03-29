@@ -3,8 +3,10 @@ package channel
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"godesk-client/internal/logger"
 	"godesk-client/internal/service/cache"
+	"godesk-client/internal/service/file"
 	"godesk-client/internal/service/screen"
 	"godesk-client/internal/service/session"
 	"godesk-client/internal/utils"
@@ -143,6 +145,8 @@ func (in *Service) ReceiveDataHandle() {
 
 // handleMessage 处理接收到的消息
 func (in *Service) handleMessage(req *pb.ChannelRequest) {
+	logger.Info("[sys] received message.", zap.String("key", req.Key), zap.String("from", req.SendClientUuid), zap.String("to", req.TargetClientUuid))
+
 	switch req.Key {
 	case "control_started_request":
 		in.handleControlStartedRequest(req)
@@ -164,6 +168,10 @@ func (in *Service) handleMessage(req *pb.ChannelRequest) {
 		in.handleKeyDown(req)
 	case "key_up":
 		in.handleKeyUp(req)
+	case "file_list_request":
+		in.handleFileListRequest(req)
+	case "file_list_response":
+		in.handleFileListResponse(req)
 	default:
 		logger.Info("[sys] unknown message key.", zap.String("key", req.Key))
 	}
@@ -186,26 +194,31 @@ func (in *Service) handleControlStartedRequest(req *pb.ChannelRequest) {
 	if data.TargetPassword != sysConfig.Password {
 		logger.Warn("[sys] password verification failed.")
 		// 发送拒绝响应
-		in.sendControlStartedResponse(req.SendClientUuid, 2, "")
+		in.sendControlStartedResponse(req.SendClientUuid, 2, "", 0)
 		return
 	}
 
-	// 启动屏幕捕获
-	manager := screen.GetScreenManager()
-	manager.StartCapture(func(frame *screen.FrameData) {
-		in.sendScreenStreamData(req.SendClientUuid, frame)
-	})
+	// 只有请求控制模式才启动屏幕捕获
+	if data.RequestControl {
+		manager := screen.GetScreenManager()
+		manager.StartCapture(func(frame *screen.FrameData) {
+			in.sendScreenStreamData(req.SendClientUuid, frame)
+		})
+		logger.Info("[sys] screen capture started for remote control.")
+	} else {
+		logger.Info("[sys] file access only, no screen capture.")
+	}
 
-	// 发送接受响应
-	in.sendControlStartedResponse(req.SendClientUuid, 0, sysConfig.Uuid)
+	// 发送接受响应，带上 targetCode 以便控制端查找会话
+	in.sendControlStartedResponse(req.SendClientUuid, 0, sysConfig.Uuid, data.TargetCode)
 }
 
 // sendControlStartedResponse 发送控制开始响应
-func (in *Service) sendControlStartedResponse(targetUUID string, code int32, uuid string) {
+func (in *Service) sendControlStartedResponse(targetUUID string, code int32, uuid string, targetCode uint64) {
 	resp := &pb.ControlStartedResponseData{
 		Code:       code,
 		Uuid:       uuid,
-		TargetCode: 0,
+		TargetCode: targetCode,
 	}
 
 	data, _ := json.Marshal(resp)
@@ -217,7 +230,7 @@ func (in *Service) sendControlStartedResponse(targetUUID string, code int32, uui
 	}
 
 	in.SendMessage(req)
-	logger.Info("[sys] control started response sent.", zap.Int32("code", code))
+	logger.Info("[sys] control started response sent.", zap.Int32("code", code), zap.Uint64("targetCode", targetCode))
 }
 
 // handleControlStartedResponse 处理控制开始响应（控制端收到）
@@ -228,16 +241,19 @@ func (in *Service) handleControlStartedResponse(req *pb.ChannelRequest) {
 		return
 	}
 
-	logger.Info("[sys] received control started response.", zap.Int32("code", data.Code), zap.String("uuid", data.Uuid))
+	logger.Info("[sys] received control started response.", zap.Int32("code", data.Code), zap.String("uuid", data.Uuid), zap.Uint64("targetCode", data.TargetCode))
 
 	if data.Code == 0 {
 		// 控制开始成功，更新会话状态
-		// 根据 deviceCode 查找会话并设置 TargetUUID
-		sess := session.GetSessionByDeviceCode(data.TargetCode)
+		// 先查找控制类型的会话，如果没有再查找文件类型
+		sess := session.GetSessionByDeviceCodeAndType(data.TargetCode, "control")
+		if sess == nil {
+			sess = session.GetSessionByDeviceCodeAndType(data.TargetCode, "file")
+		}
 		if sess != nil {
 			sess.TargetUUID = data.Uuid
 			sess.Status = "connected"
-			logger.Info("[sys] session updated with target UUID.", zap.String("sessionId", sess.SessionId), zap.String("targetUUID", data.Uuid))
+			logger.Info("[sys] session updated with target UUID.", zap.String("sessionId", sess.SessionId), zap.String("targetUUID", data.Uuid), zap.String("sessionType", sess.SessionType))
 		} else {
 			logger.Warn("[sys] no session found for device code.", zap.Uint64("deviceCode", data.TargetCode))
 		}
@@ -736,4 +752,140 @@ func (in *Service) Close() {
 	if stream != nil {
 		stream.CloseSend()
 	}
+}
+
+// ========== 文件管理相关方法 ==========
+
+// SendFileListRequest 发送文件列表请求（控制端调用）
+func SendFileListRequest(targetUUID string, targetCode uint64, path string) error {
+	if stream == nil {
+		logger.Error("[sys] stream is nil, cannot send file list request")
+		return fmt.Errorf("stream is nil")
+	}
+
+	// 如果是本地请求（同一台机器测试），直接本地处理
+	if targetUUID == myUUID {
+		logger.Info("[sys] file list request is local, handling directly.", zap.String("path", path))
+		files, err := file.ListFiles(path)
+		respCode := int32(0)
+		respMsg := "success"
+		if err != nil {
+			respCode = 3
+			respMsg = err.Error()
+		}
+
+		var pbFiles []*pb.FileInfo
+		for _, f := range files {
+			pbFiles = append(pbFiles, &pb.FileInfo{
+				Name:       f.Name,
+				Path:       f.Path,
+				Size:       f.Size,
+				IsDir:      f.IsDir,
+				ModifyTime: f.ModifyTime,
+				Mode:       f.Mode,
+			})
+		}
+
+		resp := &pb.FileListResponseData{
+			Code:        respCode,
+			Message:     respMsg,
+			CurrentPath: path,
+			Files:       pbFiles,
+			Timestamp:   time.Now().UnixMilli(),
+		}
+
+		cache.SetRemoteFileList(myUUID, path, *resp)
+		logger.Info("[sys] local file list handled.", zap.Int("fileCount", len(pbFiles)))
+		return nil
+	}
+
+	reqData := &pb.FileListRequestData{
+		TargetCode: targetCode,
+		Path:       path,
+		Timestamp:  time.Now().UnixMilli(),
+	}
+
+	data, err := json.Marshal(reqData)
+	if err != nil {
+		logger.Error("[sys] marshal file list request error.", zap.Error(err))
+		return err
+	}
+
+	req := &pb.ChannelRequest{
+		SendClientUuid:   myUUID,
+		TargetClientUuid: targetUUID,
+		Key:              "file_list_request",
+		Data:             data,
+	}
+
+	logger.Info("[sys] sending file list request.", zap.String("targetUUID", targetUUID), zap.Uint64("targetCode", targetCode), zap.String("path", path), zap.Int("dataSize", len(data)))
+
+	if err := stream.Send(req); err != nil {
+		logger.Error("[sys] send file list request error.", zap.Error(err))
+		return err
+	}
+
+	logger.Info("[sys] file list request sent.", zap.String("targetUUID", targetUUID), zap.Uint64("targetCode", targetCode), zap.String("path", path))
+	return nil
+}
+
+// handleFileListRequest 处理文件列表请求（被控端收到）
+func (in *Service) handleFileListRequest(req *pb.ChannelRequest) {
+	var data pb.FileListRequestData
+	if err := json.Unmarshal(req.Data, &data); err != nil {
+		logger.Error("[sys] unmarshal file list request error.", zap.Error(err))
+		return
+	}
+
+	logger.Info("[sys] received file list request.", zap.String("path", data.Path))
+
+	files, err := file.ListFiles(data.Path)
+	respCode := int32(0)
+	respMsg := "success"
+	if err != nil {
+		respCode = 3
+		respMsg = err.Error()
+	}
+
+	var pbFiles []*pb.FileInfo
+	for _, f := range files {
+		pbFiles = append(pbFiles, &pb.FileInfo{
+			Name:       f.Name,
+			Path:       f.Path,
+			Size:       f.Size,
+			IsDir:      f.IsDir,
+			ModifyTime: f.ModifyTime,
+			Mode:       f.Mode,
+		})
+	}
+
+	resp := &pb.FileListResponseData{
+		Code:        respCode,
+		Message:     respMsg,
+		CurrentPath: data.Path,
+		Files:       pbFiles,
+		Timestamp:   time.Now().UnixMilli(),
+	}
+
+	respData, _ := json.Marshal(resp)
+	in.SendMessage(&pb.ChannelRequest{
+		SendClientUuid:   myUUID,
+		TargetClientUuid: req.SendClientUuid,
+		Key:              "file_list_response",
+		Data:             respData,
+	})
+	logger.Info("[sys] file list response sent.", zap.Int("fileCount", len(pbFiles)))
+}
+
+// handleFileListResponse 处理文件列表响应（控制端收到）
+func (in *Service) handleFileListResponse(req *pb.ChannelRequest) {
+	var data pb.FileListResponseData
+	if err := json.Unmarshal(req.Data, &data); err != nil {
+		logger.Error("[sys] unmarshal file list response error.", zap.Error(err))
+		return
+	}
+
+	logger.Info("[sys] received file list response.", zap.Int32("code", data.Code), zap.Int("fileCount", len(data.Files)), zap.String("currentPath", data.CurrentPath), zap.String("fromUUID", req.SendClientUuid))
+	cache.SetRemoteFileList(req.SendClientUuid, data.CurrentPath, data)
+	logger.Info("[sys] remote file list cached.", zap.String("cacheKey", req.SendClientUuid+":"+data.CurrentPath))
 }

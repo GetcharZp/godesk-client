@@ -1,10 +1,11 @@
 <template>
   <div class="remote-control-page" :class="{ 'has-session': activeSessions.length > 0, 'sidebar-collapsed': isSidebarCollapsed && activeSessions.length > 0 }">
+    <div class="header">
+      <h2 class="page-title">远程控制</h2>
+    </div>
+
     <div class="content-wrapper">
       <div class="main-section" :class="{ centered: activeSessions.length === 0, collapsed: isSidebarCollapsed && activeSessions.length > 0 }">
-        <div class="header">
-          <h2 class="page-title">远程控制</h2>
-        </div>
         <!-- 收起/展开按钮 -->
         <button
           v-if="activeSessions.length > 0"
@@ -160,7 +161,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { sendControlRequest, disconnectControl, sendMouseMove, sendMouseClick, sendMouseScroll, sendKeyDown, sendKeyUp } from '../api/channel.js'
 import { getDeviceInfo, getDeviceList } from '../api/device.js'
-import { getAllSessions, createSession, removeSession, getSessionByDeviceCode } from '../api/session.js'
+import { getControlSessions, createSession, removeSession, getControlSessionByDeviceCode } from '../api/session.js'
 import { startScreenStream } from '../api/screen.js'
 
 const route = useRoute()
@@ -242,13 +243,20 @@ const fetchDeviceList = async () => {
 
 const loadSessions = async () => {
   try {
-    const res = await getAllSessions()
+    const res = await getControlSessions()
     if (res && res.code === 200 && res.data) {
       // 为每个会话设置 deviceName
       activeSessions.value = (res.data || []).map(sess => ({
         ...sess,
         deviceName: getDeviceDisplayName(sess.deviceCode)
       }))
+      
+      // 如果有活跃会话但没有选中的会话，自动选择第一个
+      if (activeSessions.value.length > 0 && !currentSessionId.value) {
+        currentSessionId.value = activeSessions.value[0].sessionId
+        // 启动屏幕流
+        startSessionScreenStream(currentSessionId.value)
+      }
     }
   } catch (error) {
     console.error('加载会话失败:', error)
@@ -257,7 +265,7 @@ const loadSessions = async () => {
 
 const findSessionByDeviceCode = async (deviceCode) => {
   try {
-    const res = await getSessionByDeviceCode(deviceCode)
+    const res = await getControlSessionByDeviceCode(deviceCode)
     if (res && res.code === 200 && res.data) {
       return res.data
     }
@@ -325,7 +333,7 @@ const doConnect = async (deviceCode, password) => {
       console.log('After setting currentSessionId:', currentSessionId.value, 'currentSession:', currentSession.value)
       
       // 然后从后端加载完整数据（但不覆盖当前选中的会话）
-      const res2 = await getAllSessions()
+      const res2 = await getControlSessions()
       if (res2 && res2.code === 200 && res2.data) {
         // 合并后端数据，保留当前选中的会话
         const backendSessions = res2.data || []
@@ -382,7 +390,13 @@ const startRemoteFile = () => {
     message.error('请输入设备码和密码')
     return
   }
-  message.info('远程文件功能开发中...')
+  router.push({
+    path: '/file-manager',
+    query: {
+      deviceCode: remoteDeviceCode.value,
+      password: remotePassword.value
+    }
+  })
 }
 
 const selectSession = (sessionId) => {
@@ -393,9 +407,13 @@ const selectSession = (sessionId) => {
 
 // 启动会话的屏幕流
 const startSessionScreenStream = (sessionId) => {
-  // 如果已经在接收，先停止
+  // 如果已经在接收，先停止旧的（确保不会有重复的轮询）
   if (screenStreamStopFns.value.has(sessionId)) {
-    return // 已经在接收
+    const oldStopFn = screenStreamStopFns.value.get(sessionId)
+    if (oldStopFn) {
+      oldStopFn()
+    }
+    screenStreamStopFns.value.delete(sessionId)
   }
 
   // 获取 canvas 元素用于视频解码渲染
@@ -714,6 +732,7 @@ onMounted(async () => {
   document.addEventListener('fullscreenchange', handleFullscreenChange)
   await handleRouteQuery()
   // 最后再加载会话列表（包含新连接的会话）
+  // loadSessions 会自动恢复屏幕流
   await loadSessions()
 })
 
@@ -734,7 +753,7 @@ watch(currentSessionId, (newSessionId) => {
 
 <style scoped>
 .remote-control-page {
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
   height: calc(100vh - 40px);
   display: flex;
@@ -747,7 +766,7 @@ watch(currentSessionId, (newSessionId) => {
 
 .header {
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
   flex-shrink: 0;
@@ -767,8 +786,7 @@ watch(currentSessionId, (newSessionId) => {
 }
 
 .main-section {
-  width: 100%;
-  max-width: 800px;
+  width: 400px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -780,8 +798,7 @@ watch(currentSessionId, (newSessionId) => {
 }
 
 .main-section.centered {
-  width: 100%;
-  max-width: 800px;
+  width: 480px;
   margin: 0 auto;
 }
 

@@ -5,7 +5,7 @@ import {models} from '../models';
 
 export function AddDevice(arg1:godesk.AddDeviceRequest):Promise<any>;
 
-export function CreateSession(arg1:string,arg2:number,arg3:string,arg4:boolean):Promise<any>;
+export function CreateSession(arg1:string,arg2:number,arg3:string,arg4:boolean,arg5:string):Promise<any>;
 
 export function DeleteDevice(arg1:godesk.DeleteDeviceRequest):Promise<any>;
 
@@ -17,7 +17,17 @@ export function GetAllSessions():Promise<any>;
 
 export function GetConnectionStatus():Promise<any>;
 
+export function GetControlSessionByDeviceCode(arg1:number):Promise<any>;
+
+export function GetControlSessions():Promise<any>;
+
 export function GetDeviceList():Promise<any>;
+
+export function GetFileSessionByDeviceCode(arg1:number):Promise<any>;
+
+export function GetLocalDrives():Promise<any>;
+
+export function GetRemoteFileList(arg1:string,arg2:string):Promise<any>;
 
 export function GetSession(arg1:string):Promise<any>;
 
@@ -31,9 +41,13 @@ export function GetUserInfo():Promise<any>;
 
 export function Greet(arg1:string):Promise<string>;
 
+export function ListLocalFiles(arg1:string):Promise<any>;
+
 export function Reconnect():Promise<any>;
 
 export function RemoveSession(arg1:string):Promise<any>;
+
+export function RequestRemoteFileList(arg1:string,arg2:string):Promise<any>;
 
 export function SaveSysConfig(arg1:models.SysConfig):Promise<any>;
 

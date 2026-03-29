@@ -8,14 +8,27 @@ export const getSessionImage = (sessionId) => {
     return Promise.resolve({ code: 200, data: null })
 }
 
+// 存储每个会话的轮询状态
+const streamStates = new Map()
+
 // 开始接收屏幕流（返回一个可取消的函数）
 export const startScreenStream = (sessionId, onFrame) => {
-    // 使用轮询方式获取图像数据
-    let isRunning = true
-    let lastSequence = 0
+    // 如果已有该会话的轮询，先停止
+    if (streamStates.has(sessionId)) {
+        const existingState = streamStates.get(sessionId)
+        existingState.isRunning = false
+        streamStates.delete(sessionId)
+    }
+
+    const state = {
+        isRunning: true,
+        lastSequence: 0,
+        pollTimer: null
+    }
+    streamStates.set(sessionId, state)
 
     const poll = async () => {
-        if (!isRunning) return
+        if (!state.isRunning) return
 
         try {
             const res = await getSessionImage(sessionId)
@@ -23,8 +36,8 @@ export const startScreenStream = (sessionId, onFrame) => {
                 const data = res.data
 
                 // 检查是否是新帧
-                if (data.sequence > lastSequence || lastSequence === 0) {
-                    lastSequence = data.sequence || 0
+                if (data.sequence > state.lastSequence || state.lastSequence === 0) {
+                    state.lastSequence = data.sequence || 0
 
                     if (onFrame && data.imageData) {
                         const imageUrl = 'data:image/jpeg;base64,' + data.imageData
@@ -37,8 +50,8 @@ export const startScreenStream = (sessionId, onFrame) => {
         }
 
         // 继续轮询（约 30fps）
-        if (isRunning) {
-            setTimeout(poll, 33)
+        if (state.isRunning) {
+            state.pollTimer = setTimeout(poll, 33)
         }
     }
 
@@ -47,6 +60,10 @@ export const startScreenStream = (sessionId, onFrame) => {
 
     // 返回停止函数
     return () => {
-        isRunning = false
+        state.isRunning = false
+        if (state.pollTimer) {
+            clearTimeout(state.pollTimer)
+        }
+        streamStates.delete(sessionId)
     }
 }

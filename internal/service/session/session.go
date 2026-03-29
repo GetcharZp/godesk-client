@@ -30,7 +30,8 @@ type Session struct {
 	ScreenHeight int32  `json:"screenHeight"`
 	CreatedAt    int64  `json:"createdAt"`
 	UpdatedAt    int64  `json:"updatedAt"`
-	TargetUUID   string `json:"targetUuid"` // 被控端UUID，用于接收屏幕数据
+	TargetUUID   string `json:"targetUuid"`  // 被控端UUID，用于接收屏幕数据
+	SessionType  string `json:"sessionType"` // 会话类型: "control" 远程控制, "file" 文件访问
 
 	// 帧数据（支持视频流）
 	lastFrameData *FrameData   `json:"-"`
@@ -46,13 +47,13 @@ var (
 	sessionsMux sync.RWMutex
 )
 
-func CreateSession(sessionId string, deviceCode uint64, deviceName string, viewOnly bool) *Session {
+func CreateSession(sessionId string, deviceCode uint64, deviceName string, viewOnly bool, sessionType string) *Session {
 	sessionsMux.Lock()
 	defer sessionsMux.Unlock()
 
-	// 检查是否已存在相同 deviceCode 的会话
+	// 检查是否已存在相同 deviceCode 和 sessionType 的会话
 	for _, existingSession := range sessions {
-		if existingSession.DeviceCode == deviceCode {
+		if existingSession.DeviceCode == deviceCode && existingSession.SessionType == sessionType {
 			// 更新现有会话
 			existingSession.SessionId = sessionId
 			existingSession.DeviceName = deviceName
@@ -60,25 +61,26 @@ func CreateSession(sessionId string, deviceCode uint64, deviceName string, viewO
 			existingSession.Status = "connecting"
 			existingSession.UpdatedAt = time.Now().Unix()
 			saveSessions()
-			logger.Info("[session] updated existing.", zap.String("sessionId", sessionId), zap.Uint64("deviceCode", deviceCode))
+			logger.Info("[session] updated existing.", zap.String("sessionId", sessionId), zap.Uint64("deviceCode", deviceCode), zap.String("sessionType", sessionType))
 			return existingSession
 		}
 	}
 
 	session := &Session{
-		SessionId:  sessionId,
-		DeviceCode: deviceCode,
-		DeviceName: deviceName,
-		ViewOnly:   viewOnly,
-		Status:     "connecting",
-		CreatedAt:  time.Now().Unix(),
-		UpdatedAt:  time.Now().Unix(),
+		SessionId:   sessionId,
+		DeviceCode:  deviceCode,
+		DeviceName:  deviceName,
+		ViewOnly:    viewOnly,
+		Status:      "connecting",
+		SessionType: sessionType,
+		CreatedAt:   time.Now().Unix(),
+		UpdatedAt:   time.Now().Unix(),
 	}
 
 	sessions[sessionId] = session
 	saveSessions()
 
-	logger.Info("[session] created.", zap.String("sessionId", sessionId), zap.Uint64("deviceCode", deviceCode))
+	logger.Info("[session] created.", zap.String("sessionId", sessionId), zap.Uint64("deviceCode", deviceCode), zap.String("sessionType", sessionType))
 
 	return session
 }
@@ -94,6 +96,17 @@ func GetSessionByDeviceCode(deviceCode uint64) *Session {
 	defer sessionsMux.RUnlock()
 	for _, session := range sessions {
 		if session.DeviceCode == deviceCode {
+			return session
+		}
+	}
+	return nil
+}
+
+func GetSessionByDeviceCodeAndType(deviceCode uint64, sessionType string) *Session {
+	sessionsMux.RLock()
+	defer sessionsMux.RUnlock()
+	for _, session := range sessions {
+		if session.DeviceCode == deviceCode && session.SessionType == sessionType {
 			return session
 		}
 	}
@@ -118,6 +131,19 @@ func GetAllSessions() []*Session {
 	result := make([]*Session, 0, len(sessions))
 	for _, session := range sessions {
 		result = append(result, session)
+	}
+	return result
+}
+
+func GetSessionsByType(sessionType string) []*Session {
+	sessionsMux.RLock()
+	defer sessionsMux.RUnlock()
+
+	result := make([]*Session, 0)
+	for _, session := range sessions {
+		if session.SessionType == sessionType {
+			result = append(result, session)
+		}
 	}
 	return result
 }

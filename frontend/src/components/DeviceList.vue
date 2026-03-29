@@ -22,6 +22,7 @@
             </span>
             <div class="device-actions">
               <button class="btn-control" @click="handleRemoteControl(device)">远程控制</button>
+              <button class="btn-file" @click="handleRemoteFile(device)">远程文件</button>
               <button class="btn-edit" @click="openEditModal(device)">编辑</button>
               <button class="btn-delete" @click="handleDelete(device)">删除</button>
             </div>
@@ -119,6 +120,21 @@ const handleRemoteControl = (device) => {
       targetCode: device.code,
       targetName: device.remark || device.code,
       targetPassword: device.password
+    }
+  })
+}
+
+// 远程文件
+const handleRemoteFile = (device) => {
+  if (!device.online) {
+    message.warning('设备离线，无法访问远程文件')
+    return
+  }
+  router.push({
+    path: '/file-manager',
+    query: {
+      deviceCode: device.code,
+      password: device.password
     }
   })
 }
@@ -309,6 +325,21 @@ onMounted(() => {
 
 .btn-control:hover {
   background-color: #73d13d;
+}
+
+.btn-file {
+  padding: 5px 12px;
+  background-color: #722ed1;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.3s;
+}
+
+.btn-file:hover {
+  background-color: #9254de;
 }
 
 .btn-edit {

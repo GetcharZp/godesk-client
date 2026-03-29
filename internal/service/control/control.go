@@ -14,9 +14,13 @@ func (in *Service) SendControlRequest(targetDeviceCode uint64, targetPassword st
 	// 生成请求ID
 	requestID := time.Now().Format("20060102150405") + string(rune(time.Now().UnixNano()%1000))
 
-	// 创建会话
+	// 创建会话，根据 requestControl 设置会话类型
 	sessionID := generateSessionID()
-	sess := session.CreateSession(sessionID, targetDeviceCode, "", !requestControl)
+	sessionType := "file"
+	if requestControl {
+		sessionType = "control"
+	}
+	sess := session.CreateSession(sessionID, targetDeviceCode, "", !requestControl, sessionType)
 	sess.Status = "connecting"
 
 	// 发送控制开始请求（通过channel服务的DataStream）
@@ -27,7 +31,8 @@ func (in *Service) SendControlRequest(targetDeviceCode uint64, targetPassword st
 
 	logger.Info("[control] control request sent.",
 		zap.String("requestID", requestID),
-		zap.Uint64("targetDevice", targetDeviceCode))
+		zap.Uint64("targetDevice", targetDeviceCode),
+		zap.String("sessionType", sessionType))
 
 	return sessionID, nil
 }

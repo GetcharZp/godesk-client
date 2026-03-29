@@ -12,6 +12,7 @@ import (
 	"godesk-client/internal/service/common"
 	"godesk-client/internal/service/control"
 	"godesk-client/internal/service/device"
+	"godesk-client/internal/service/file"
 	"godesk-client/internal/service/models"
 	"godesk-client/internal/service/session"
 	"godesk-client/internal/service/sys"
@@ -155,6 +156,11 @@ func (a *App) GetAllSessions() any {
 	return resp(session.GetAllSessions(), nil)
 }
 
+// GetControlSessions 获取远程控制类型的会话
+func (a *App) GetControlSessions() any {
+	return resp(session.GetSessionsByType("control"), nil)
+}
+
 // GetSession 获取单个会话
 func (a *App) GetSession(sessionId string) any {
 	return resp(session.GetSession(sessionId), nil)
@@ -165,9 +171,19 @@ func (a *App) GetSessionByDeviceCode(deviceCode uint64) any {
 	return resp(session.GetSessionByDeviceCode(deviceCode), nil)
 }
 
+// GetControlSessionByDeviceCode 根据设备码获取远程控制类型的会话
+func (a *App) GetControlSessionByDeviceCode(deviceCode uint64) any {
+	return resp(session.GetSessionByDeviceCodeAndType(deviceCode, "control"), nil)
+}
+
+// GetFileSessionByDeviceCode 根据设备码获取文件访问类型的会话
+func (a *App) GetFileSessionByDeviceCode(deviceCode uint64) any {
+	return resp(session.GetSessionByDeviceCodeAndType(deviceCode, "file"), nil)
+}
+
 // CreateSession 创建会话
-func (a *App) CreateSession(sessionId string, deviceCode uint64, deviceName string, viewOnly bool) any {
-	return resp(session.CreateSession(sessionId, deviceCode, deviceName, viewOnly), nil)
+func (a *App) CreateSession(sessionId string, deviceCode uint64, deviceName string, viewOnly bool, sessionType string) any {
+	return resp(session.CreateSession(sessionId, deviceCode, deviceName, viewOnly, sessionType), nil)
 }
 
 // RemoveSession 移除会话
@@ -259,4 +275,38 @@ func (a *App) SendKeyUp(sessionId string, key string, modifiers []string) any {
 		return resp(nil, nil)
 	}
 	return resp(nil, channel.SendKeyUp(sess.TargetUUID, key, modifiers))
+}
+
+// ========== 文件管理相关 API ==========
+
+// ListLocalFiles 获取本地文件列表
+func (a *App) ListLocalFiles(path string) any {
+	files, err := (&file.Service{}).ListLocalFiles(path)
+	return resp(files, err)
+}
+
+// GetLocalDrives 获取本地驱动器列表
+func (a *App) GetLocalDrives() any {
+	drives, err := (&file.Service{}).GetLocalDrives()
+	return resp(drives, err)
+}
+
+// GetRemoteFileList 获取远程文件列表（从缓存）
+func (a *App) GetRemoteFileList(targetUUID string, path string) any {
+	data, ok := cache.GetRemoteFileList(targetUUID, path)
+	if !ok {
+		logger.Info("[app] remote file list not found in cache.", zap.String("targetUUID", targetUUID), zap.String("path", path))
+		return resp(nil, fmt.Errorf("no cached data"))
+	}
+	logger.Info("[app] remote file list found in cache.", zap.String("targetUUID", targetUUID), zap.String("path", path), zap.Int("fileCount", len(data.Files)))
+	return resp(data, nil)
+}
+
+// RequestRemoteFileList 请求远程文件列表
+func (a *App) RequestRemoteFileList(sessionId string, path string) any {
+	sess := session.GetSession(sessionId)
+	if sess == nil || sess.TargetUUID == "" {
+		return resp(nil, fmt.Errorf("session not found or targetUUID is empty"))
+	}
+	return resp(nil, channel.SendFileListRequest(sess.TargetUUID, sess.DeviceCode, path))
 }

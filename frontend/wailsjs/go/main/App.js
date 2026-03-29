@@ -6,8 +6,8 @@ export function AddDevice(arg1) {
   return window['go']['main']['App']['AddDevice'](arg1);
 }
 
-export function CreateSession(arg1, arg2, arg3, arg4) {
-  return window['go']['main']['App']['CreateSession'](arg1, arg2, arg3, arg4);
+export function CreateSession(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['App']['CreateSession'](arg1, arg2, arg3, arg4, arg5);
 }
 
 export function DeleteDevice(arg1) {
@@ -30,8 +30,28 @@ export function GetConnectionStatus() {
   return window['go']['main']['App']['GetConnectionStatus']();
 }
 
+export function GetControlSessionByDeviceCode(arg1) {
+  return window['go']['main']['App']['GetControlSessionByDeviceCode'](arg1);
+}
+
+export function GetControlSessions() {
+  return window['go']['main']['App']['GetControlSessions']();
+}
+
 export function GetDeviceList() {
   return window['go']['main']['App']['GetDeviceList']();
+}
+
+export function GetFileSessionByDeviceCode(arg1) {
+  return window['go']['main']['App']['GetFileSessionByDeviceCode'](arg1);
+}
+
+export function GetLocalDrives() {
+  return window['go']['main']['App']['GetLocalDrives']();
+}
+
+export function GetRemoteFileList(arg1, arg2) {
+  return window['go']['main']['App']['GetRemoteFileList'](arg1, arg2);
 }
 
 export function GetSession(arg1) {
@@ -58,12 +78,20 @@ export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
 
+export function ListLocalFiles(arg1) {
+  return window['go']['main']['App']['ListLocalFiles'](arg1);
+}
+
 export function Reconnect() {
   return window['go']['main']['App']['Reconnect']();
 }
 
 export function RemoveSession(arg1) {
   return window['go']['main']['App']['RemoveSession'](arg1);
+}
+
+export function RequestRemoteFileList(arg1, arg2) {
+  return window['go']['main']['App']['RequestRemoteFileList'](arg1, arg2);
 }
 
 export function SaveSysConfig(arg1) {

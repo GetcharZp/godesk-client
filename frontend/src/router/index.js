@@ -3,6 +3,7 @@ import RemoteControl from "../components/RemoteControl.vue";
 import RemoteSession from "../components/RemoteSession.vue";
 import DeviceList from "../components/DeviceList.vue";
 import SystemSettings from "../components/SystemSettings.vue";
+import FileManager from "../components/FileManager.vue";
 
 const router = createRouter({
     history: createWebHistory(),
@@ -31,6 +32,11 @@ const router = createRouter({
             path: '/system-settings',
             name: 'SystemSettings',
             component: SystemSettings,
+        },
+        {
+            path: '/file-manager',
+            name: 'FileManager',
+            component: FileManager,
         }
     ]
 })
