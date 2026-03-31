@@ -18,6 +18,8 @@ import (
 	"godesk-client/internal/service/sys"
 	"godesk-client/internal/service/user"
 	pb "godesk-client/proto"
+	"os"
+	"time"
 
 	"go.uber.org/zap"
 )
@@ -309,4 +311,174 @@ func (a *App) RequestRemoteFileList(sessionId string, path string) any {
 		return resp(nil, fmt.Errorf("session not found or targetUUID is empty"))
 	}
 	return resp(nil, channel.SendFileListRequest(sess.TargetUUID, sess.DeviceCode, path))
+}
+
+// UploadFile 上传文件到远程设备
+func (a *App) UploadFile(sessionId string, localPath string, remotePath string) any {
+	sess := session.GetSession(sessionId)
+	if sess == nil || sess.TargetUUID == "" {
+		return resp(nil, fmt.Errorf("session not found or targetUUID is empty"))
+	}
+
+	fileInfo, err := file.GetFileInfo(localPath)
+	if err != nil {
+		return resp(nil, fmt.Errorf("failed to get file info: %v", err))
+	}
+
+	if fileInfo.IsDir {
+		return resp(nil, fmt.Errorf("directory upload not supported"))
+	}
+
+	transferId := fmt.Sprintf("%d", time.Now().UnixMilli())
+	chunkSize := int32(64 * 1024) // 64KB
+
+	// 本地测试：直接复制文件
+	if sess.TargetUUID == channel.GetMyUUID() {
+		logger.Info("[app] local upload, copying file directly.", zap.String("localPath", localPath), zap.String("remotePath", remotePath))
+		fileData, err := file.ReadFile(localPath)
+		if err != nil {
+			return resp(nil, fmt.Errorf("failed to read file: %v", err))
+		}
+		if err := file.WriteFile(remotePath, fileData); err != nil {
+			return resp(nil, fmt.Errorf("failed to write file: %v", err))
+		}
+		return resp(map[string]any{
+			"transferId": transferId,
+			"totalSize":  fileInfo.Size,
+			"complete":   true,
+		}, nil)
+	}
+
+	// 初始化发送端进度缓存
+	cache.InitUploadProgress(transferId, fileInfo.Size)
+
+	// 远程上传：发送文件数据
+	if err := channel.SendFileTransferStart(sess.TargetUUID, transferId, "upload", localPath, remotePath, fileInfo.Size, chunkSize); err != nil {
+		cache.ClearFileTransfer(transferId)
+		return resp(nil, err)
+	}
+
+	fileData, err := file.ReadFile(localPath)
+	if err != nil {
+		cache.ClearFileTransfer(transferId)
+		return resp(nil, fmt.Errorf("failed to read file: %v", err))
+	}
+
+	go func() {
+		totalChunks := int32(len(fileData) / int(chunkSize))
+		if len(fileData)%int(chunkSize) != 0 {
+			totalChunks++
+		}
+
+		logger.Info("[app] starting file upload.", zap.String("transferId", transferId), zap.Int32("totalChunks", totalChunks))
+
+		for i := int32(0); i < totalChunks; i++ {
+			start := i * chunkSize
+			end := start + chunkSize
+			if end > int32(len(fileData)) {
+				end = int32(len(fileData))
+			}
+
+			chunk := fileData[start:end]
+			isLast := i == totalChunks-1
+
+			if err := channel.SendFileTransferData(sess.TargetUUID, transferId, i, chunk, isLast, 0); err != nil {
+				logger.Error("[app] send file transfer data error", zap.Error(err))
+				cache.SetFileTransferComplete(transferId, false, err.Error())
+				return
+			}
+
+			// 更新发送进度
+			cache.UpdateUploadProgress(transferId, int64(end))
+
+			time.Sleep(10 * time.Millisecond)
+		}
+
+		// 标记发送完成
+		cache.SetFileTransferComplete(transferId, true, "")
+		logger.Info("[app] file upload complete.", zap.String("transferId", transferId))
+	}()
+
+	return resp(map[string]any{
+		"transferId": transferId,
+		"totalSize":  fileInfo.Size,
+		"chunkSize":  chunkSize,
+	}, nil)
+}
+
+// DownloadFile 从远程设备下载文件
+func (a *App) DownloadFile(sessionId string, remotePath string, localPath string) any {
+	sess := session.GetSession(sessionId)
+	if sess == nil || sess.TargetUUID == "" {
+		return resp(nil, fmt.Errorf("session not found or targetUUID is empty"))
+	}
+
+	transferId := fmt.Sprintf("%d", time.Now().UnixMilli())
+	chunkSize := int32(64 * 1024)
+
+	// 本地测试：直接复制文件
+	if sess.TargetUUID == channel.GetMyUUID() {
+		logger.Info("[app] local download, copying file directly.", zap.String("remotePath", remotePath), zap.String("localPath", localPath))
+		fileData, err := file.ReadFile(remotePath)
+		if err != nil {
+			return resp(nil, fmt.Errorf("failed to read file: %v", err))
+		}
+		if err := file.WriteFile(localPath, fileData); err != nil {
+			return resp(nil, fmt.Errorf("failed to write file: %v", err))
+		}
+		return resp(map[string]any{
+			"transferId": transferId,
+			"totalSize":  len(fileData),
+			"complete":   true,
+		}, nil)
+	}
+
+	// 初始化下载进度缓存（接收端会在收到数据时更新）
+	cache.InitDownloadProgress(transferId, localPath)
+
+	if err := channel.SendFileTransferStart(sess.TargetUUID, transferId, "download", remotePath, localPath, 0, chunkSize); err != nil {
+		cache.ClearFileTransfer(transferId)
+		return resp(nil, err)
+	}
+
+	return resp(map[string]any{
+		"transferId": transferId,
+		"chunkSize":  chunkSize,
+	}, nil)
+}
+
+// GetFileTransferStatus 获取文件传输状态
+func (a *App) GetFileTransferStatus(transferId string) any {
+	exists, complete, errMsg, received, total := cache.GetFileTransferStatus(transferId)
+	return resp(map[string]any{
+		"exists":   exists,
+		"complete": complete,
+		"error":    errMsg,
+		"received": received,
+		"total":    total,
+	}, nil)
+}
+
+// CheckFileExists 检查文件是否存在
+func (a *App) CheckFileExists(path string) any {
+	_, err := os.Stat(path)
+	exists := !os.IsNotExist(err)
+	return resp(map[string]any{
+		"exists": exists,
+	}, nil)
+}
+
+// CancelFileTransfer 取消文件传输
+func (a *App) CancelFileTransfer(sessionId string, transferId string, reason string) any {
+	sess := session.GetSession(sessionId)
+	if sess == nil || sess.TargetUUID == "" {
+		return resp(nil, fmt.Errorf("session not found or targetUUID is empty"))
+	}
+
+	if err := channel.SendFileTransferCancel(sess.TargetUUID, transferId, reason); err != nil {
+		return resp(nil, err)
+	}
+
+	cache.ClearFileTransfer(transferId)
+	return resp(nil, nil)
 }

@@ -6,6 +6,14 @@ export function AddDevice(arg1) {
   return window['go']['main']['App']['AddDevice'](arg1);
 }
 
+export function CancelFileTransfer(arg1, arg2, arg3) {
+  return window['go']['main']['App']['CancelFileTransfer'](arg1, arg2, arg3);
+}
+
+export function CheckFileExists(arg1) {
+  return window['go']['main']['App']['CheckFileExists'](arg1);
+}
+
 export function CreateSession(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['main']['App']['CreateSession'](arg1, arg2, arg3, arg4, arg5);
 }
@@ -16,6 +24,10 @@ export function DeleteDevice(arg1) {
 
 export function DeviceInfo() {
   return window['go']['main']['App']['DeviceInfo']();
+}
+
+export function DownloadFile(arg1, arg2, arg3) {
+  return window['go']['main']['App']['DownloadFile'](arg1, arg2, arg3);
 }
 
 export function EditDevice(arg1) {
@@ -44,6 +56,10 @@ export function GetDeviceList() {
 
 export function GetFileSessionByDeviceCode(arg1) {
   return window['go']['main']['App']['GetFileSessionByDeviceCode'](arg1);
+}
+
+export function GetFileTransferStatus(arg1) {
+  return window['go']['main']['App']['GetFileTransferStatus'](arg1);
 }
 
 export function GetLocalDrives() {
@@ -128,6 +144,10 @@ export function SendMouseScroll(arg1, arg2, arg3, arg4, arg5) {
 
 export function StopScreenStream(arg1) {
   return window['go']['main']['App']['StopScreenStream'](arg1);
+}
+
+export function UploadFile(arg1, arg2, arg3) {
+  return window['go']['main']['App']['UploadFile'](arg1, arg2, arg3);
 }
 
 export function UserLogin(arg1) {

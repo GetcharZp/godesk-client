@@ -3,6 +3,8 @@ package cache
 import (
 	"godesk-client/internal/service/models"
 	pb "godesk-client/proto"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 )
@@ -60,4 +62,180 @@ func GetRemoteFileList(targetUUID string, path string) (pb.FileListResponseData,
 		delete(remoteFileListCache, key)
 	}
 	return pb.FileListResponseData{}, false
+}
+
+// ========== 文件传输缓存 ==========
+
+type fileTransferCache struct {
+	info         *pb.FileTransferStartData
+	tempFile     *os.File
+	tempPath     string
+	receivedSize int64
+	totalSize    int64
+	complete     bool
+	errMsg       string
+}
+
+var (
+	fileTransferCaches      = make(map[string]*fileTransferCache)
+	fileTransferCachesMutex sync.Mutex
+)
+
+func SetFileTransfer(transferId string, data pb.FileTransferStartData) {
+	fileTransferCachesMutex.Lock()
+	defer fileTransferCachesMutex.Unlock()
+	fileTransferCaches[transferId] = &fileTransferCache{
+		info:      &data,
+		totalSize: data.TotalSize,
+	}
+}
+
+// InitUploadProgress 初始化上传进度（发送端调用）
+func InitUploadProgress(transferId string, totalSize int64) {
+	fileTransferCachesMutex.Lock()
+	defer fileTransferCachesMutex.Unlock()
+	fileTransferCaches[transferId] = &fileTransferCache{
+		info:      &pb.FileTransferStartData{TransferId: transferId},
+		totalSize: totalSize,
+	}
+}
+
+// InitDownloadProgress 初始化下载进度（接收端调用）
+func InitDownloadProgress(transferId string, targetPath string) {
+	fileTransferCachesMutex.Lock()
+	defer fileTransferCachesMutex.Unlock()
+	fileTransferCaches[transferId] = &fileTransferCache{
+		info:      &pb.FileTransferStartData{TransferId: transferId, TargetPath: targetPath},
+		totalSize: 0,
+	}
+}
+
+// UpdateUploadProgress 更新上传进度（发送端调用）
+func UpdateUploadProgress(transferId string, sentSize int64) {
+	fileTransferCachesMutex.Lock()
+	defer fileTransferCachesMutex.Unlock()
+	if cache, ok := fileTransferCaches[transferId]; ok {
+		cache.receivedSize = sentSize
+	}
+}
+
+// UpdateDownloadTotal 更新下载总大小
+func UpdateDownloadTotal(transferId string, total int64) {
+	fileTransferCachesMutex.Lock()
+	defer fileTransferCachesMutex.Unlock()
+	if cache, ok := fileTransferCaches[transferId]; ok {
+		cache.totalSize = total
+	}
+}
+
+func GetFileTransfer(transferId string) *pb.FileTransferStartData {
+	fileTransferCachesMutex.Lock()
+	defer fileTransferCachesMutex.Unlock()
+	if cache, ok := fileTransferCaches[transferId]; ok {
+		return cache.info
+	}
+	return nil
+}
+
+func InitFileTransferTempFile(transferId string) error {
+	fileTransferCachesMutex.Lock()
+	defer fileTransferCachesMutex.Unlock()
+
+	cache, ok := fileTransferCaches[transferId]
+	if !ok {
+		return nil
+	}
+
+	dir := filepath.Dir(cache.info.TargetPath)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
+
+	tempPath := cache.info.TargetPath + ".tmp"
+	f, err := os.Create(tempPath)
+	if err != nil {
+		return err
+	}
+
+	cache.tempFile = f
+	cache.tempPath = tempPath
+	return nil
+}
+
+func WriteFileTransferChunk(transferId string, data []byte) error {
+	fileTransferCachesMutex.Lock()
+	defer fileTransferCachesMutex.Unlock()
+
+	cache, ok := fileTransferCaches[transferId]
+	if !ok || cache.tempFile == nil {
+		return nil
+	}
+
+	n, err := cache.tempFile.Write(data)
+	if err != nil {
+		return err
+	}
+	cache.receivedSize += int64(n)
+	// 强制刷新到磁盘，确保文件大小实时更新
+	cache.tempFile.Sync()
+	return nil
+}
+
+func GetFileTransferProgress(transferId string) (int64, int64) {
+	fileTransferCachesMutex.Lock()
+	defer fileTransferCachesMutex.Unlock()
+	if cache, ok := fileTransferCaches[transferId]; ok {
+		return cache.receivedSize, cache.totalSize
+	}
+	return 0, 0
+}
+
+func SetFileTransferComplete(transferId string, success bool, errMsg string) error {
+	fileTransferCachesMutex.Lock()
+	defer fileTransferCachesMutex.Unlock()
+
+	cache, ok := fileTransferCaches[transferId]
+	if !ok {
+		return nil
+	}
+
+	cache.complete = true
+	if !success {
+		cache.errMsg = errMsg
+		if cache.tempFile != nil {
+			cache.tempFile.Close()
+			os.Remove(cache.tempPath)
+		}
+		return nil
+	}
+
+	if cache.tempFile != nil {
+		cache.tempFile.Close()
+		if err := os.Rename(cache.tempPath, cache.info.TargetPath); err != nil {
+			cache.errMsg = err.Error()
+			return err
+		}
+	}
+	return nil
+}
+
+func GetFileTransferStatus(transferId string) (bool, bool, string, int64, int64) {
+	fileTransferCachesMutex.Lock()
+	defer fileTransferCachesMutex.Unlock()
+	if cache, ok := fileTransferCaches[transferId]; ok {
+		return true, cache.complete, cache.errMsg, cache.receivedSize, cache.totalSize
+	}
+	return false, false, "", 0, 0
+}
+
+func ClearFileTransfer(transferId string) {
+	fileTransferCachesMutex.Lock()
+	defer fileTransferCachesMutex.Unlock()
+	if cache, ok := fileTransferCaches[transferId]; ok {
+		if cache.tempFile != nil {
+			cache.tempFile.Close()
+			os.Remove(cache.tempPath)
+		}
+	}
+	delete(fileTransferCaches, transferId)
 }

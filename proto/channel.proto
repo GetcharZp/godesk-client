@@ -278,6 +278,8 @@ message FileTransferData {
   int32 data_size = 5;
   // 时间戳（毫秒）
   int64 timestamp = 6;
+  // 文件总大小（仅第一个数据块时设置）
+  int64 total_size = 7;
 }
 
 // FileTransferCompleteData 文件传输完成（key = "file_transfer_complete"）

@@ -66,10 +66,10 @@
         </div>
 
         <div class="transfer-buttons">
-          <a-button type="primary" :disabled="!selectedLocalFile || selectedLocalFile.isDir" @click="uploadFile">
+          <a-button type="primary" :disabled="!selectedLocalFile || selectedLocalFile.isDir || transferring" @click="uploadFile">
             <ArrowRightOutlined /> 上传
           </a-button>
-          <a-button :disabled="!selectedRemoteFile || selectedRemoteFile.isDir" @click="downloadFile">
+          <a-button :disabled="!selectedRemoteFile || selectedRemoteFile.isDir || transferring" @click="downloadFile">
             <ArrowLeftOutlined /> 下载
           </a-button>
         </div>
@@ -112,6 +112,17 @@
           </div>
         </div>
       </div>
+
+      <div class="transfer-progress" v-if="transferring">
+        <div class="progress-header">
+          <span>{{ transferDirection === 'upload' ? '上传中' : '下载中' }}: {{ transferFileName }}</span>
+          <a-button size="small" danger @click="cancelTransfer">取消</a-button>
+        </div>
+        <a-progress :percent="transferPercent" :status="transferStatus" />
+        <div class="progress-info">
+          {{ formatSize(transferReceived) }} / {{ formatSize(transferTotal) }}
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -147,7 +158,17 @@ const remoteFiles = ref([])
 const remoteLoading = ref(false)
 const selectedRemoteFile = ref(null)
 
+const transferring = ref(false)
+const transferDirection = ref('')
+const transferFileName = ref('')
+const transferPercent = ref(0)
+const transferReceived = ref(0)
+const transferTotal = ref(0)
+const transferStatus = ref('active')
+const transferId = ref('')
+
 let pollTimer = null
+let progressTimer = null
 
 onMounted(async () => {
   if (route.query.deviceCode) {
@@ -172,6 +193,9 @@ onMounted(async () => {
 onUnmounted(() => {
   if (pollTimer) {
     clearInterval(pollTimer)
+  }
+  if (progressTimer) {
+    clearInterval(progressTimer)
   }
 })
 
@@ -399,14 +423,145 @@ const openRemoteFolder = (file) => {
   }
 }
 
-const uploadFile = () => {
+const uploadFile = async () => {
   if (!selectedLocalFile.value || selectedLocalFile.value.isDir) return
-  message.info('上传功能开发中...')
+  
+  const targetPath = remotePath.value 
+    ? `${remotePath.value}/${selectedLocalFile.value.name}`.replace(/\\/g, '/')
+    : selectedLocalFile.value.name
+
+  // 检查目标文件是否存在
+  try {
+    const checkRes = await checkFileExistsApi(targetPath)
+    if (checkRes.code === 200 && checkRes.data?.exists) {
+      const confirmed = confirm(`文件 "${selectedLocalFile.value.name}" 已存在于目标位置，是否覆盖？`)
+      if (!confirmed) return
+    }
+  } catch (e) {
+    console.error('Check file exists error:', e)
+  }
+
+  try {
+    const res = await uploadFileApi(
+      connectedDevice.value.sessionId,
+      selectedLocalFile.value.path,
+      targetPath
+    )
+    if (res.code === 200) {
+      if (res.data?.complete) {
+        message.success('上传完成: ' + selectedLocalFile.value.name)
+        refreshRemoteFiles()
+      } else {
+        startProgressTracking(res.data.transferId, 'upload', selectedLocalFile.value.name, res.data.totalSize)
+        message.info('上传已开始: ' + selectedLocalFile.value.name)
+      }
+    } else {
+      message.error('上传失败: ' + (res.msg || '未知错误'))
+    }
+  } catch (error) {
+    console.error('Upload error:', error)
+    message.error('上传失败')
+  }
 }
 
-const downloadFile = () => {
+const downloadFile = async () => {
   if (!selectedRemoteFile.value || selectedRemoteFile.value.isDir) return
-  message.info('下载功能开发中...')
+  
+  const localTargetPath = localPath.value
+    ? `${localPath.value}\\${selectedRemoteFile.value.name}`
+    : selectedRemoteFile.value.name
+
+  // 检查本地文件是否存在
+  try {
+    const checkRes = await checkFileExistsApi(localTargetPath)
+    if (checkRes.code === 200 && checkRes.data?.exists) {
+      const confirmed = confirm(`文件 "${selectedRemoteFile.value.name}" 已存在于本地，是否覆盖？`)
+      if (!confirmed) return
+    }
+  } catch (e) {
+    console.error('Check file exists error:', e)
+  }
+
+  try {
+    const res = await downloadFileApi(
+      connectedDevice.value.sessionId,
+      selectedRemoteFile.value.path,
+      localTargetPath
+    )
+    if (res.code === 200) {
+      if (res.data?.complete) {
+        message.success('下载完成: ' + selectedRemoteFile.value.name)
+        refreshLocalFiles()
+      } else {
+        startProgressTracking(res.data.transferId, 'download', selectedRemoteFile.value.name, res.data.totalSize)
+        message.info('下载已开始: ' + selectedRemoteFile.value.name)
+      }
+    } else {
+      message.error('下载失败: ' + (res.msg || '未知错误'))
+    }
+  } catch (error) {
+    console.error('Download error:', error)
+    message.error('下载失败')
+  }
+}
+
+const startProgressTracking = (tid, direction, fileName, total) => {
+  transferId.value = tid
+  transferDirection.value = direction
+  transferFileName.value = fileName
+  transferTotal.value = total || 0
+  transferReceived.value = 0
+  transferPercent.value = 0
+  transferStatus.value = 'active'
+  transferring.value = true
+
+  progressTimer = setInterval(async () => {
+    try {
+      const res = await getFileTransferStatusApi(transferId.value)
+      if (res.code === 200 && res.data) {
+        transferReceived.value = res.data.received || 0
+        transferTotal.value = res.data.total || transferTotal.value
+        if (transferTotal.value > 0) {
+          transferPercent.value = Math.round((transferReceived.value / transferTotal.value) * 100)
+        }
+        if (res.data.complete) {
+          transferStatus.value = res.data.error ? 'exception' : 'success'
+          clearInterval(progressTimer)
+          progressTimer = null
+          setTimeout(() => {
+            transferring.value = false
+            if (transferDirection.value === 'upload') {
+              refreshRemoteFiles()
+            } else {
+              refreshLocalFiles()
+            }
+            if (res.data.error) {
+              message.error('传输失败: ' + res.data.error)
+            } else {
+              message.success('传输完成: ' + transferFileName.value)
+            }
+          }, 500)
+        }
+      }
+    } catch (e) {
+      console.error('Get transfer status error:', e)
+    }
+  }, 200)
+}
+
+const cancelTransfer = async () => {
+  if (!transferId.value) return
+  try {
+    await cancelFileTransferApi(connectedDevice.value.sessionId, transferId.value, '用户取消')
+    message.info('已取消传输')
+  } catch (e) {
+    console.error('Cancel transfer error:', e)
+  }
+  if (progressTimer) {
+    clearInterval(progressTimer)
+    progressTimer = null
+  }
+  transferring.value = false
 }
 
 const formatSize = (bytes) => {
@@ -469,6 +624,41 @@ const getRemoteFileList = (targetUUID, path) => {
   }
   return Promise.resolve({ code: -1 })
 }
+
+const uploadFileApi = (sessionId, localPath, remotePath) => {
+  if (window.go?.main?.App?.UploadFile) {
+    return window.go.main.App.UploadFile(sessionId, localPath, remotePath)
+  }
+  return Promise.resolve({ code: -1, msg: 'API 不可用' })
+}
+
+const downloadFileApi = (sessionId, remotePath, localPath) => {
+  if (window.go?.main?.App?.DownloadFile) {
+    return window.go.main.App.DownloadFile(sessionId, remotePath, localPath)
+  }
+  return Promise.resolve({ code: -1, msg: 'API 不可用' })
+}
+
+const checkFileExistsApi = (path) => {
+  if (window.go?.main?.App?.CheckFileExists) {
+    return window.go.main.App.CheckFileExists(path)
+  }
+  return Promise.resolve({ code: 200, data: { exists: false } })
+}
+
+const getFileTransferStatusApi = (transferId) => {
+  if (window.go?.main?.App?.GetFileTransferStatus) {
+    return window.go.main.App.GetFileTransferStatus(transferId)
+  }
+  return Promise.resolve({ code: -1 })
+}
+
+const cancelFileTransferApi = (sessionId, transferId, reason) => {
+  if (window.go?.main?.App?.CancelFileTransfer) {
+    return window.go.main.App.CancelFileTransfer(sessionId, transferId, reason)
+  }
+  return Promise.resolve({ code: -1 })
+}
 </script>
 
 <style scoped>
@@ -514,6 +704,29 @@ const getRemoteFileList = (targetUUID, path) => {
   flex: 1;
   display: flex;
   overflow: hidden;
+}
+
+.transfer-progress {
+  margin: 8px;
+  padding: 12px;
+  background: #fafafa;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.progress-info {
+  text-align: right;
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
 }
 
 .local-files,

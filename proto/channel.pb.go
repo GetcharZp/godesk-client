@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        v7.34.0
-// source: channel.proto
+// source: proto/channel.proto
 
 package godesk
 
@@ -38,7 +38,7 @@ type ChannelRequest struct {
 
 func (x *ChannelRequest) Reset() {
 	*x = ChannelRequest{}
-	mi := &file_channel_proto_msgTypes[0]
+	mi := &file_proto_channel_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -50,7 +50,7 @@ func (x *ChannelRequest) String() string {
 func (*ChannelRequest) ProtoMessage() {}
 
 func (x *ChannelRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[0]
+	mi := &file_proto_channel_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -63,7 +63,7 @@ func (x *ChannelRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChannelRequest.ProtoReflect.Descriptor instead.
 func (*ChannelRequest) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{0}
+	return file_proto_channel_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *ChannelRequest) GetSendClientUuid() string {
@@ -107,7 +107,7 @@ type RegisterData struct {
 
 func (x *RegisterData) Reset() {
 	*x = RegisterData{}
-	mi := &file_channel_proto_msgTypes[1]
+	mi := &file_proto_channel_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -119,7 +119,7 @@ func (x *RegisterData) String() string {
 func (*RegisterData) ProtoMessage() {}
 
 func (x *RegisterData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[1]
+	mi := &file_proto_channel_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -132,7 +132,7 @@ func (x *RegisterData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RegisterData.ProtoReflect.Descriptor instead.
 func (*RegisterData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{1}
+	return file_proto_channel_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *RegisterData) GetOs() string {
@@ -160,7 +160,7 @@ type HeartbeatData struct {
 
 func (x *HeartbeatData) Reset() {
 	*x = HeartbeatData{}
-	mi := &file_channel_proto_msgTypes[2]
+	mi := &file_proto_channel_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -172,7 +172,7 @@ func (x *HeartbeatData) String() string {
 func (*HeartbeatData) ProtoMessage() {}
 
 func (x *HeartbeatData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[2]
+	mi := &file_proto_channel_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -185,7 +185,7 @@ func (x *HeartbeatData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HeartbeatData.ProtoReflect.Descriptor instead.
 func (*HeartbeatData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{2}
+	return file_proto_channel_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *HeartbeatData) GetTimestamp() int64 {
@@ -212,7 +212,7 @@ type ControlStartedRequestData struct {
 
 func (x *ControlStartedRequestData) Reset() {
 	*x = ControlStartedRequestData{}
-	mi := &file_channel_proto_msgTypes[3]
+	mi := &file_proto_channel_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -224,7 +224,7 @@ func (x *ControlStartedRequestData) String() string {
 func (*ControlStartedRequestData) ProtoMessage() {}
 
 func (x *ControlStartedRequestData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[3]
+	mi := &file_proto_channel_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -237,7 +237,7 @@ func (x *ControlStartedRequestData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ControlStartedRequestData.ProtoReflect.Descriptor instead.
 func (*ControlStartedRequestData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{3}
+	return file_proto_channel_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *ControlStartedRequestData) GetTargetCode() uint64 {
@@ -283,7 +283,7 @@ type ControlStartedResponseData struct {
 
 func (x *ControlStartedResponseData) Reset() {
 	*x = ControlStartedResponseData{}
-	mi := &file_channel_proto_msgTypes[4]
+	mi := &file_proto_channel_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -295,7 +295,7 @@ func (x *ControlStartedResponseData) String() string {
 func (*ControlStartedResponseData) ProtoMessage() {}
 
 func (x *ControlStartedResponseData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[4]
+	mi := &file_proto_channel_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -308,7 +308,7 @@ func (x *ControlStartedResponseData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ControlStartedResponseData.ProtoReflect.Descriptor instead.
 func (*ControlStartedResponseData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{4}
+	return file_proto_channel_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ControlStartedResponseData) GetCode() int32 {
@@ -345,7 +345,7 @@ type ControlEndedRequestData struct {
 
 func (x *ControlEndedRequestData) Reset() {
 	*x = ControlEndedRequestData{}
-	mi := &file_channel_proto_msgTypes[5]
+	mi := &file_proto_channel_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -357,7 +357,7 @@ func (x *ControlEndedRequestData) String() string {
 func (*ControlEndedRequestData) ProtoMessage() {}
 
 func (x *ControlEndedRequestData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[5]
+	mi := &file_proto_channel_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -370,7 +370,7 @@ func (x *ControlEndedRequestData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ControlEndedRequestData.ProtoReflect.Descriptor instead.
 func (*ControlEndedRequestData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{5}
+	return file_proto_channel_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ControlEndedRequestData) GetTargetCode() uint64 {
@@ -398,7 +398,7 @@ type ControlEndedResponseData struct {
 
 func (x *ControlEndedResponseData) Reset() {
 	*x = ControlEndedResponseData{}
-	mi := &file_channel_proto_msgTypes[6]
+	mi := &file_proto_channel_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -410,7 +410,7 @@ func (x *ControlEndedResponseData) String() string {
 func (*ControlEndedResponseData) ProtoMessage() {}
 
 func (x *ControlEndedResponseData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[6]
+	mi := &file_proto_channel_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -423,7 +423,7 @@ func (x *ControlEndedResponseData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ControlEndedResponseData.ProtoReflect.Descriptor instead.
 func (*ControlEndedResponseData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{6}
+	return file_proto_channel_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ControlEndedResponseData) GetCode() int32 {
@@ -458,7 +458,7 @@ type ScreenStreamData struct {
 
 func (x *ScreenStreamData) Reset() {
 	*x = ScreenStreamData{}
-	mi := &file_channel_proto_msgTypes[7]
+	mi := &file_proto_channel_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -470,7 +470,7 @@ func (x *ScreenStreamData) String() string {
 func (*ScreenStreamData) ProtoMessage() {}
 
 func (x *ScreenStreamData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[7]
+	mi := &file_proto_channel_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -483,7 +483,7 @@ func (x *ScreenStreamData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScreenStreamData.ProtoReflect.Descriptor instead.
 func (*ScreenStreamData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{7}
+	return file_proto_channel_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ScreenStreamData) GetSequenceId() uint64 {
@@ -557,7 +557,7 @@ type MouseMoveData struct {
 
 func (x *MouseMoveData) Reset() {
 	*x = MouseMoveData{}
-	mi := &file_channel_proto_msgTypes[8]
+	mi := &file_proto_channel_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -569,7 +569,7 @@ func (x *MouseMoveData) String() string {
 func (*MouseMoveData) ProtoMessage() {}
 
 func (x *MouseMoveData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[8]
+	mi := &file_proto_channel_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -582,7 +582,7 @@ func (x *MouseMoveData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MouseMoveData.ProtoReflect.Descriptor instead.
 func (*MouseMoveData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{8}
+	return file_proto_channel_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *MouseMoveData) GetX() int32 {
@@ -625,7 +625,7 @@ type MouseClickData struct {
 
 func (x *MouseClickData) Reset() {
 	*x = MouseClickData{}
-	mi := &file_channel_proto_msgTypes[9]
+	mi := &file_proto_channel_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -637,7 +637,7 @@ func (x *MouseClickData) String() string {
 func (*MouseClickData) ProtoMessage() {}
 
 func (x *MouseClickData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[9]
+	mi := &file_proto_channel_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -650,7 +650,7 @@ func (x *MouseClickData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MouseClickData.ProtoReflect.Descriptor instead.
 func (*MouseClickData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{9}
+	return file_proto_channel_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *MouseClickData) GetX() int32 {
@@ -705,7 +705,7 @@ type MouseScrollData struct {
 
 func (x *MouseScrollData) Reset() {
 	*x = MouseScrollData{}
-	mi := &file_channel_proto_msgTypes[10]
+	mi := &file_proto_channel_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -717,7 +717,7 @@ func (x *MouseScrollData) String() string {
 func (*MouseScrollData) ProtoMessage() {}
 
 func (x *MouseScrollData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[10]
+	mi := &file_proto_channel_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -730,7 +730,7 @@ func (x *MouseScrollData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MouseScrollData.ProtoReflect.Descriptor instead.
 func (*MouseScrollData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{10}
+	return file_proto_channel_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *MouseScrollData) GetX() int32 {
@@ -776,7 +776,7 @@ type KeyTapData struct {
 
 func (x *KeyTapData) Reset() {
 	*x = KeyTapData{}
-	mi := &file_channel_proto_msgTypes[11]
+	mi := &file_proto_channel_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -788,7 +788,7 @@ func (x *KeyTapData) String() string {
 func (*KeyTapData) ProtoMessage() {}
 
 func (x *KeyTapData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[11]
+	mi := &file_proto_channel_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -801,7 +801,7 @@ func (x *KeyTapData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyTapData.ProtoReflect.Descriptor instead.
 func (*KeyTapData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{11}
+	return file_proto_channel_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *KeyTapData) GetKey() string {
@@ -840,7 +840,7 @@ type KeyDownData struct {
 
 func (x *KeyDownData) Reset() {
 	*x = KeyDownData{}
-	mi := &file_channel_proto_msgTypes[12]
+	mi := &file_proto_channel_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -852,7 +852,7 @@ func (x *KeyDownData) String() string {
 func (*KeyDownData) ProtoMessage() {}
 
 func (x *KeyDownData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[12]
+	mi := &file_proto_channel_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -865,7 +865,7 @@ func (x *KeyDownData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyDownData.ProtoReflect.Descriptor instead.
 func (*KeyDownData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{12}
+	return file_proto_channel_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *KeyDownData) GetKey() string {
@@ -904,7 +904,7 @@ type KeyUpData struct {
 
 func (x *KeyUpData) Reset() {
 	*x = KeyUpData{}
-	mi := &file_channel_proto_msgTypes[13]
+	mi := &file_proto_channel_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -916,7 +916,7 @@ func (x *KeyUpData) String() string {
 func (*KeyUpData) ProtoMessage() {}
 
 func (x *KeyUpData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[13]
+	mi := &file_proto_channel_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -929,7 +929,7 @@ func (x *KeyUpData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyUpData.ProtoReflect.Descriptor instead.
 func (*KeyUpData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{13}
+	return file_proto_channel_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *KeyUpData) GetKey() string {
@@ -970,7 +970,7 @@ type FileListRequestData struct {
 
 func (x *FileListRequestData) Reset() {
 	*x = FileListRequestData{}
-	mi := &file_channel_proto_msgTypes[14]
+	mi := &file_proto_channel_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -982,7 +982,7 @@ func (x *FileListRequestData) String() string {
 func (*FileListRequestData) ProtoMessage() {}
 
 func (x *FileListRequestData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[14]
+	mi := &file_proto_channel_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -995,7 +995,7 @@ func (x *FileListRequestData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileListRequestData.ProtoReflect.Descriptor instead.
 func (*FileListRequestData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{14}
+	return file_proto_channel_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *FileListRequestData) GetTargetCode() uint64 {
@@ -1047,7 +1047,7 @@ type FileInfo struct {
 
 func (x *FileInfo) Reset() {
 	*x = FileInfo{}
-	mi := &file_channel_proto_msgTypes[15]
+	mi := &file_proto_channel_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1059,7 +1059,7 @@ func (x *FileInfo) String() string {
 func (*FileInfo) ProtoMessage() {}
 
 func (x *FileInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[15]
+	mi := &file_proto_channel_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1072,7 +1072,7 @@ func (x *FileInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileInfo.ProtoReflect.Descriptor instead.
 func (*FileInfo) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{15}
+	return file_proto_channel_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *FileInfo) GetName() string {
@@ -1136,7 +1136,7 @@ type FileListResponseData struct {
 
 func (x *FileListResponseData) Reset() {
 	*x = FileListResponseData{}
-	mi := &file_channel_proto_msgTypes[16]
+	mi := &file_proto_channel_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1148,7 +1148,7 @@ func (x *FileListResponseData) String() string {
 func (*FileListResponseData) ProtoMessage() {}
 
 func (x *FileListResponseData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[16]
+	mi := &file_proto_channel_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1161,7 +1161,7 @@ func (x *FileListResponseData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileListResponseData.ProtoReflect.Descriptor instead.
 func (*FileListResponseData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{16}
+	return file_proto_channel_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *FileListResponseData) GetCode() int32 {
@@ -1222,7 +1222,7 @@ type FileTransferStartData struct {
 
 func (x *FileTransferStartData) Reset() {
 	*x = FileTransferStartData{}
-	mi := &file_channel_proto_msgTypes[17]
+	mi := &file_proto_channel_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1234,7 +1234,7 @@ func (x *FileTransferStartData) String() string {
 func (*FileTransferStartData) ProtoMessage() {}
 
 func (x *FileTransferStartData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[17]
+	mi := &file_proto_channel_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1247,7 +1247,7 @@ func (x *FileTransferStartData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileTransferStartData.ProtoReflect.Descriptor instead.
 func (*FileTransferStartData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{17}
+	return file_proto_channel_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *FileTransferStartData) GetTransferId() string {
@@ -1313,14 +1313,16 @@ type FileTransferData struct {
 	// 数据块实际大小
 	DataSize int32 `protobuf:"varint,5,opt,name=data_size,json=dataSize,proto3" json:"data_size,omitempty"`
 	// 时间戳（毫秒）
-	Timestamp     int64 `protobuf:"varint,6,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Timestamp int64 `protobuf:"varint,6,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	// 文件总大小（仅第一个数据块时设置）
+	TotalSize     int64 `protobuf:"varint,7,opt,name=total_size,json=totalSize,proto3" json:"total_size,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *FileTransferData) Reset() {
 	*x = FileTransferData{}
-	mi := &file_channel_proto_msgTypes[18]
+	mi := &file_proto_channel_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1332,7 +1334,7 @@ func (x *FileTransferData) String() string {
 func (*FileTransferData) ProtoMessage() {}
 
 func (x *FileTransferData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[18]
+	mi := &file_proto_channel_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1345,7 +1347,7 @@ func (x *FileTransferData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileTransferData.ProtoReflect.Descriptor instead.
 func (*FileTransferData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{18}
+	return file_proto_channel_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *FileTransferData) GetTransferId() string {
@@ -1390,6 +1392,13 @@ func (x *FileTransferData) GetTimestamp() int64 {
 	return 0
 }
 
+func (x *FileTransferData) GetTotalSize() int64 {
+	if x != nil {
+		return x.TotalSize
+	}
+	return 0
+}
+
 // FileTransferCompleteData 文件传输完成（key = "file_transfer_complete"）
 type FileTransferCompleteData struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -1409,7 +1418,7 @@ type FileTransferCompleteData struct {
 
 func (x *FileTransferCompleteData) Reset() {
 	*x = FileTransferCompleteData{}
-	mi := &file_channel_proto_msgTypes[19]
+	mi := &file_proto_channel_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1421,7 +1430,7 @@ func (x *FileTransferCompleteData) String() string {
 func (*FileTransferCompleteData) ProtoMessage() {}
 
 func (x *FileTransferCompleteData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[19]
+	mi := &file_proto_channel_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1434,7 +1443,7 @@ func (x *FileTransferCompleteData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileTransferCompleteData.ProtoReflect.Descriptor instead.
 func (*FileTransferCompleteData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{19}
+	return file_proto_channel_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *FileTransferCompleteData) GetTransferId() string {
@@ -1487,7 +1496,7 @@ type FileTransferCancelData struct {
 
 func (x *FileTransferCancelData) Reset() {
 	*x = FileTransferCancelData{}
-	mi := &file_channel_proto_msgTypes[20]
+	mi := &file_proto_channel_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1499,7 +1508,7 @@ func (x *FileTransferCancelData) String() string {
 func (*FileTransferCancelData) ProtoMessage() {}
 
 func (x *FileTransferCancelData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[20]
+	mi := &file_proto_channel_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1512,7 +1521,7 @@ func (x *FileTransferCancelData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileTransferCancelData.ProtoReflect.Descriptor instead.
 func (*FileTransferCancelData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{20}
+	return file_proto_channel_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *FileTransferCancelData) GetTransferId() string {
@@ -1553,7 +1562,7 @@ type FileRenameRequestData struct {
 
 func (x *FileRenameRequestData) Reset() {
 	*x = FileRenameRequestData{}
-	mi := &file_channel_proto_msgTypes[21]
+	mi := &file_proto_channel_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1565,7 +1574,7 @@ func (x *FileRenameRequestData) String() string {
 func (*FileRenameRequestData) ProtoMessage() {}
 
 func (x *FileRenameRequestData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[21]
+	mi := &file_proto_channel_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1578,7 +1587,7 @@ func (x *FileRenameRequestData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileRenameRequestData.ProtoReflect.Descriptor instead.
 func (*FileRenameRequestData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{21}
+	return file_proto_channel_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *FileRenameRequestData) GetRequestId() string {
@@ -1628,7 +1637,7 @@ type FileRenameResponseData struct {
 
 func (x *FileRenameResponseData) Reset() {
 	*x = FileRenameResponseData{}
-	mi := &file_channel_proto_msgTypes[22]
+	mi := &file_proto_channel_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1640,7 +1649,7 @@ func (x *FileRenameResponseData) String() string {
 func (*FileRenameResponseData) ProtoMessage() {}
 
 func (x *FileRenameResponseData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[22]
+	mi := &file_proto_channel_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1653,7 +1662,7 @@ func (x *FileRenameResponseData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileRenameResponseData.ProtoReflect.Descriptor instead.
 func (*FileRenameResponseData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{22}
+	return file_proto_channel_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *FileRenameResponseData) GetRequestId() string {
@@ -1708,7 +1717,7 @@ type FileDeleteRequestData struct {
 
 func (x *FileDeleteRequestData) Reset() {
 	*x = FileDeleteRequestData{}
-	mi := &file_channel_proto_msgTypes[23]
+	mi := &file_proto_channel_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1720,7 +1729,7 @@ func (x *FileDeleteRequestData) String() string {
 func (*FileDeleteRequestData) ProtoMessage() {}
 
 func (x *FileDeleteRequestData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[23]
+	mi := &file_proto_channel_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1733,7 +1742,7 @@ func (x *FileDeleteRequestData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileDeleteRequestData.ProtoReflect.Descriptor instead.
 func (*FileDeleteRequestData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{23}
+	return file_proto_channel_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *FileDeleteRequestData) GetRequestId() string {
@@ -1783,7 +1792,7 @@ type FileDeleteResponseData struct {
 
 func (x *FileDeleteResponseData) Reset() {
 	*x = FileDeleteResponseData{}
-	mi := &file_channel_proto_msgTypes[24]
+	mi := &file_proto_channel_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1795,7 +1804,7 @@ func (x *FileDeleteResponseData) String() string {
 func (*FileDeleteResponseData) ProtoMessage() {}
 
 func (x *FileDeleteResponseData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[24]
+	mi := &file_proto_channel_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1808,7 +1817,7 @@ func (x *FileDeleteResponseData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileDeleteResponseData.ProtoReflect.Descriptor instead.
 func (*FileDeleteResponseData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{24}
+	return file_proto_channel_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *FileDeleteResponseData) GetRequestId() string {
@@ -1865,7 +1874,7 @@ type FileCreateFolderRequestData struct {
 
 func (x *FileCreateFolderRequestData) Reset() {
 	*x = FileCreateFolderRequestData{}
-	mi := &file_channel_proto_msgTypes[25]
+	mi := &file_proto_channel_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1877,7 +1886,7 @@ func (x *FileCreateFolderRequestData) String() string {
 func (*FileCreateFolderRequestData) ProtoMessage() {}
 
 func (x *FileCreateFolderRequestData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[25]
+	mi := &file_proto_channel_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1890,7 +1899,7 @@ func (x *FileCreateFolderRequestData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileCreateFolderRequestData.ProtoReflect.Descriptor instead.
 func (*FileCreateFolderRequestData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{25}
+	return file_proto_channel_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *FileCreateFolderRequestData) GetRequestId() string {
@@ -1947,7 +1956,7 @@ type FileCreateFolderResponseData struct {
 
 func (x *FileCreateFolderResponseData) Reset() {
 	*x = FileCreateFolderResponseData{}
-	mi := &file_channel_proto_msgTypes[26]
+	mi := &file_proto_channel_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1959,7 +1968,7 @@ func (x *FileCreateFolderResponseData) String() string {
 func (*FileCreateFolderResponseData) ProtoMessage() {}
 
 func (x *FileCreateFolderResponseData) ProtoReflect() protoreflect.Message {
-	mi := &file_channel_proto_msgTypes[26]
+	mi := &file_proto_channel_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1972,7 +1981,7 @@ func (x *FileCreateFolderResponseData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileCreateFolderResponseData.ProtoReflect.Descriptor instead.
 func (*FileCreateFolderResponseData) Descriptor() ([]byte, []int) {
-	return file_channel_proto_rawDescGZIP(), []int{26}
+	return file_proto_channel_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *FileCreateFolderResponseData) GetRequestId() string {
@@ -2010,11 +2019,11 @@ func (x *FileCreateFolderResponseData) GetTimestamp() int64 {
 	return 0
 }
 
-var File_channel_proto protoreflect.FileDescriptor
+var File_proto_channel_proto protoreflect.FileDescriptor
 
-const file_channel_proto_rawDesc = "" +
+const file_proto_channel_proto_rawDesc = "" +
 	"\n" +
-	"\rchannel.proto\x12\x06godesk\"\x8e\x01\n" +
+	"\x13proto/channel.proto\x12\x06godesk\"\x8e\x01\n" +
 	"\x0eChannelRequest\x12(\n" +
 	"\x10send_client_uuid\x18\x01 \x01(\tR\x0esendClientUuid\x12,\n" +
 	"\x12target_client_uuid\x18\x02 \x01(\tR\x10targetClientUuid\x12\x10\n" +
@@ -2116,7 +2125,7 @@ const file_channel_proto_rawDesc = "" +
 	"total_size\x18\x05 \x01(\x03R\ttotalSize\x12\x1d\n" +
 	"\n" +
 	"chunk_size\x18\x06 \x01(\x05R\tchunkSize\x12\x1c\n" +
-	"\ttimestamp\x18\a \x01(\x03R\ttimestamp\"\xbc\x01\n" +
+	"\ttimestamp\x18\a \x01(\x03R\ttimestamp\"\xdb\x01\n" +
 	"\x10FileTransferData\x12\x1f\n" +
 	"\vtransfer_id\x18\x01 \x01(\tR\n" +
 	"transferId\x12\x1f\n" +
@@ -2125,7 +2134,9 @@ const file_channel_proto_rawDesc = "" +
 	"\ais_last\x18\x03 \x01(\bR\x06isLast\x12\x12\n" +
 	"\x04data\x18\x04 \x01(\fR\x04data\x12\x1b\n" +
 	"\tdata_size\x18\x05 \x01(\x05R\bdataSize\x12\x1c\n" +
-	"\ttimestamp\x18\x06 \x01(\x03R\ttimestamp\"\x99\x01\n" +
+	"\ttimestamp\x18\x06 \x01(\x03R\ttimestamp\x12\x1d\n" +
+	"\n" +
+	"total_size\x18\a \x01(\x03R\ttotalSize\"\x99\x01\n" +
 	"\x18FileTransferCompleteData\x12\x1f\n" +
 	"\vtransfer_id\x18\x01 \x01(\tR\n" +
 	"transferId\x12\x12\n" +
@@ -2186,19 +2197,19 @@ const file_channel_proto_rawDesc = "" +
 	"DataStream\x12\x16.godesk.ChannelRequest\x1a\x16.godesk.ChannelRequest\"\x00(\x010\x01B\vZ\t./;godeskb\x06proto3"
 
 var (
-	file_channel_proto_rawDescOnce sync.Once
-	file_channel_proto_rawDescData []byte
+	file_proto_channel_proto_rawDescOnce sync.Once
+	file_proto_channel_proto_rawDescData []byte
 )
 
-func file_channel_proto_rawDescGZIP() []byte {
-	file_channel_proto_rawDescOnce.Do(func() {
-		file_channel_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_channel_proto_rawDesc), len(file_channel_proto_rawDesc)))
+func file_proto_channel_proto_rawDescGZIP() []byte {
+	file_proto_channel_proto_rawDescOnce.Do(func() {
+		file_proto_channel_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proto_channel_proto_rawDesc), len(file_proto_channel_proto_rawDesc)))
 	})
-	return file_channel_proto_rawDescData
+	return file_proto_channel_proto_rawDescData
 }
 
-var file_channel_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
-var file_channel_proto_goTypes = []any{
+var file_proto_channel_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
+var file_proto_channel_proto_goTypes = []any{
 	(*ChannelRequest)(nil),               // 0: godesk.ChannelRequest
 	(*RegisterData)(nil),                 // 1: godesk.RegisterData
 	(*HeartbeatData)(nil),                // 2: godesk.HeartbeatData
@@ -2227,7 +2238,7 @@ var file_channel_proto_goTypes = []any{
 	(*FileCreateFolderRequestData)(nil),  // 25: godesk.FileCreateFolderRequestData
 	(*FileCreateFolderResponseData)(nil), // 26: godesk.FileCreateFolderResponseData
 }
-var file_channel_proto_depIdxs = []int32{
+var file_proto_channel_proto_depIdxs = []int32{
 	15, // 0: godesk.FileListResponseData.files:type_name -> godesk.FileInfo
 	0,  // 1: godesk.ChannelService.DataStream:input_type -> godesk.ChannelRequest
 	0,  // 2: godesk.ChannelService.DataStream:output_type -> godesk.ChannelRequest
@@ -2238,26 +2249,26 @@ var file_channel_proto_depIdxs = []int32{
 	0,  // [0:1] is the sub-list for field type_name
 }
 
-func init() { file_channel_proto_init() }
-func file_channel_proto_init() {
-	if File_channel_proto != nil {
+func init() { file_proto_channel_proto_init() }
+func file_proto_channel_proto_init() {
+	if File_proto_channel_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_channel_proto_rawDesc), len(file_channel_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_channel_proto_rawDesc), len(file_proto_channel_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   27,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_channel_proto_goTypes,
-		DependencyIndexes: file_channel_proto_depIdxs,
-		MessageInfos:      file_channel_proto_msgTypes,
+		GoTypes:           file_proto_channel_proto_goTypes,
+		DependencyIndexes: file_proto_channel_proto_depIdxs,
+		MessageInfos:      file_proto_channel_proto_msgTypes,
 	}.Build()
-	File_channel_proto = out.File
-	file_channel_proto_goTypes = nil
-	file_channel_proto_depIdxs = nil
+	File_proto_channel_proto = out.File
+	file_proto_channel_proto_goTypes = nil
+	file_proto_channel_proto_depIdxs = nil
 }

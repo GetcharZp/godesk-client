@@ -5,11 +5,17 @@ import {models} from '../models';
 
 export function AddDevice(arg1:godesk.AddDeviceRequest):Promise<any>;
 
+export function CancelFileTransfer(arg1:string,arg2:string,arg3:string):Promise<any>;
+
+export function CheckFileExists(arg1:string):Promise<any>;
+
 export function CreateSession(arg1:string,arg2:number,arg3:string,arg4:boolean,arg5:string):Promise<any>;
 
 export function DeleteDevice(arg1:godesk.DeleteDeviceRequest):Promise<any>;
 
 export function DeviceInfo():Promise<any>;
+
+export function DownloadFile(arg1:string,arg2:string,arg3:string):Promise<any>;
 
 export function EditDevice(arg1:godesk.EditDeviceRequest):Promise<any>;
 
@@ -24,6 +30,8 @@ export function GetControlSessions():Promise<any>;
 export function GetDeviceList():Promise<any>;
 
 export function GetFileSessionByDeviceCode(arg1:number):Promise<any>;
+
+export function GetFileTransferStatus(arg1:string):Promise<any>;
 
 export function GetLocalDrives():Promise<any>;
 
@@ -66,6 +74,8 @@ export function SendMouseMove(arg1:string,arg2:number,arg3:number):Promise<any>;
 export function SendMouseScroll(arg1:string,arg2:number,arg3:number,arg4:number,arg5:number):Promise<any>;
 
 export function StopScreenStream(arg1:string):Promise<any>;
+
+export function UploadFile(arg1:string,arg2:string,arg3:string):Promise<any>;
 
 export function UserLogin(arg1:godesk.UserLoginRequest):Promise<any>;
 

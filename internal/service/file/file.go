@@ -142,3 +142,30 @@ func GetDocumentsDir() string {
 	}
 	return filepath.Join(home, "Documents")
 }
+
+func ReadFile(path string) ([]byte, error) {
+	return os.ReadFile(path)
+}
+
+func WriteFile(path string, data []byte) error {
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
+	return os.WriteFile(path, data, 0644)
+}
+
+func GetFileInfo(path string) (*FileInfo, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+	return &FileInfo{
+		Name:       filepath.Base(path),
+		Path:       path,
+		Size:       info.Size(),
+		IsDir:      info.IsDir(),
+		ModifyTime: info.ModTime().UnixMilli(),
+		Mode:       int32(info.Mode()),
+	}, nil
+}
