@@ -29,6 +29,8 @@ export function GetControlSessions():Promise<any>;
 
 export function GetDeviceList():Promise<any>;
 
+export function GetFileRenameResult(arg1:string):Promise<any>;
+
 export function GetFileSessionByDeviceCode(arg1:number):Promise<any>;
 
 export function GetFileTransferStatus(arg1:string):Promise<any>;
@@ -54,6 +56,10 @@ export function ListLocalFiles(arg1:string):Promise<any>;
 export function Reconnect():Promise<any>;
 
 export function RemoveSession(arg1:string):Promise<any>;
+
+export function RenameLocalFile(arg1:string,arg2:string):Promise<any>;
+
+export function RenameRemoteFile(arg1:string,arg2:string,arg3:string):Promise<any>;
 
 export function RequestRemoteFileList(arg1:string,arg2:string):Promise<any>;
 

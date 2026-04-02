@@ -11,6 +11,7 @@ import (
 	"godesk-client/internal/service/session"
 	"godesk-client/internal/utils"
 	pb "godesk-client/proto"
+	"path/filepath"
 	"runtime"
 	"time"
 
@@ -177,6 +178,10 @@ func (in *Service) handleMessage(req *pb.ChannelRequest) {
 		in.handleFileListRequest(req)
 	case "file_list_response":
 		in.handleFileListResponse(req)
+	case "file_rename_request":
+		in.handleFileRenameRequest(req)
+	case "file_rename_response":
+		in.handleFileRenameResponse(req)
 	case "file_transfer_start":
 		in.handleFileTransferStart(req)
 	case "file_transfer_data":
@@ -842,6 +847,44 @@ func SendFileListRequest(targetUUID string, targetCode uint64, path string) erro
 	return nil
 }
 
+// SendFileRenameRequest 发送文件重命名请求
+func SendFileRenameRequest(targetUUID string, requestId string, oldPath string, newName string) error {
+	if stream == nil {
+		logger.Error("[sys] stream is nil, cannot send file rename request")
+		return fmt.Errorf("stream is nil")
+	}
+
+	reqData := &pb.FileRenameRequestData{
+		RequestId: requestId,
+		OldPath:   oldPath,
+		NewName:   newName,
+		Timestamp: time.Now().UnixMilli(),
+	}
+
+	data, err := json.Marshal(reqData)
+	if err != nil {
+		logger.Error("[sys] marshal file rename request error.", zap.Error(err))
+		return err
+	}
+
+	req := &pb.ChannelRequest{
+		SendClientUuid:   myUUID,
+		TargetClientUuid: targetUUID,
+		Key:              "file_rename_request",
+		Data:             data,
+	}
+
+	logger.Info("[sys] sending file rename request.", zap.String("targetUUID", targetUUID), zap.String("requestId", requestId), zap.String("oldPath", oldPath), zap.String("newName", newName))
+
+	if err := stream.Send(req); err != nil {
+		logger.Error("[sys] send file rename request error.", zap.Error(err))
+		return err
+	}
+
+	logger.Info("[sys] file rename request sent.", zap.String("targetUUID", targetUUID), zap.String("requestId", requestId))
+	return nil
+}
+
 // handleFileListRequest 处理文件列表请求（被控端收到）
 func (in *Service) handleFileListRequest(req *pb.ChannelRequest) {
 	var data pb.FileListRequestData
@@ -901,6 +944,72 @@ func (in *Service) handleFileListResponse(req *pb.ChannelRequest) {
 	logger.Info("[sys] received file list response.", zap.Int32("code", data.Code), zap.Int("fileCount", len(data.Files)), zap.String("currentPath", data.CurrentPath), zap.String("fromUUID", req.SendClientUuid))
 	cache.SetRemoteFileList(req.SendClientUuid, data.CurrentPath, data)
 	logger.Info("[sys] remote file list cached.", zap.String("cacheKey", req.SendClientUuid+":"+data.CurrentPath))
+}
+
+// handleFileRenameRequest 处理文件重命名请求（被控端收到）
+func (in *Service) handleFileRenameRequest(req *pb.ChannelRequest) {
+	var data pb.FileRenameRequestData
+	if err := json.Unmarshal(req.Data, &data); err != nil {
+		logger.Error("[sys] unmarshal file rename request error.", zap.Error(err))
+		return
+	}
+
+	logger.Info("[sys] received file rename request.", zap.String("requestId", data.RequestId), zap.String("oldPath", data.OldPath), zap.String("newName", data.NewName))
+
+	respCode := int32(0)
+	respMsg := "success"
+	var newPath string
+
+	err := file.RenameFile(data.OldPath, data.NewName)
+	if err != nil {
+		respCode = 4
+		respMsg = err.Error()
+		logger.Error("[sys] rename file error.", zap.Error(err))
+	} else {
+		dir := filepath.Dir(data.OldPath)
+		newPath = filepath.Clean(filepath.Join(dir, data.NewName))
+	}
+
+	respData := &pb.FileRenameResponseData{
+		RequestId: data.RequestId,
+		Code:      respCode,
+		Message:   respMsg,
+		NewPath:   newPath,
+		Timestamp: time.Now().UnixMilli(),
+	}
+
+	jsonData, err := json.Marshal(respData)
+	if err != nil {
+		logger.Error("[sys] marshal file rename response error.", zap.Error(err))
+		return
+	}
+
+	resp := &pb.ChannelRequest{
+		SendClientUuid:   myUUID,
+		TargetClientUuid: req.SendClientUuid,
+		Key:              "file_rename_response",
+		Data:             jsonData,
+	}
+
+	if err := stream.Send(resp); err != nil {
+		logger.Error("[sys] send file rename response error.", zap.Error(err))
+		return
+	}
+
+	logger.Info("[sys] file rename response sent.", zap.String("requestId", data.RequestId), zap.Int32("code", respCode), zap.String("newPath", newPath))
+}
+
+// handleFileRenameResponse 处理文件重命名响应（控制端收到）
+func (in *Service) handleFileRenameResponse(req *pb.ChannelRequest) {
+	var data pb.FileRenameResponseData
+	if err := json.Unmarshal(req.Data, &data); err != nil {
+		logger.Error("[sys] unmarshal file rename response error.", zap.Error(err))
+		return
+	}
+
+	logger.Info("[sys] received file rename response.", zap.String("requestId", data.RequestId), zap.Int32("code", data.Code), zap.String("message", data.Message), zap.String("newPath", data.NewPath))
+
+	cache.SetFileRenameResult(data.RequestId, data.Code, data.Message, data.NewPath)
 }
 
 // ========== 文件传输相关方法 ==========

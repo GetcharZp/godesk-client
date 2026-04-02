@@ -239,3 +239,41 @@ func ClearFileTransfer(transferId string) {
 	}
 	delete(fileTransferCaches, transferId)
 }
+
+// ========== 文件重命名结果缓存 ==========
+
+var (
+	fileRenameResults      = make(map[string]*FileRenameResult)
+	fileRenameResultsMutex sync.Mutex
+)
+
+type FileRenameResult struct {
+	Code    int32
+	Message string
+	NewPath string
+}
+
+func SetFileRenameResult(requestId string, code int32, message string, newPath string) {
+	fileRenameResultsMutex.Lock()
+	defer fileRenameResultsMutex.Unlock()
+	fileRenameResults[requestId] = &FileRenameResult{
+		Code:    code,
+		Message: message,
+		NewPath: newPath,
+	}
+}
+
+func GetFileRenameResult(requestId string) *FileRenameResult {
+	fileRenameResultsMutex.Lock()
+	defer fileRenameResultsMutex.Unlock()
+	if result, ok := fileRenameResults[requestId]; ok {
+		return result
+	}
+	return nil
+}
+
+func ClearFileRenameResult(requestId string) {
+	fileRenameResultsMutex.Lock()
+	defer fileRenameResultsMutex.Unlock()
+	delete(fileRenameResults, requestId)
+}

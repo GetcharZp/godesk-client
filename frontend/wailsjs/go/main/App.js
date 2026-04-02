@@ -54,6 +54,10 @@ export function GetDeviceList() {
   return window['go']['main']['App']['GetDeviceList']();
 }
 
+export function GetFileRenameResult(arg1) {
+  return window['go']['main']['App']['GetFileRenameResult'](arg1);
+}
+
 export function GetFileSessionByDeviceCode(arg1) {
   return window['go']['main']['App']['GetFileSessionByDeviceCode'](arg1);
 }
@@ -104,6 +108,14 @@ export function Reconnect() {
 
 export function RemoveSession(arg1) {
   return window['go']['main']['App']['RemoveSession'](arg1);
+}
+
+export function RenameLocalFile(arg1, arg2) {
+  return window['go']['main']['App']['RenameLocalFile'](arg1, arg2);
+}
+
+export function RenameRemoteFile(arg1, arg2, arg3) {
+  return window['go']['main']['App']['RenameRemoteFile'](arg1, arg2, arg3);
 }
 
 export function RequestRemoteFileList(arg1, arg2) {

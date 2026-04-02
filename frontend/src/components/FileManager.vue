@@ -1,5 +1,5 @@
 <template>
-  <div class="file-manager">
+  <div class="file-manager" @contextmenu.prevent>
     <div class="connection-panel" v-if="!connectedDevice">
       <a-card title="连接远程设备" class="connection-card">
         <a-form layout="vertical">
@@ -40,7 +40,7 @@
               <ReloadOutlined />
             </a-button>
           </div>
-          <div class="file-list">
+          <div class="file-list" tabindex="0" @keydown="handleLocalKeyDown">
             <div v-if="localLoading" class="loading">
               <a-spin />
             </div>
@@ -52,13 +52,27 @@
                 v-for="file in localFiles"
                 :key="file.path"
                 class="file-item"
-                :class="{ selected: selectedLocalFile?.path === file.path }"
-                @click="selectLocalFile(file)"
-                @dblclick="openLocalFolder(file)"
+                :class="{ selected: selectedLocalFile?.path === file.path, editing: editingLocalFile?.path === file.path }"
+                @click.stop="selectLocalFile(file)"
+                @dblclick.stop="openLocalFolder(file)"
+                @contextmenu.stop.prevent="showLocalContextMenu($event, file)"
               >
                 <FolderOutlined v-if="file.isDir" class="file-icon folder" />
                 <FileOutlined v-else class="file-icon" />
-                <span class="file-name">{{ file.name }}</span>
+                <template v-if="editingLocalFile?.path === file.path">
+                  <input
+                    v-model="editingFileName"
+                    class="file-name-edit"
+                    @blur="finishLocalEdit"
+                    @keyup.enter="finishLocalEdit"
+                    @keyup.escape="cancelLocalEdit"
+                    @click.stop
+                    ref="localEditInput"
+                  />
+                </template>
+                <template v-else>
+                  <span class="file-name">{{ file.name }}</span>
+                </template>
                 <span class="file-size" v-if="!file.isDir">{{ formatSize(file.size) }}</span>
               </div>
             </div>
@@ -87,7 +101,7 @@
               <ReloadOutlined />
             </a-button>
           </div>
-          <div class="file-list">
+          <div class="file-list" tabindex="0" @keydown="handleRemoteKeyDown">
             <div v-if="remoteLoading" class="loading">
               <a-spin />
             </div>
@@ -99,13 +113,27 @@
                 v-for="file in remoteFiles"
                 :key="file.path"
                 class="file-item"
-                :class="{ selected: selectedRemoteFile?.path === file.path }"
-                @click="selectRemoteFile(file)"
-                @dblclick="openRemoteFolder(file)"
+                :class="{ selected: selectedRemoteFile?.path === file.path, editing: editingRemoteFile?.path === file.path }"
+                @click.stop="selectRemoteFile(file)"
+                @dblclick.stop="openRemoteFolder(file)"
+                @contextmenu.stop.prevent="showRemoteContextMenu($event, file)"
               >
                 <FolderOutlined v-if="file.isDir" class="file-icon folder" />
                 <FileOutlined v-else class="file-icon" />
-                <span class="file-name">{{ file.name }}</span>
+                <template v-if="editingRemoteFile?.path === file.path">
+                  <input
+                    v-model="editingFileName"
+                    class="file-name-edit"
+                    @blur="finishRemoteEdit"
+                    @keyup.enter="finishRemoteEdit"
+                    @keyup.escape="cancelRemoteEdit"
+                    @click.stop
+                    ref="remoteEditInput"
+                  />
+                </template>
+                <template v-else>
+                  <span class="file-name">{{ file.name }}</span>
+                </template>
                 <span class="file-size" v-if="!file.isDir">{{ formatSize(file.size) }}</span>
               </div>
             </div>
@@ -124,11 +152,27 @@
         </div>
       </div>
     </div>
+
+    <div
+      v-if="localContextMenuVisible"
+      class="context-menu"
+      :style="{ left: localContextMenuX + 'px', top: localContextMenuY + 'px' }"
+    >
+      <div class="context-menu-item" @click="startLocalRenameFromMenu">重命名</div>
+    </div>
+
+    <div
+      v-if="remoteContextMenuVisible"
+      class="context-menu"
+      :style="{ left: remoteContextMenuX + 'px', top: remoteContextMenuY + 'px' }"
+    >
+      <div class="context-menu-item" @click="startRemoteRenameFromMenu">重命名</div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { message } from 'ant-design-vue'
 import {
   FolderOutlined,
@@ -165,6 +209,22 @@ const transferPercent = ref(0)
 const transferReceived = ref(0)
 const transferTotal = ref(0)
 const transferStatus = ref('active')
+
+const localContextMenuVisible = ref(false)
+const localContextMenuX = ref(0)
+const localContextMenuY = ref(0)
+const localContextMenuFile = ref(null)
+
+const remoteContextMenuVisible = ref(false)
+const remoteContextMenuX = ref(0)
+const remoteContextMenuY = ref(0)
+const remoteContextMenuFile = ref(null)
+
+const editingLocalFile = ref(null)
+const editingRemoteFile = ref(null)
+const editingFileName = ref('')
+const originalFileName = ref('')
+
 const transferId = ref('')
 
 let pollTimer = null
@@ -188,6 +248,8 @@ onMounted(async () => {
   } else if (deviceCode.value && devicePassword.value) {
     await connectToDevice()
   }
+
+  document.addEventListener('click', hideAllContextMenu)
 })
 
 onUnmounted(() => {
@@ -197,7 +259,55 @@ onUnmounted(() => {
   if (progressTimer) {
     clearInterval(progressTimer)
   }
+  document.removeEventListener('click', hideAllContextMenu)
 })
+
+const hideAllContextMenu = () => {
+  localContextMenuVisible.value = false
+  remoteContextMenuVisible.value = false
+}
+
+const handleLocalKeyDown = (e) => {
+  if (e.key === 'F2' && selectedLocalFile.value && !editingLocalFile.value) {
+    e.preventDefault()
+    startEditingLocal()
+  }
+}
+
+const handleRemoteKeyDown = (e) => {
+  if (e.key === 'F2' && selectedRemoteFile.value && !editingRemoteFile.value) {
+    e.preventDefault()
+    startEditingRemote()
+  }
+}
+
+const startEditingLocal = () => {
+  if (!selectedLocalFile.value) return
+  editingLocalFile.value = selectedLocalFile.value
+  editingFileName.value = selectedLocalFile.value.name
+  originalFileName.value = selectedLocalFile.value.name
+  nextTick(() => {
+    const inputs = document.querySelectorAll('.file-name-edit')
+    if (inputs.length > 0) {
+      inputs[0].focus()
+      inputs[0].select()
+    }
+  })
+}
+
+const startEditingRemote = () => {
+  if (!selectedRemoteFile.value) return
+  editingRemoteFile.value = selectedRemoteFile.value
+  editingFileName.value = selectedRemoteFile.value.name
+  originalFileName.value = selectedRemoteFile.value.name
+  nextTick(() => {
+    const inputs = document.querySelectorAll('.file-name-edit')
+    if (inputs.length > 0) {
+      inputs[0].focus()
+      inputs[0].select()
+    }
+  })
+}
 
 const connectToDevice = async () => {
   if (!deviceCode.value.trim() || !devicePassword.value.trim()) {
@@ -210,7 +320,6 @@ const connectToDevice = async () => {
     const deviceCodeNum = parseInt(deviceCode.value)
     console.log('[FileManager] Connecting to device:', deviceCodeNum)
 
-    // 检查是否已有该设备的文件会话
     const existingSessionRes = await getFileSessionByDeviceCode(deviceCodeNum)
     console.log('[FileManager] Existing file session:', existingSessionRes)
     
@@ -285,7 +394,6 @@ const connectToDevice = async () => {
 }
 
 const disconnect = async () => {
-  // 发送断开连接通知
   if (connectedDevice.value?.uuid) {
     try {
       await disconnectControl(connectedDevice.value.uuid)
@@ -294,7 +402,6 @@ const disconnect = async () => {
     }
   }
   
-  // 移除会话
   if (connectedDevice.value?.sessionId) {
     try {
       await removeSession(connectedDevice.value.sessionId)
@@ -347,7 +454,6 @@ const fetchRemoteFileList = async () => {
   try {
     await requestRemoteFileList(connectedDevice.value.sessionId, remotePath.value)
 
-    // 等待响应，最多重试10次
     let res = null
     for (let i = 0; i < 10; i++) {
       await new Promise(resolve => setTimeout(resolve, 200))
@@ -359,7 +465,6 @@ const fetchRemoteFileList = async () => {
     }
 
     if (res && res.code === 200 && res.data) {
-      // 规范化字段名
       const files = (res.data.files || res.data.Files || []).map(f => ({
         name: f.name || f.Name,
         path: f.path || f.Path,
@@ -389,7 +494,7 @@ const goToLocalParent = () => {
   if (!localPath.value) return
   const parts = localPath.value.replace(/\\/g, '/').split('/').filter(p => p)
   parts.pop()
-  localPath.value = parts.length > 0 ? parts.join('/') : ''
+  localPath.value = parts.length > 0 ? parts.join('\\') : ''
   fetchLocalFileList()
 }
 
@@ -397,21 +502,24 @@ const goToRemoteParent = () => {
   if (!remotePath.value) return
   const parts = remotePath.value.replace(/\\/g, '/').split('/').filter(p => p)
   parts.pop()
-  remotePath.value = parts.length > 0 ? parts.join('/') : ''
+  remotePath.value = parts.length > 0 ? parts.join('\\') : ''
   fetchRemoteFileList()
 }
 
 const selectLocalFile = (file) => {
   selectedLocalFile.value = file
+  editingLocalFile.value = null
 }
 
 const selectRemoteFile = (file) => {
   selectedRemoteFile.value = file
+  editingRemoteFile.value = null
 }
 
 const openLocalFolder = (file) => {
   if (file.isDir) {
     localPath.value = file.path
+    selectedLocalFile.value = null
     fetchLocalFileList()
   }
 }
@@ -419,6 +527,7 @@ const openLocalFolder = (file) => {
 const openRemoteFolder = (file) => {
   if (file.isDir) {
     remotePath.value = file.path
+    selectedRemoteFile.value = null
     fetchRemoteFileList()
   }
 }
@@ -427,10 +536,9 @@ const uploadFile = async () => {
   if (!selectedLocalFile.value || selectedLocalFile.value.isDir) return
   
   const targetPath = remotePath.value 
-    ? `${remotePath.value}/${selectedLocalFile.value.name}`.replace(/\\/g, '/')
+    ? `${remotePath.value}\\${selectedLocalFile.value.name}`
     : selectedLocalFile.value.name
 
-  // 检查目标文件是否存在
   try {
     const checkRes = await checkFileExistsApi(targetPath)
     if (checkRes.code === 200 && checkRes.data?.exists) {
@@ -471,7 +579,6 @@ const downloadFile = async () => {
     ? `${localPath.value}\\${selectedRemoteFile.value.name}`
     : selectedRemoteFile.value.name
 
-  // 检查本地文件是否存在
   try {
     const checkRes = await checkFileExistsApi(localTargetPath)
     if (checkRes.code === 200 && checkRes.data?.exists) {
@@ -571,7 +678,6 @@ const formatSize = (bytes) => {
   return (bytes / 1024 / 1024 / 1024).toFixed(1) + ' GB'
 }
 
-// API 调用
 const getFileSessionByDeviceCode = (deviceCode) => {
   if (window.go?.main?.App?.GetFileSessionByDeviceCode) {
     return window.go.main.App.GetFileSessionByDeviceCode(deviceCode)
@@ -608,7 +714,7 @@ const listLocalFiles = (path) => {
   if (window.go?.main?.App?.ListLocalFiles) {
     return window.go.main.App.ListLocalFiles(path)
   }
-  return Promise.resolve({ code: 200, data: [] })
+  return Promise.resolve({ code: -1 })
 }
 
 const requestRemoteFileList = (sessionId, path) => {
@@ -629,14 +735,14 @@ const uploadFileApi = (sessionId, localPath, remotePath) => {
   if (window.go?.main?.App?.UploadFile) {
     return window.go.main.App.UploadFile(sessionId, localPath, remotePath)
   }
-  return Promise.resolve({ code: -1, msg: 'API 不可用' })
+  return Promise.resolve({ code: -1 })
 }
 
 const downloadFileApi = (sessionId, remotePath, localPath) => {
   if (window.go?.main?.App?.DownloadFile) {
     return window.go.main.App.DownloadFile(sessionId, remotePath, localPath)
   }
-  return Promise.resolve({ code: -1, msg: 'API 不可用' })
+  return Promise.resolve({ code: -1 })
 }
 
 const checkFileExistsApi = (path) => {
@@ -658,6 +764,148 @@ const cancelFileTransferApi = (sessionId, transferId, reason) => {
     return window.go.main.App.CancelFileTransfer(sessionId, transferId, reason)
   }
   return Promise.resolve({ code: -1 })
+}
+
+const renameLocalFileApi = (oldPath, newName) => {
+  if (window.go?.main?.App?.RenameLocalFile) {
+    return window.go.main.App.RenameLocalFile(oldPath, newName)
+  }
+  return Promise.resolve({ code: -1 })
+}
+
+const renameRemoteFileApi = (sessionId, oldPath, newName) => {
+  if (window.go?.main?.App?.RenameRemoteFile) {
+    return window.go.main.App.RenameRemoteFile(sessionId, oldPath, newName)
+  }
+  return Promise.resolve({ code: -1 })
+}
+
+const getFileRenameResultApi = (requestId) => {
+  if (window.go?.main?.App?.GetFileRenameResult) {
+    return window.go.main.App.GetFileRenameResult(requestId)
+  }
+  return Promise.resolve({ code: -1 })
+}
+
+const showLocalContextMenu = (e, file) => {
+  e.preventDefault()
+  e.stopPropagation()
+  selectedLocalFile.value = file
+  localContextMenuFile.value = file
+  localContextMenuX.value = e.clientX
+  localContextMenuY.value = e.clientY
+  localContextMenuVisible.value = true
+  remoteContextMenuVisible.value = false
+}
+
+const showRemoteContextMenu = (e, file) => {
+  e.preventDefault()
+  e.stopPropagation()
+  selectedRemoteFile.value = file
+  remoteContextMenuFile.value = file
+  remoteContextMenuX.value = e.clientX
+  remoteContextMenuY.value = e.clientY
+  remoteContextMenuVisible.value = true
+  localContextMenuVisible.value = false
+}
+
+const startLocalRenameFromMenu = () => {
+  localContextMenuVisible.value = false
+  if (localContextMenuFile.value) {
+    selectedLocalFile.value = localContextMenuFile.value
+    startEditingLocal()
+  }
+}
+
+const startRemoteRenameFromMenu = () => {
+  remoteContextMenuVisible.value = false
+  if (remoteContextMenuFile.value) {
+    selectedRemoteFile.value = remoteContextMenuFile.value
+    startEditingRemote()
+  }
+}
+
+const cancelLocalEdit = () => {
+  editingLocalFile.value = null
+  editingFileName.value = ''
+}
+
+const cancelRemoteEdit = () => {
+  editingRemoteFile.value = null
+  editingFileName.value = ''
+}
+
+const finishLocalEdit = async () => {
+  if (!editingLocalFile.value) return
+
+  const file = editingLocalFile.value
+  const newName = editingFileName.value.trim()
+
+  if (!newName || newName === originalFileName.value) {
+    editingLocalFile.value = null
+    return
+  }
+
+  try {
+    const res = await renameLocalFileApi(file.path, newName)
+    if (res.code === 200) {
+      message.success('重命名成功')
+      refreshLocalFiles()
+    } else {
+      message.error('重命名失败: ' + (res.msg || '未知错误'))
+    }
+  } catch (e) {
+    console.error('Rename local file error:', e)
+    message.error('重命名失败')
+  }
+
+  editingLocalFile.value = null
+}
+
+const finishRemoteEdit = async () => {
+  if (!editingRemoteFile.value) return
+
+  const file = editingRemoteFile.value
+  const newName = editingFileName.value.trim()
+
+  if (!newName || newName === originalFileName.value) {
+    editingRemoteFile.value = null
+    return
+  }
+
+  try {
+    const res = await renameRemoteFileApi(connectedDevice.value.sessionId, file.path, newName)
+    if (res.code === 200) {
+      if (res.data?.code === 0) {
+        message.success('重命名成功')
+        refreshRemoteFiles()
+      } else {
+        const requestId = res.data?.requestId
+        if (requestId) {
+          const checkResult = setInterval(async () => {
+            const result = await getFileRenameResultApi(requestId)
+            if (result.code === 200 && result.data?.exists) {
+              clearInterval(checkResult)
+              if (result.data.code === 0) {
+                message.success('重命名成功')
+                refreshRemoteFiles()
+              } else {
+                message.error('重命名失败: ' + result.data.message)
+              }
+            }
+          }, 200)
+          setTimeout(() => clearInterval(checkResult), 10000)
+        }
+      }
+    } else {
+      message.error('重命名失败: ' + (res.msg || '未知错误'))
+    }
+  } catch (e) {
+    console.error('Rename remote file error:', e)
+    message.error('重命名失败')
+  }
+
+  editingRemoteFile.value = null
 }
 </script>
 
@@ -762,6 +1010,7 @@ const cancelFileTransferApi = (sessionId, transferId, reason) => {
   flex: 1;
   overflow-y: auto;
   padding: 8px;
+  outline: none;
 }
 
 .loading,
@@ -779,19 +1028,25 @@ const cancelFileTransferApi = (sessionId, transferId, reason) => {
   padding: 8px;
   border-radius: 4px;
   cursor: pointer;
+  transition: background-color 0.15s;
 }
 
 .file-item:hover {
-  background: #f5f5f5;
+  background: #f0f0f0;
 }
 
 .file-item.selected {
+  background: #bae7ff;
+}
+
+.file-item.editing {
   background: #e6f7ff;
 }
 
 .file-icon {
   margin-right: 8px;
   color: #999;
+  flex-shrink: 0;
 }
 
 .file-icon.folder {
@@ -805,10 +1060,22 @@ const cancelFileTransferApi = (sessionId, transferId, reason) => {
   white-space: nowrap;
 }
 
+.file-name-edit {
+  flex: 1;
+  border: 2px solid #1890ff;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 14px;
+  outline: none;
+  background: #fff;
+  min-width: 0;
+}
+
 .file-size {
   color: #999;
   font-size: 12px;
   margin-left: 8px;
+  flex-shrink: 0;
 }
 
 .transfer-buttons {
@@ -816,6 +1083,27 @@ const cancelFileTransferApi = (sessionId, transferId, reason) => {
   flex-direction: column;
   justify-content: center;
   gap: 8px;
-  padding: 8px;
+  padding: 0 8px;
+}
+
+.context-menu {
+  position: fixed;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 120px;
+  padding: 4px 0;
+}
+
+.context-menu-item {
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.context-menu-item:hover {
+  background: #f5f5f5;
 }
 </style>

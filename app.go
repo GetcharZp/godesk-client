@@ -19,6 +19,7 @@ import (
 	"godesk-client/internal/service/user"
 	pb "godesk-client/proto"
 	"os"
+	"path/filepath"
 	"time"
 
 	"go.uber.org/zap"
@@ -465,6 +466,70 @@ func (a *App) CheckFileExists(path string) any {
 	exists := !os.IsNotExist(err)
 	return resp(map[string]any{
 		"exists": exists,
+	}, nil)
+}
+
+// RenameLocalFile 重命名本地文件
+func (a *App) RenameLocalFile(oldPath string, newName string) any {
+	if err := file.RenameFile(oldPath, newName); err != nil {
+		return resp(nil, err)
+	}
+	dir := filepath.Dir(oldPath)
+	newPath := filepath.Clean(filepath.Join(dir, newName))
+	return resp(map[string]any{
+		"oldPath": oldPath,
+		"newPath": newPath,
+		"newName": newName,
+	}, nil)
+}
+
+// RenameRemoteFile 重命名远程文件
+func (a *App) RenameRemoteFile(sessionId string, oldPath string, newName string) any {
+	sess := session.GetSession(sessionId)
+	if sess == nil || sess.TargetUUID == "" {
+		return resp(nil, fmt.Errorf("session not found or targetUUID is empty"))
+	}
+
+	requestId := fmt.Sprintf("%d", time.Now().UnixMilli())
+
+	// 本地测试：直接重命名
+	if sess.TargetUUID == channel.GetMyUUID() {
+		if err := file.RenameFile(oldPath, newName); err != nil {
+			return resp(nil, err)
+		}
+		dir := filepath.Dir(oldPath)
+		newPath := filepath.Clean(filepath.Join(dir, newName))
+		return resp(map[string]any{
+			"requestId": requestId,
+			"code":      0,
+			"newPath":   newPath,
+		}, nil)
+	}
+
+	// 发送重命名请求到远程
+	if err := channel.SendFileRenameRequest(sess.TargetUUID, requestId, oldPath, newName); err != nil {
+		return resp(nil, err)
+	}
+
+	return resp(map[string]any{
+		"requestId": requestId,
+	}, nil)
+}
+
+// GetFileRenameResult 获取文件重命名结果
+func (a *App) GetFileRenameResult(requestId string) any {
+	result := cache.GetFileRenameResult(requestId)
+	if result == nil {
+		return resp(map[string]any{
+			"exists": false,
+		}, nil)
+	}
+	return resp(map[string]any{
+		"exists":   true,
+		"code":     result.Code,
+		"message":  result.Message,
+		"newPath":  result.NewPath,
+		"complete": true,
 	}, nil)
 }
 
