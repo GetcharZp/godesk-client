@@ -1,20 +1,11 @@
 <template>
   <div class="remote-control-page" :class="{ 'has-session': activeSessions.length > 0, 'sidebar-collapsed': isSidebarCollapsed && activeSessions.length > 0 }">
-    <div class="header">
-      <h2 class="page-title">远程控制</h2>
-    </div>
+    <template v-if="activeSessions.length === 0">
+      <div class="no-session-container">
+        <div class="header">
+          <h2 class="page-title">远程控制</h2>
+        </div>
 
-    <div class="content-wrapper">
-      <div class="main-section" :class="{ centered: activeSessions.length === 0, collapsed: isSidebarCollapsed && activeSessions.length > 0 }">
-        <!-- 收起/展开按钮 -->
-        <button
-          v-if="activeSessions.length > 0"
-          class="sidebar-toggle"
-          @click="isSidebarCollapsed = !isSidebarCollapsed"
-          :title="isSidebarCollapsed ? '展开' : '收起'"
-        >
-          {{ isSidebarCollapsed ? '→' : '←' }}
-        </button>
         <div class="section-card">
           <h3>本机设备</h3>
           <div class="device-info-row">
@@ -70,88 +61,161 @@
             </div>
           </div>
         </div>
+      </div>
+    </template>
 
-        <div class="section-card sessions-card" v-if="activeSessions.length > 0">
-          <h3>活跃会话 ({{ activeSessions.length }})</h3>
-          <div class="session-list">
-            <div
-              v-for="session in activeSessions"
-              :key="session.sessionId"
-              class="session-item"
-              :class="{ active: currentSessionId === session.sessionId }"
-              @click="selectSession(session.sessionId)"
-            >
-              <span class="session-code">{{ session.deviceName }}</span>
-              <span class="session-status" :class="session.status">
-                {{ getStatusText(session.status) }}
-              </span>
-              <div class="session-actions">
-                <button class="btn-view" @click.stop="selectSession(session.sessionId)">查看</button>
-                <button class="btn-disconnect" @click.stop="closeSession(session.sessionId)">断开</button>
+    <template v-else>
+      <div class="header">
+        <h2 class="page-title">远程控制</h2>
+      </div>
+
+      <div class="content-wrapper">
+        <div class="main-section" :class="{ collapsed: isSidebarCollapsed }">
+          <button
+            class="sidebar-toggle"
+            @click="isSidebarCollapsed = !isSidebarCollapsed"
+            :title="isSidebarCollapsed ? '展开' : '收起'"
+          >
+            {{ isSidebarCollapsed ? '→' : '←' }}
+          </button>
+          <div class="section-card">
+            <h3>本机设备</h3>
+            <div class="device-info-row">
+              <span class="info-label">设备码</span>
+              <span class="info-value">{{ myDeviceInfo.code || '-' }}</span>
+              <button class="btn-copy" @click="copyToClipboard(myDeviceInfo.code)" :disabled="!myDeviceInfo.code">
+                复制
+              </button>
+            </div>
+            <div class="device-info-row">
+              <span class="info-label">密码</span>
+              <span class="info-value password">{{ showPassword ? myDeviceInfo.password : '******' }}</span>
+              <button class="btn-toggle" @click="showPassword = !showPassword">
+                {{ showPassword ? '隐藏' : '显示' }}
+              </button>
+              <button class="btn-copy" @click="copyToClipboard(myDeviceInfo.password)" :disabled="!myDeviceInfo.password">
+                复制
+              </button>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <h3>远程连接</h3>
+            <div class="connect-form">
+              <div class="form-row">
+                <div class="form-item">
+                  <label>设备码</label>
+                  <input
+                    type="text"
+                    v-model="remoteDeviceCode"
+                    placeholder="输入对方设备码"
+                  />
+                </div>
+                <div class="form-item">
+                  <label>密码</label>
+                  <input
+                    :type="showRemotePassword ? 'text' : 'password'"
+                    v-model="remotePassword"
+                    placeholder="输入对方密码"
+                  />
+                  <button class="btn-toggle-pwd" @click="showRemotePassword = !showRemotePassword">
+                    {{ showRemotePassword ? '隐藏' : '显示' }}
+                  </button>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="btn-primary" @click="startRemoteControl" :disabled="connecting">
+                  {{ connecting ? '连接中...' : '远程控制' }}
+                </button>
+                <button class="btn-secondary" @click="startRemoteFile" :disabled="connecting">
+                  远程文件
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card sessions-card">
+            <h3>活跃会话 ({{ activeSessions.length }})</h3>
+            <div class="session-list">
+              <div
+                v-for="session in activeSessions"
+                :key="session.sessionId"
+                class="session-item"
+                :class="{ active: currentSessionId === session.sessionId }"
+                @click="selectSession(session.sessionId)"
+              >
+                <span class="session-code">{{ session.deviceName }}</span>
+                <span class="session-status" :class="session.status">
+                  {{ getStatusText(session.status) }}
+                </span>
+                <div class="session-actions">
+                  <button class="btn-view" @click.stop="selectSession(session.sessionId)">查看</button>
+                  <button class="btn-disconnect" @click.stop="closeSession(session.sessionId)">断开</button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="screen-section" v-if="activeSessions.length > 0">
-        <div class="screen-header">
-          <div class="session-tabs">
-            <div
-              v-for="session in activeSessions"
-              :key="session.sessionId"
-              class="session-tab"
-              :class="{ active: currentSessionId === session.sessionId }"
-              @click="selectSession(session.sessionId)"
-            >
-              <span class="tab-name">{{ session.deviceName }}</span>
-              <span class="tab-status" :class="session.status"></span>
-              <button class="tab-close" @click.stop="closeSession(session.sessionId)">×</button>
+        <div class="screen-section">
+          <div class="screen-header">
+            <div class="session-tabs">
+              <div
+                v-for="session in activeSessions"
+                :key="session.sessionId"
+                class="session-tab"
+                :class="{ active: currentSessionId === session.sessionId }"
+                @click="selectSession(session.sessionId)"
+              >
+                <span class="tab-name">{{ session.deviceName }}</span>
+                <span class="tab-status" :class="session.status"></span>
+                <button class="tab-close" @click.stop="closeSession(session.sessionId)">×</button>
+              </div>
+            </div>
+            <div class="screen-toolbar" v-if="currentSession">
+              <button class="toolbar-btn" :class="{ active: currentSession.viewOnly }" @click="toggleViewOnly">
+                仅查看
+              </button>
+              <button class="toolbar-btn" @click="toggleFullscreen">
+                {{ isFullscreen ? '退出全屏' : '全屏' }}
+              </button>
+              <button class="toolbar-btn" @click="refreshScreen">刷新</button>
+              <button class="toolbar-btn danger" @click="disconnectCurrent">断开</button>
             </div>
           </div>
-          <div class="screen-toolbar" v-if="currentSession">
-            <button class="toolbar-btn" :class="{ active: currentSession.viewOnly }" @click="toggleViewOnly">
-              仅查看
-            </button>
-            <button class="toolbar-btn" @click="toggleFullscreen">
-              {{ isFullscreen ? '退出全屏' : '全屏' }}
-            </button>
-            <button class="toolbar-btn" @click="refreshScreen">刷新</button>
-            <button class="toolbar-btn danger" @click="disconnectCurrent">断开</button>
-          </div>
-        </div>
-        <div class="screen-wrapper" ref="screenWrapper">
-          <template v-if="currentSession">
-            <canvas
-              ref="screenCanvas"
-              class="screen-canvas"
-              :width="currentSession.screenWidth || 1920"
-              :height="currentSession.screenHeight || 1080"
-              @mousemove="handleMouseMove"
-              @mousedown="handleMouseDown"
-              @mouseup="handleMouseUp"
-              @wheel="handleMouseWheel"
-              @keydown="handleKeyDown"
-              @keyup="handleKeyUp"
-              @contextmenu.prevent="handleContextMenu"
-              tabindex="0"
-              :class="{ 'control-mode': !currentSession.viewOnly && currentSession.status === 'connected' }"
-            ></canvas>
-            <div v-if="currentSession.status === 'connecting'" class="screen-overlay">
-              <div class="loading-spinner"></div>
-              <p>正在连接...</p>
+          <div class="screen-wrapper" ref="screenWrapper">
+            <template v-if="currentSession">
+              <canvas
+                ref="screenCanvas"
+                class="screen-canvas"
+                :width="currentSession.screenWidth || 1920"
+                :height="currentSession.screenHeight || 1080"
+                @mousemove="handleMouseMove"
+                @mousedown="handleMouseDown"
+                @mouseup="handleMouseUp"
+                @wheel="handleMouseWheel"
+                @keydown="handleKeyDown"
+                @keyup="handleKeyUp"
+                @contextmenu.prevent="handleContextMenu"
+                tabindex="0"
+                :class="{ 'control-mode': !currentSession.viewOnly && currentSession.status === 'connected' }"
+              ></canvas>
+              <div v-if="currentSession.status === 'connecting'" class="screen-overlay">
+                <div class="loading-spinner"></div>
+                <p>正在连接...</p>
+              </div>
+              <div v-if="currentSession.status === 'error'" class="screen-overlay error">
+                <p>连接失败</p>
+                <button class="btn-retry" @click="reconnect">重新连接</button>
+              </div>
+            </template>
+            <div v-else class="screen-overlay">
+              <p>请选择一个会话</p>
             </div>
-            <div v-if="currentSession.status === 'error'" class="screen-overlay error">
-              <p>连接失败</p>
-              <button class="btn-retry" @click="reconnect">重新连接</button>
-            </div>
-          </template>
-          <div v-else class="screen-overlay">
-            <p>请选择一个会话</p>
           </div>
         </div>
       </div>
-    </div>
+    </template>
   </div>
 </template>
 
@@ -764,23 +828,40 @@ watch(currentSessionId, (newSessionId) => {
   max-width: none;
 }
 
+.no-session-container {
+  width: 750px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.no-session-container .section-card {
+  margin-bottom: 24px;
+}
+
+.no-session-container .section-card:last-child {
+  margin-bottom: 0;
+}
+
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   flex-shrink: 0;
 }
 
 .page-title {
-  color: #333;
+  color: #00d4ff;
   margin: 0;
-  font-size: 20px;
+  font-size: 24px;
+  font-weight: 500;
+  text-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+  letter-spacing: 0.5px;
 }
 
 .content-wrapper {
   display: flex;
-  gap: 20px;
+  gap: 24px;
   flex: 1;
   min-height: 0;
 }
@@ -797,11 +878,6 @@ watch(currentSessionId, (newSessionId) => {
   transition: width 0.3s ease;
 }
 
-.main-section.centered {
-  width: 480px;
-  margin: 0 auto;
-}
-
 .main-section.collapsed {
   width: 40px;
   overflow: hidden;
@@ -816,22 +892,25 @@ watch(currentSessionId, (newSessionId) => {
   position: absolute;
   right: 8px;
   top: 8px;
-  width: 24px;
-  height: 24px;
-  border: none;
-  background-color: #f0f0f0;
-  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #2d3561;
+  background: linear-gradient(135deg, #151b3d 0%, #1a2040 100%);
+  border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
+  color: #94a3b8;
 }
 
 .sidebar-toggle:hover {
-  background-color: #e0e0e0;
+  border-color: #00d4ff;
+  color: #00d4ff;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
 }
 
 .main-section.collapsed .sidebar-toggle {
@@ -858,9 +937,10 @@ watch(currentSessionId, (newSessionId) => {
 
 .screen-section {
   flex: 1;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, #151b3d 0%, #1a2040 100%);
+  border-radius: 12px;
+  border: 1px solid #2d3561;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -871,15 +951,15 @@ watch(currentSessionId, (newSessionId) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 16px;
-  border-bottom: 1px solid #eee;
-  background-color: #fafafa;
+  padding: 12px 20px;
+  border-bottom: 1px solid #2d3561;
+  background: linear-gradient(90deg, #151b3d 0%, #1a2040 100%);
   flex-shrink: 0;
 }
 
 .session-tabs {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   overflow-x: auto;
   flex: 1;
 }
@@ -887,22 +967,27 @@ watch(currentSessionId, (newSessionId) => {
 .session-tab {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background-color: #f0f0f0;
-  border-radius: 4px;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(10, 14, 39, 0.5);
+  border: 1px solid #2d3561;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
   white-space: nowrap;
+  color: #94a3b8;
 }
 
 .session-tab:hover {
-  background-color: #e0e0e0;
+  background: rgba(0, 212, 255, 0.1);
+  border-color: #00d4ff;
 }
 
 .session-tab.active {
-  background-color: #1890ff;
-  color: white;
+  background: rgba(0, 212, 255, 0.15);
+  border-color: #00d4ff;
+  color: #00d4ff;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
 }
 
 .tab-name {
@@ -913,25 +998,28 @@ watch(currentSessionId, (newSessionId) => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: #999;
+  background-color: #64748b;
 }
 
 .tab-status.connected {
-  background-color: #52c41a;
+  background-color: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
 }
 
 .tab-status.connecting {
-  background-color: #faad14;
+  background-color: #f59e0b;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
 }
 
 .tab-status.error,
 .tab-status.disconnected {
-  background-color: #ff4d4f;
+  background-color: #ef4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.5);
 }
 
 .tab-close {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border: none;
   background: none;
   cursor: pointer;
@@ -941,6 +1029,7 @@ watch(currentSessionId, (newSessionId) => {
   padding: 0;
   margin-left: 4px;
   opacity: 0.6;
+  transition: opacity 0.2s;
 }
 
 .tab-close:hover {
@@ -954,34 +1043,37 @@ watch(currentSessionId, (newSessionId) => {
 }
 
 .toolbar-btn {
-  padding: 4px 12px;
+  padding: 6px 14px;
   font-size: 12px;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  background: white;
+  border: 1px solid #2d3561;
+  border-radius: 6px;
+  background: rgba(10, 14, 39, 0.5);
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
+  color: #94a3b8;
 }
 
 .toolbar-btn:hover {
-  border-color: #1890ff;
-  color: #1890ff;
+  border-color: #00d4ff;
+  color: #00d4ff;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
 }
 
 .toolbar-btn.active {
-  background-color: #1890ff;
-  color: white;
-  border-color: #1890ff;
+  background: rgba(0, 212, 255, 0.15);
+  border-color: #00d4ff;
+  color: #00d4ff;
 }
 
 .toolbar-btn.danger {
-  color: #ff4d4f;
-  border-color: #ffccc7;
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
 .toolbar-btn.danger:hover {
-  background-color: #ff4d4f;
-  color: white;
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
 }
 
 .screen-wrapper {
@@ -989,14 +1081,14 @@ watch(currentSessionId, (newSessionId) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #1a1a1a;
+  background: radial-gradient(ellipse at center, #0f1428 0%, #0a0e27 100%);
   position: relative;
   overflow: auto;
   min-height: 0;
 }
 
 .screen-wrapper:-webkit-full-screen {
-  background-color: #1a1a1a;
+  background: radial-gradient(ellipse at center, #0f1428 0%, #0a0e27 100%);
 }
 
 .screen-canvas {
@@ -1015,22 +1107,22 @@ watch(currentSessionId, (newSessionId) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: rgba(0, 0, 0, 0.8);
-  color: white;
+  background-color: rgba(10, 14, 39, 0.9);
+  color: #e0e7ff;
 }
 
 .screen-overlay.error {
-  color: #ff4d4f;
+  color: #ef4444;
 }
 
 .loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #1890ff;
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(0, 212, 255, 0.2);
+  border-top-color: #00d4ff;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 @keyframes spin {
@@ -1038,39 +1130,45 @@ watch(currentSessionId, (newSessionId) => {
 }
 
 .btn-retry {
-  margin-top: 12px;
-  padding: 8px 20px;
-  background-color: #1890ff;
-  color: white;
+  margin-top: 16px;
+  padding: 10px 24px;
+  background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+  color: #0a0e27;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
 }
 
 .btn-retry:hover {
-  background-color: #40a9ff;
+  box-shadow: 0 0 25px rgba(0, 212, 255, 0.5);
+  transform: translateY(-2px);
 }
 
 .section-card {
-  background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, #151b3d 0%, #1a2040 100%);
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid #2d3561;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
 }
 
 .section-card h3 {
   font-size: 16px;
-  color: #333;
-  margin: 0 0 15px 0;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
+  color: #00d4ff;
+  margin: 0 0 16px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #2d3561;
+  text-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
 }
 
 .device-info-row {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .device-info-row:last-child {
@@ -1079,7 +1177,7 @@ watch(currentSessionId, (newSessionId) => {
 
 .info-label {
   font-size: 14px;
-  color: #666;
+  color: #94a3b8;
   min-width: 50px;
 }
 
@@ -1088,10 +1186,12 @@ watch(currentSessionId, (newSessionId) => {
   font-family: 'Courier New', monospace;
   font-size: 16px;
   font-weight: 600;
-  color: #333;
-  background-color: #f5f5f5;
-  padding: 8px 12px;
-  border-radius: 4px;
+  color: #00d4ff;
+  background: rgba(10, 14, 39, 0.5);
+  border: 1px solid #2d3561;
+  padding: 10px 14px;
+  border-radius: 6px;
+  text-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
 }
 
 .info-value.password {
@@ -1099,30 +1199,31 @@ watch(currentSessionId, (newSessionId) => {
 }
 
 .btn-copy, .btn-toggle {
-  padding: 6px 12px;
+  padding: 8px 14px;
   font-size: 12px;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  background: white;
+  border: 1px solid #2d3561;
+  border-radius: 6px;
+  background: rgba(10, 14, 39, 0.5);
   cursor: pointer;
-  color: #666;
-  transition: all 0.3s;
+  color: #94a3b8;
+  transition: all 0.3s ease;
 }
 
 .btn-copy:hover, .btn-toggle:hover {
-  border-color: #1890ff;
-  color: #1890ff;
+  border-color: #00d4ff;
+  color: #00d4ff;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
 }
 
 .btn-copy:disabled {
   cursor: not-allowed;
-  opacity: 0.5;
+  opacity: 0.4;
 }
 
 .connect-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
 .form-row {
@@ -1138,34 +1239,47 @@ watch(currentSessionId, (newSessionId) => {
 .form-item label {
   display: block;
   font-size: 14px;
-  color: #666;
-  margin-bottom: 6px;
+  color: #94a3b8;
+  margin-bottom: 8px;
 }
 
 .form-item input {
   width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
+  padding: 10px 14px;
+  background: #0a0e27;
+  border: 1px solid #2d3561;
+  border-radius: 6px;
   font-size: 14px;
+  color: #e0e7ff;
   box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.form-item input::placeholder {
+  color: #64748b;
 }
 
 .form-item input:focus {
-  border-color: #1890ff;
+  border-color: #00d4ff;
   outline: none;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
 }
 
 .btn-toggle-pwd {
   position: absolute;
-  right: 8px;
-  top: 28px;
-  padding: 2px 8px;
+  right: 10px;
+  top: 32px;
+  padding: 4px 10px;
   font-size: 12px;
   border: none;
   background: none;
   cursor: pointer;
-  color: #999;
+  color: #64748b;
+  transition: color 0.2s;
+}
+
+.btn-toggle-pwd:hover {
+  color: #00d4ff;
 }
 
 .form-actions {
@@ -1175,95 +1289,107 @@ watch(currentSessionId, (newSessionId) => {
 
 .btn-primary {
   flex: 1;
-  padding: 10px 16px;
-  background-color: #1890ff;
-  color: white;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+  color: #0a0e27;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
-  transition: all 0.3s;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: #40a9ff;
+  box-shadow: 0 0 25px rgba(0, 212, 255, 0.5);
+  transform: translateY(-2px);
 }
 
 .btn-primary:disabled {
-  background-color: #d9d9d9;
+  background: linear-gradient(135deg, #3d4571 0%, #2d3561 100%);
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .btn-secondary {
   flex: 1;
-  padding: 10px 16px;
-  background-color: white;
-  color: #666;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
+  padding: 12px 18px;
+  background: transparent;
+  color: #94a3b8;
+  border: 1px solid #2d3561;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
 }
 
 .btn-secondary:hover:not(:disabled) {
-  border-color: #1890ff;
-  color: #1890ff;
+  border-color: #00d4ff;
+  color: #00d4ff;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
 }
 
 .session-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .session-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background-color: #fafafa;
-  border-radius: 4px;
+  gap: 14px;
+  padding: 14px 16px;
+  background: rgba(10, 14, 39, 0.5);
+  border: 1px solid #2d3561;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
   border-left: 3px solid transparent;
 }
 
 .session-item:hover {
-  background-color: #f0f0f0;
+  background: rgba(0, 212, 255, 0.08);
+  border-color: #2d3561;
 }
 
 .session-item.active {
-  border-left-color: #1890ff;
-  background-color: #e6f7ff;
+  border-left-color: #00d4ff;
+  background: rgba(0, 212, 255, 0.1);
+  border-color: #00d4ff;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.15);
 }
 
 .session-code {
   flex: 1;
   font-size: 14px;
-  color: #333;
+  color: #e0e7ff;
 }
 
 .session-status {
   font-size: 12px;
-  padding: 2px 8px;
-  border-radius: 4px;
+  padding: 4px 12px;
+  border-radius: 12px;
 }
 
 .session-status.connected {
-  background-color: #f6ffed;
-  color: #52c41a;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid #10b981;
 }
 
 .session-status.connecting {
-  background-color: #fffbe6;
-  color: #faad14;
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid #f59e0b;
 }
 
 .session-status.error,
 .session-status.disconnected {
-  background-color: #fff2f0;
-  color: #ff4d4f;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid #ef4444;
 }
 
 .session-actions {
@@ -1272,26 +1398,30 @@ watch(currentSessionId, (newSessionId) => {
 }
 
 .btn-view, .btn-disconnect {
-  padding: 4px 12px;
+  padding: 6px 14px;
   font-size: 12px;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  background: white;
+  border: 1px solid #2d3561;
+  border-radius: 6px;
+  background: rgba(10, 14, 39, 0.5);
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
+  color: #94a3b8;
 }
 
 .btn-view:hover {
-  border-color: #1890ff;
-  color: #1890ff;
+  border-color: #00d4ff;
+  color: #00d4ff;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
 }
 
 .btn-disconnect {
-  color: #ff4d4f;
-  border-color: #ffccc7;
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
 .btn-disconnect:hover {
-  background-color: #fff2f0;
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
 }
 </style>

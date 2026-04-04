@@ -33,3 +33,7 @@ func (s *SysConfig) Get() (*SysConfig, error) {
 func (s *SysConfig) Updates() error {
 	return DB.Model(s).Where("id = ?", defaultSysConfigID).Updates(s).Error
 }
+
+func (s *SysConfig) UpdatesMap(mapData map[string]interface{}) error {
+	return DB.Model(s).Where("id = ?", defaultSysConfigID).Updates(mapData).Error
+}

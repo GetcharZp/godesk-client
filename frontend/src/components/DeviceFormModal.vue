@@ -91,7 +91,8 @@ const handleConfirm = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(10, 14, 39, 0.85);
+  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -99,52 +100,66 @@ const handleConfirm = () => {
 }
 
 .modal {
-  background-color: white;
-  padding: 24px;
-  border-radius: 8px;
-  width: 400px;
+  background: linear-gradient(135deg, #151b3d 0%, #1a2040 100%);
+  padding: 28px;
+  border-radius: 16px;
+  border: 1px solid #2d3561;
+  width: 420px;
   max-width: 90%;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 212, 255, 0.1);
 }
 
 .modal h3 {
-  margin-bottom: 20px;
-  font-size: 18px;
-  color: #333;
+  margin-bottom: 24px;
+  font-size: 20px;
+  color: #00d4ff;
+  text-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+  letter-spacing: 0.5px;
 }
 
 .form {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .form-item {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .form-item label {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   font-size: 14px;
-  color: #666;
+  color: #94a3b8;
+  letter-spacing: 0.3px;
 }
 
 .form-item input {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 12px 16px;
+  background: #0a0e27;
+  border: 1px solid #2d3561;
+  border-radius: 8px;
   font-size: 14px;
+  color: #e0e7ff;
   box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.form-item input::placeholder {
+  color: #64748b;
 }
 
 .form-item input:focus {
   outline: none;
-  border-color: #1890ff;
+  border-color: #00d4ff;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
 }
 
 .form-item input:disabled {
-  background-color: #f5f5f5;
-  color: #999;
+  background-color: rgba(10, 14, 39, 0.5);
+  color: #64748b;
   cursor: not-allowed;
+  border-color: #1e2642;
 }
 
 .modal-footer {
@@ -154,38 +169,44 @@ const handleConfirm = () => {
 }
 
 .btn-cancel {
-  padding: 8px 16px;
-  background-color: #f5f5f5;
-  color: #666;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
+  padding: 10px 20px;
+  background: transparent;
+  color: #94a3b8;
+  border: 1px solid #2d3561;
+  border-radius: 8px;
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
 }
 
 .btn-cancel:hover {
-  color: #40a9ff;
-  border-color: #40a9ff;
+  color: #00d4ff;
+  border-color: #00d4ff;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
 }
 
 .btn-confirm {
-  padding: 8px 16px;
-  background-color: #1890ff;
-  color: white;
+  padding: 10px 24px;
+  background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+  color: #0a0e27;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
 }
 
 .btn-confirm:hover {
-  background-color: #40a9ff;
+  box-shadow: 0 0 25px rgba(0, 212, 255, 0.5);
+  transform: translateY(-2px);
 }
 
 .btn-confirm:disabled {
-  background-color: #bae7ff;
+  background: linear-gradient(135deg, #3d4571 0%, #2d3561 100%);
   cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
 }
 </style>

@@ -12,3 +12,11 @@ func UpdateSysConfig(sysConfig *models.SysConfig) error {
 	cache.ClearSysConfig()
 	return nil
 }
+
+func UpdateSysConfigMap(mapData map[string]any) error {
+	if err := (&models.SysConfig{}).UpdatesMap(mapData); err != nil {
+		return err
+	}
+	cache.ClearSysConfig()
+	return nil
+}

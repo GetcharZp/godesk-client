@@ -914,6 +914,8 @@ const finishRemoteEdit = async () => {
   height: 100%;
   display: flex;
   flex-direction: column;
+  background: linear-gradient(135deg, #0a0e27 0%, #151b3d 100%);
+  color: #e0e7ff;
 }
 
 .connection-panel {
@@ -922,11 +924,17 @@ const finishRemoteEdit = async () => {
   align-items: center;
   height: 100%;
   padding: 20px;
+  background: radial-gradient(ellipse at center, #151b3d 0%, #0a0e27 100%);
 }
 
 .connection-card {
   width: 100%;
   max-width: 400px;
+  background: rgba(26, 32, 64, 0.8);
+  border: 1px solid #2d3561;
+  border-radius: 12px;
+  box-shadow: 0 0 30px rgba(0, 212, 255, 0.1);
+  backdrop-filter: blur(10px);
 }
 
 .file-panel {
@@ -939,42 +947,50 @@ const finishRemoteEdit = async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  background: #f5f5f5;
-  border-bottom: 1px solid #e8e8e8;
+  padding: 16px 20px;
+  background: linear-gradient(90deg, #151b3d 0%, #1a2040 100%);
+  border-bottom: 1px solid #2d3561;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
 .device-info {
   font-weight: 500;
+  color: #00d4ff;
+  text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+  font-size: 14px;
+  letter-spacing: 0.5px;
 }
 
 .file-container {
   flex: 1;
   display: flex;
   overflow: hidden;
+  background: #0a0e27;
 }
 
 .transfer-progress {
-  margin: 8px;
-  padding: 12px;
-  background: #fafafa;
-  border: 1px solid #e8e8e8;
-  border-radius: 4px;
+  margin: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, #151b3d 0%, #1a2040 100%);
+  border: 1px solid #2d3561;
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.1);
 }
 
 .progress-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   font-size: 13px;
+  color: #e0e7ff;
 }
 
 .progress-info {
   text-align: right;
   font-size: 12px;
-  color: #666;
-  margin-top: 4px;
+  color: #94a3b8;
+  margin-top: 8px;
 }
 
 .local-files,
@@ -982,28 +998,47 @@ const finishRemoteEdit = async () => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  border: 1px solid #e8e8e8;
-  margin: 8px;
-  border-radius: 4px;
+  border: 1px solid #2d3561;
+  margin: 12px;
+  border-radius: 8px;
   overflow: hidden;
+  background: linear-gradient(180deg, #151b3d 0%, #0f1428 100%);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
 }
 
 .section-header {
-  padding: 8px 12px;
-  background: #fafafa;
-  border-bottom: 1px solid #e8e8e8;
+  padding: 12px 16px;
+  background: linear-gradient(90deg, #1a2040 0%, #151b3d 100%);
+  border-bottom: 1px solid #2d3561;
   font-weight: 500;
+  color: #00d4ff;
+  text-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+  letter-spacing: 0.5px;
 }
 
 .path-bar {
   display: flex;
   gap: 8px;
-  padding: 8px;
-  border-bottom: 1px solid #e8e8e8;
+  padding: 12px;
+  border-bottom: 1px solid #2d3561;
+  background: rgba(21, 27, 61, 0.5);
 }
 
 .path-input {
   flex: 1;
+  background: #0a0e27;
+  border: 1px solid #2d3561;
+  color: #e0e7ff;
+  border-radius: 6px;
+}
+
+.path-input :deep(input) {
+  background: transparent !important;
+  color: #e0e7ff !important;
+}
+
+.path-input :deep(input::placeholder) {
+  color: #64748b !important;
 }
 
 .file-list {
@@ -1011,6 +1046,24 @@ const finishRemoteEdit = async () => {
   overflow-y: auto;
   padding: 8px;
   outline: none;
+  background: #0a0e27;
+}
+
+.file-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.file-list::-webkit-scrollbar-track {
+  background: #0a0e27;
+}
+
+.file-list::-webkit-scrollbar-thumb {
+  background: #2d3561;
+  border-radius: 4px;
+}
+
+.file-list::-webkit-scrollbar-thumb:hover {
+  background: #3d4571;
 }
 
 .loading,
@@ -1019,38 +1072,49 @@ const finishRemoteEdit = async () => {
   justify-content: center;
   align-items: center;
   height: 100px;
-  color: #999;
+  color: #64748b;
+  font-size: 14px;
 }
 
 .file-item {
   display: flex;
   align-items: center;
-  padding: 8px;
-  border-radius: 4px;
+  padding: 10px 12px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.15s;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  margin-bottom: 4px;
 }
 
 .file-item:hover {
-  background: #f0f0f0;
+  background: rgba(0, 212, 255, 0.08);
+  border-color: #2d3561;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.1);
 }
 
 .file-item.selected {
-  background: #bae7ff;
+  background: rgba(0, 212, 255, 0.15);
+  border-color: #00d4ff;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
 }
 
 .file-item.editing {
-  background: #e6f7ff;
+  background: rgba(124, 58, 237, 0.15);
+  border-color: #7c3aed;
+  box-shadow: 0 0 15px rgba(124, 58, 237, 0.2);
 }
 
 .file-icon {
-  margin-right: 8px;
-  color: #999;
+  margin-right: 10px;
+  color: #64748b;
   flex-shrink: 0;
+  font-size: 16px;
 }
 
 .file-icon.folder {
-  color: #faad14;
+  color: #00d4ff;
+  text-shadow: 0 0 8px rgba(0, 212, 255, 0.4);
 }
 
 .file-name {
@@ -1058,23 +1122,27 @@ const finishRemoteEdit = async () => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: #e0e7ff;
+  font-size: 13px;
 }
 
 .file-name-edit {
   flex: 1;
-  border: 2px solid #1890ff;
-  border-radius: 4px;
-  padding: 2px 8px;
-  font-size: 14px;
+  border: 2px solid #00d4ff;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 13px;
   outline: none;
-  background: #fff;
+  background: #0a0e27;
+  color: #e0e7ff;
   min-width: 0;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
 }
 
 .file-size {
-  color: #999;
+  color: #64748b;
   font-size: 12px;
-  margin-left: 8px;
+  margin-left: 10px;
   flex-shrink: 0;
 }
 
@@ -1082,28 +1150,123 @@ const finishRemoteEdit = async () => {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 8px;
-  padding: 0 8px;
+  gap: 12px;
+  padding: 0 12px;
 }
 
 .context-menu {
   position: fixed;
-  background: #fff;
-  border: 1px solid #e8e8e8;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, #1a2040 0%, #151b3d 100%);
+  border: 1px solid #2d3561;
+  border-radius: 8px;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 212, 255, 0.1);
   z-index: 1000;
-  min-width: 120px;
-  padding: 4px 0;
+  min-width: 140px;
+  padding: 6px 0;
+  backdrop-filter: blur(10px);
 }
 
 .context-menu-item {
-  padding: 8px 16px;
+  padding: 10px 18px;
   cursor: pointer;
-  transition: background-color 0.15s;
+  transition: all 0.2s ease;
+  color: #e0e7ff;
+  font-size: 13px;
 }
 
 .context-menu-item:hover {
-  background: #f5f5f5;
+  background: rgba(0, 212, 255, 0.15);
+  color: #00d4ff;
+  text-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
+}
+
+:deep(.ant-btn) {
+  background: linear-gradient(135deg, #1a2040 0%, #151b3d 100%);
+  border: 1px solid #2d3561;
+  color: #e0e7ff;
+  transition: all 0.3s ease;
+}
+
+:deep(.ant-btn:hover) {
+  background: linear-gradient(135deg, #2d3561 0%, #1a2040 100%);
+  border-color: #00d4ff;
+  color: #00d4ff;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+}
+
+:deep(.ant-btn-primary) {
+  background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+  border: none;
+  color: #0a0e27;
+  font-weight: 500;
+}
+
+:deep(.ant-btn-primary:hover) {
+  background: linear-gradient(135deg, #00e5ff 0%, #00b3e6 100%);
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+}
+
+:deep(.ant-btn-dangerous) {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border: none;
+  color: #fff;
+}
+
+:deep(.ant-btn-dangerous:hover) {
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+}
+
+:deep(.ant-input) {
+  background: #0a0e27;
+  border: 1px solid #2d3561;
+  color: #e0e7ff;
+}
+
+:deep(.ant-input:hover),
+:deep(.ant-input:focus) {
+  border-color: #00d4ff;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+}
+
+:deep(.ant-input-password) {
+  background: #0a0e27;
+}
+
+:deep(.ant-input-password :deep(input)) {
+  background: transparent !important;
+}
+
+:deep(.ant-card) {
+  background: rgba(26, 32, 64, 0.8);
+  border: 1px solid #2d3561;
+  color: #e0e7ff;
+}
+
+:deep(.ant-card-head) {
+  background: transparent;
+  border-bottom: 1px solid #2d3561;
+  color: #00d4ff;
+}
+
+:deep(.ant-card-head-title) {
+  color: #00d4ff;
+  text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+
+:deep(.ant-form-item-label > label) {
+  color: #94a3b8;
+}
+
+:deep(.ant-progress-bg) {
+  background: linear-gradient(90deg, #00d4ff 0%, #7c3aed 100%);
+}
+
+:deep(.ant-progress-text) {
+  color: #00d4ff;
+}
+
+:deep(.ant-spin-dot-item) {
+  background-color: #00d4ff;
 }
 </style>

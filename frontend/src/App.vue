@@ -94,26 +94,29 @@ onUnmounted(() => {
 .app-container {
   display: flex;
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background: linear-gradient(135deg, #0a0e27 0%, #151b3d 100%);
 }
 
 .nav-sidebar {
   width: 220px;
-  background-color: white;
-  padding: 20px;
+  background: linear-gradient(180deg, #151b3d 0%, #0f1428 100%);
+  padding: 24px 20px;
   display: flex;
   flex-direction: column;
-  box-shadow: 1px 0 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+  border-right: 1px solid #2d3561;
 }
 
 .user-info {
-  margin-bottom: 30px;
+  margin-bottom: 32px;
 }
 
 .user-info h2 {
-  color: #409EFF;
+  color: #00d4ff;
   font-size: 18px;
-  margin-bottom: 10px;
+  margin-bottom: 16px;
+  text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+  letter-spacing: 0.5px;
 }
 
 .user-detail {
@@ -125,61 +128,87 @@ onUnmounted(() => {
 .main-nav {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  margin-bottom: 30px;
+  gap: 8px;
+  margin-bottom: 32px;
   flex: 1;
 }
 
 .nav-item {
-  padding: 10px 15px;
-  color: #666;
+  padding: 12px 16px;
+  color: #94a3b8;
   text-decoration: none;
-  border-radius: 4px;
-  transition: all 0.3s;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+  font-size: 14px;
 }
 
 .nav-item:hover {
-  background-color: #ECF5FF;
+  background: rgba(0, 212, 255, 0.08);
+  color: #00d4ff;
+  border-color: #2d3561;
 }
 
 .nav-item.active {
-  background-color: #ECF5FF;
-  color: #409EFF;
+  background: rgba(0, 212, 255, 0.15);
+  color: #00d4ff;
+  border-color: #00d4ff;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
   font-weight: 500;
 }
 
-/* 连接状态样式 */
 .connection-status {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 15px;
+  gap: 10px;
+  padding: 16px;
   margin-top: auto;
-  border-top: 1px solid #e8e8e8;
+  border-top: 1px solid #2d3561;
   font-size: 13px;
-  color: #666;
+  background: rgba(21, 27, 61, 0.3);
+  border-radius: 8px;
 }
 
 .status-indicator {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background-color: #ff4d4f;
-  transition: background-color 0.3s;
+  background-color: #ef4444;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+  transition: all 0.3s ease;
 }
 
 .status-indicator.connected {
-  background-color: #52c41a;
+  background-color: #10b981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
 }
 
 .status-text {
   font-size: 13px;
-  color: #666;
+  color: #94a3b8;
 }
 
 .main-content {
   flex: 1;
   padding: 20px;
   overflow-y: auto;
+  background: #0a0e27;
+}
+
+.main-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.main-content::-webkit-scrollbar-track {
+  background: #0a0e27;
+}
+
+.main-content::-webkit-scrollbar-thumb {
+  background: #2d3561;
+  border-radius: 4px;
+}
+
+.main-content::-webkit-scrollbar-thumb:hover {
+  background: #3d4571;
 }
 </style>

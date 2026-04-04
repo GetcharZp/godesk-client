@@ -66,7 +66,10 @@ func (in *Service) Register(req *pb.UserRegisterRequest) (*pb.UserInfoResponse, 
 
 // Logout 退出登录
 func (in *Service) Logout() (any, error) {
-	if err := in.updateSysConfig(&pb.UserInfoResponse{}); err != nil {
+	if err := common.UpdateSysConfigMap(map[string]any{
+		"username": "",
+		"token":    "",
+	}); err != nil {
 		return nil, err
 	}
 	return nil, nil

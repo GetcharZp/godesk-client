@@ -214,38 +214,80 @@ onMounted(() => {
 
 <style scoped>
 .device-list {
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
 .page-title {
-  color: #333;
-  margin-bottom: 20px;
-  font-size: 20px;
+  color: #00d4ff;
+  font-size: 24px;
+  font-weight: 500;
+  text-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+  letter-spacing: 0.5px;
+}
+
+.add-btn {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+  color: #0a0e27;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+}
+
+.add-btn:hover {
+  background: linear-gradient(135deg, #00e5ff 0%, #00b3e6 100%);
+  box-shadow: 0 0 25px rgba(0, 212, 255, 0.5);
+  transform: translateY(-2px);
 }
 
 .search-bar {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .search-bar input {
   width: 100%;
-  padding: 10px 15px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 12px 16px;
+  background: #0a0e27;
+  border: 1px solid #2d3561;
+  border-radius: 8px;
   font-size: 14px;
+  color: #e0e7ff;
+  transition: all 0.3s ease;
+}
+
+.search-bar input::placeholder {
+  color: #64748b;
+}
+
+.search-bar input:hover,
+.search-bar input:focus {
+  border-color: #00d4ff;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+  outline: none;
 }
 
 .device-categories {
-  background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  margin-bottom: 20px;
+  background: linear-gradient(135deg, #151b3d 0%, #1a2040 100%);
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid #2d3561;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
 }
 
 .category {
-  margin-bottom: 25px;
+  margin-bottom: 32px;
 }
 
 .category:last-child {
@@ -254,10 +296,11 @@ onMounted(() => {
 
 .category h3 {
   font-size: 16px;
-  color: #333;
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
+  color: #00d4ff;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #2d3561;
+  text-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
 }
 
 .device-items {
@@ -267,44 +310,56 @@ onMounted(() => {
 }
 
 .device-item {
-  padding: 12px 15px;
-  background-color: #f9f9f9;
-  border-radius: 4px;
+  padding: 16px 20px;
+  background: rgba(10, 14, 39, 0.5);
+  border: 1px solid #2d3561;
+  border-radius: 8px;
   font-size: 14px;
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 16px;
+  transition: all 0.3s ease;
+}
+
+.device-item:hover {
+  background: rgba(0, 212, 255, 0.08);
+  border-color: #00d4ff;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.15);
 }
 
 .device-code {
-  font-family: monospace;
+  font-family: 'Courier New', monospace;
   font-weight: bold;
-  color: #1890ff;
+  color: #00d4ff;
   min-width: 100px;
+  text-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
 }
 
 .device-remark {
   flex: 1;
-  color: #333;
+  color: #e0e7ff;
 }
 
 .device-os {
-  color: #666;
+  color: #94a3b8;
   font-size: 12px;
   min-width: 80px;
 }
 
 .device-status {
   font-size: 12px;
-  padding: 2px 8px;
-  border-radius: 10px;
-  background-color: #f5f5f5;
-  color: #999;
+  padding: 4px 12px;
+  border-radius: 12px;
+  background: rgba(100, 116, 139, 0.2);
+  color: #64748b;
+  border: 1px solid transparent;
 }
 
 .device-status.online {
-  background-color: #f6ffed;
-  color: #52c41a;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border-color: #10b981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
 }
 
 .device-actions {
@@ -313,91 +368,77 @@ onMounted(() => {
 }
 
 .btn-control {
-  padding: 5px 12px;
-  background-color: #52c41a;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 12px;
-  transition: all 0.3s;
+  font-weight: 500;
+  transition: all 0.3s ease;
 }
 
 .btn-control:hover {
-  background-color: #73d13d;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+  transform: translateY(-1px);
 }
 
 .btn-file {
-  padding: 5px 12px;
-  background-color: #722ed1;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 12px;
-  transition: all 0.3s;
+  font-weight: 500;
+  transition: all 0.3s ease;
 }
 
 .btn-file:hover {
-  background-color: #9254de;
+  box-shadow: 0 0 15px rgba(124, 58, 237, 0.5);
+  transform: translateY(-1px);
 }
 
 .btn-edit {
-  padding: 5px 12px;
-  background-color: #1890ff;
-  color: white;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+  color: #0a0e27;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 12px;
-  transition: all 0.3s;
+  font-weight: 500;
+  transition: all 0.3s ease;
 }
 
 .btn-edit:hover {
-  background-color: #40a9ff;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+  transform: translateY(-1px);
 }
 
 .btn-delete {
-  padding: 5px 12px;
-  background-color: #ff4d4f;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 12px;
-  transition: all 0.3s;
+  font-weight: 500;
+  transition: all 0.3s ease;
 }
 
 .btn-delete:hover {
-  background-color: #ff7875;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+  transform: translateY(-1px);
 }
 
 .empty-tip {
   text-align: center;
-  color: #999;
-  padding: 40px;
+  color: #64748b;
+  padding: 60px 20px;
   font-size: 14px;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.add-btn {
-  padding: 8px 16px;
-  background-color: #1890ff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.3s;
-}
-
-.add-btn:hover {
-  background-color: #40a9ff;
 }
 </style>
