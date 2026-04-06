@@ -23,7 +23,7 @@ func (in *Service) Info() (*Info, error) {
 	sysConfig := cache.GetSysConfig()
 	if sysConfig == nil || sysConfig.Uuid == "" {
 		// 配置文件不存在
-		password := randomutil.RandomAlphaNumber(8)
+		password := randomutil.Alphanumeric(8)
 		response, err := client.CreateDevice(common.WithAuthorization(context.Background()), &pb.CreateDeviceRequest{
 			Os: runtime.GOOS,
 		})

@@ -1,3 +1,5 @@
+git.sr.ht/~jackmordaunt/go-toast/v2 v2.0.3 h1:N3IGoHHp9pb6mj1cbXbuaSXV/UMKwmbKLf53nQmtqMA=
+git.sr.ht/~jackmordaunt/go-toast/v2 v2.0.3/go.mod h1:QtOLZGz8olr4qH2vWK0QH0w0O4T9fEIjMuWpKUsH7nc=
 github.com/BurntSushi/freetype-go v0.0.0-20160129220410-b763ddbfe298/go.mod h1:D+QujdIlUNfa0igpNMk6UIvlb6C252URs4yupRUV4lQ=
 github.com/BurntSushi/graphics-go v0.0.0-20160129215708-b43f31a4a966/go.mod h1:Mid70uvE93zn9wgF92A/r5ixgnvX8Lh68fxp9KQBaI0=
 github.com/bep/debounce v1.2.1 h1:v67fRdBA9UQu2NhLFXrSg0Brw7CexQekrBwDMM8bzeY=
@@ -117,8 +119,8 @@ github.com/tklauser/numcpus v0.11.0 h1:nSTwhKH5e1dMNsCdVBukSZrURJRoHbSEQjdEbY+9R
 github.com/tklauser/numcpus v0.11.0/go.mod h1:z+LwcLq54uWZTX0u/bGobaV34u6V7KNlTZejzM6/3MQ=
 github.com/tkrajina/go-reflector v0.5.8 h1:yPADHrwmUbMq4RGEyaOUpz2H90sRsETNVpjzo3DLVQQ=
 github.com/tkrajina/go-reflector v0.5.8/go.mod h1:ECbqLgccecY5kPmPmXg1MrHW585yMcDkVl6IvJe64T4=
-github.com/up-zero/gotool v0.0.0-20250424084133-5ca462645a53 h1:aABp1nELuFKSdPVdFKdvjIpq08OmVDaCR+bLx8PS7hw=
-github.com/up-zero/gotool v0.0.0-20250424084133-5ca462645a53/go.mod h1:+jwIpLHojqHUvbEmNXv/F5acdHSEkJIbNXRqT1IE78I=
+github.com/up-zero/gotool v0.0.0-20260402041903-fc63843f0377 h1:QvTovZDFjs5WBR23yooUO7mZsuBiECnIw4lzR6FDf1A=
+github.com/up-zero/gotool v0.0.0-20260402041903-fc63843f0377/go.mod h1:+jwIpLHojqHUvbEmNXv/F5acdHSEkJIbNXRqT1IE78I=
 github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6KllzawFIhcdPw=
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
 github.com/valyala/fasttemplate v1.2.2 h1:lxLXG0uE3Qnshl9QyaK6XJxMXlQZELvChBOCmQD0Loo=
@@ -137,8 +139,8 @@ github.com/wailsapp/go-webview2 v1.0.22 h1:YT61F5lj+GGaat5OB96Aa3b4QA+mybD0Ggq6N
 github.com/wailsapp/go-webview2 v1.0.22/go.mod h1:qJmWAmAmaniuKGZPWwne+uor3AHMB5PFhqiK0Bbj8kc=
 github.com/wailsapp/mimetype v1.4.1 h1:pQN9ycO7uo4vsUUuPeHEYoUkLVkaRntMnHJxVwYhwHs=
 github.com/wailsapp/mimetype v1.4.1/go.mod h1:9aV5k31bBOv5z6u+QP8TltzvNGJPmNJD4XlAL3U+j3o=
-github.com/wailsapp/wails/v2 v2.11.0 h1:seLacV8pqupq32IjS4Y7V8ucab0WZwtK6VvUVxSBtqQ=
-github.com/wailsapp/wails/v2 v2.11.0/go.mod h1:jrf0ZaM6+GBc1wRmXsM8cIvzlg0karYin3erahI4+0k=
+github.com/wailsapp/wails/v2 v2.12.0 h1:BHO/kLNWFHYjCzucxbzAYZWUjub1Tvb4cSguQozHn5c=
+github.com/wailsapp/wails/v2 v2.12.0/go.mod h1:mo1bzK1DEJrobt7YrBjgxvb5Sihb1mhAY09hppbibQg=
 github.com/yusufpapurcu/wmi v1.2.4 h1:zFUKzehAFReQwLys1b/iSMl+JQGSCSjtVqQn9bBrPo0=
 github.com/yusufpapurcu/wmi v1.2.4/go.mod h1:SBZ9tNy3G9/m5Oi98Zks0QjeHVDvuK0qfxQmPyzfmi0=
 go.opentelemetry.io/otel v1.32.0 h1:WnBN+Xjcteh0zdk01SVqV55d/m62NJLJdIyb4y/WO5U=

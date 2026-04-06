@@ -1,5 +1,7 @@
 build/bin
 build/windows
+build/darwin
+build/linux
 
 node_modules
 frontend/dist

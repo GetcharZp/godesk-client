@@ -392,13 +392,8 @@ func (in *Service) handleMouseMove(req *pb.ChannelRequest) {
 
 	logger.Debug("[sys] received mouse move.", zap.Int32("x", data.X), zap.Int32("y", data.Y))
 
-	// 使用 Windows API 直接设置鼠标位置（避免 DPI 缩放问题）
-	if runtime.GOOS == "windows" {
-		utils.SetCursorPosAbsolute(int(data.X), int(data.Y))
-	} else {
-		// 其他平台使用 robotgo
-		robotgo.Move(int(data.X), int(data.Y))
-	}
+	// 鼠标移动
+	utils.SetCursorPosAbsolute(int(data.X), int(data.Y))
 }
 
 // handleMouseClick 处理鼠标点击事件（被控端收到）
@@ -415,12 +410,8 @@ func (in *Service) handleMouseClick(req *pb.ChannelRequest) {
 		zap.Int32("button", data.Button),
 		zap.String("action", data.Action))
 
-	// 先移动鼠标到指定位置（使用 Windows API 避免 DPI 问题）
-	if runtime.GOOS == "windows" {
-		utils.SetCursorPosAbsolute(int(data.X), int(data.Y))
-	} else {
-		robotgo.Move(int(data.X), int(data.Y))
-	}
+	// 鼠标移动
+	utils.SetCursorPosAbsolute(int(data.X), int(data.Y))
 
 	// 根据按钮和动作执行点击
 	switch data.Button {
