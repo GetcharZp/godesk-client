@@ -7,6 +7,7 @@ import (
 	"godesk-client/internal/define"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -15,6 +16,10 @@ import (
 var LOGGER *zap.Logger
 
 func NewLogger() {
+	if err := os.MkdirAll(filepath.Dir(define.DefaultConfig.LogPath), os.ModePerm); err != nil {
+		panic(err)
+	}
+
 	lumberjackLogger := &lumberjack.Logger{
 		Filename:   define.DefaultConfig.LogPath, // 文件基础名字
 		MaxSize:    100,                          // 单个日志文件的大小 (MB)

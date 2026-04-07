@@ -3,8 +3,6 @@ package models
 import (
 	"godesk-client/internal/define"
 	"os"
-	"path"
-	"path/filepath"
 	"sync"
 	"time"
 
@@ -13,10 +11,9 @@ import (
 )
 
 var (
-	DB          *gorm.DB
-	dbOnce      sync.Once
-	homePath, _ = os.UserHomeDir()
-	dbPath      = filepath.Join(homePath, define.DefaultConfig.AppName, "config.db")
+	DB     *gorm.DB
+	dbOnce sync.Once
+	dbPath = define.ConfigDBPath()
 )
 
 // InitDB 初始化数据库
@@ -24,7 +21,7 @@ func InitDB() error {
 	var initErr error
 	dbOnce.Do(func() {
 		// 初始化文件夹
-		err := os.MkdirAll(path.Dir(dbPath), os.ModePerm)
+		err := os.MkdirAll(define.AppDataDir(), os.ModePerm)
 		if err != nil {
 			panic(err)
 		}
