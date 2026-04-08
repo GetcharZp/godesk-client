@@ -211,4 +211,16 @@ onUnmounted(() => {
 .main-content::-webkit-scrollbar-thumb:hover {
   background: #3d4571;
 }
+
+body.remote-control-fullscreen .nav-sidebar {
+  display: none;
+}
+
+body.remote-control-fullscreen .main-content {
+  padding: 0;
+}
+
+body.remote-control-fullscreen .app-container {
+  display: block;
+}
 </style>

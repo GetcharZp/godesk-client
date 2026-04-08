@@ -1,5 +1,5 @@
 <template>
-  <div class="remote-control-page" :class="{ 'has-session': activeSessions.length > 0, 'sidebar-collapsed': isSidebarCollapsed && activeSessions.length > 0 }">
+  <div class="remote-control-page" :class="{ 'has-session': activeSessions.length > 0, 'sidebar-collapsed': isSidebarCollapsed && activeSessions.length > 0, 'fullscreen-mode': isFullscreen }">
     <template v-if="activeSessions.length === 0">
       <div class="no-session-container">
         <div class="header">
@@ -184,6 +184,13 @@
             </div>
           </div>
           <div class="screen-wrapper" ref="screenWrapper">
+            <button
+              v-if="isFullscreen"
+              class="fullscreen-exit-btn"
+              @click="toggleFullscreen"
+            >
+              退出全屏
+            </button>
             <template v-if="currentSession">
               <canvas
                 ref="screenCanvas"
@@ -223,6 +230,7 @@
 import { ref, computed, onMounted, watch, onUnmounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
+import { WindowFullscreen, WindowIsFullscreen, WindowUnfullscreen } from '../../wailsjs/runtime/runtime.js'
 import { sendControlRequest, disconnectControl, sendMouseMove, sendMouseClick, sendMouseScroll, sendKeyDown, sendKeyUp } from '../api/channel.js'
 import { getDeviceInfo, getDeviceList } from '../api/device.js'
 import { getControlSessions, createSession, removeSession, getControlSessionByDeviceCode } from '../api/session.js'
@@ -251,6 +259,23 @@ const isSidebarCollapsed = ref(false) // 左侧导航栏是否收起
 const currentSession = computed(() => {
   return activeSessions.value.find(s => s.sessionId === currentSessionId.value)
 })
+
+const updateCanvasDisplaySize = () => {
+  const canvas = screenCanvas.value
+  if (!canvas) return
+
+  const container = screenWrapper.value || canvas.parentElement
+  if (!container || !canvas.width || !canvas.height) return
+
+  const scale = Math.min(
+    container.clientWidth / canvas.width,
+    container.clientHeight / canvas.height,
+    1
+  )
+
+  canvas.style.width = `${canvas.width * scale}px`
+  canvas.style.height = `${canvas.height * scale}px`
+}
 
 // 获取设备显示名称（优先显示备注）
 const getDeviceDisplayName = (deviceCode) => {
@@ -547,22 +572,14 @@ const renderImageToCanvas = (imageUrl) => {
   const img = new Image()
   img.onload = () => {
     const canvas = screenCanvas.value
-    const container = canvas.parentElement
+    if (!canvas) return
 
     // 设置 canvas 为原始图像分辨率（保持清晰）
     canvas.width = img.width
     canvas.height = img.height
 
     // 使用 CSS 缩放来适应容器
-    if (container) {
-      const scale = Math.min(
-        container.clientWidth / img.width,
-        container.clientHeight / img.height,
-        1
-      )
-      canvas.style.width = `${img.width * scale}px`
-      canvas.style.height = `${img.height * scale}px`
-    }
+    updateCanvasDisplaySize()
 
     // 使用高质量缩放
     ctx.imageSmoothingEnabled = true
@@ -604,18 +621,17 @@ const toggleViewOnly = () => {
 }
 
 const toggleFullscreen = () => {
-  if (!screenWrapper.value) return
-
-  if (!document.fullscreenElement) {
-    screenWrapper.value.requestFullscreen().then(() => {
-      isFullscreen.value = true
-    }).catch(err => {
-      message.error('无法进入全屏模式')
-    })
-  } else {
-    document.exitFullscreen().then(() => {
+  try {
+    if (isFullscreen.value) {
+      WindowUnfullscreen()
       isFullscreen.value = false
-    })
+    } else {
+      WindowFullscreen()
+      isFullscreen.value = true
+    }
+    nextTick(() => updateCanvasDisplaySize())
+  } catch (error) {
+    message.error('无法切换全屏模式')
   }
 }
 
@@ -636,7 +652,19 @@ const reconnect = () => {
 }
 
 const handleFullscreenChange = () => {
-  isFullscreen.value = !!document.fullscreenElement
+  WindowIsFullscreen().then((value) => {
+    isFullscreen.value = !!value
+    nextTick(() => updateCanvasDisplaySize())
+  }).catch(() => {
+    isFullscreen.value = false
+  })
+}
+
+const handleGlobalKeyDown = (e) => {
+  if (e.key === 'Escape' && isFullscreen.value) {
+    e.preventDefault()
+    toggleFullscreen()
+  }
 }
 
 // 将 canvas 坐标转换为原始屏幕坐标
@@ -793,7 +821,9 @@ onMounted(async () => {
   await fetchDeviceList() // 加载设备列表用于获取备注
   // 先处理路由参数（连接新设备），然后再加载会话列表
   // 这样可以确保新连接的会话被正确添加到列表中
-  document.addEventListener('fullscreenchange', handleFullscreenChange)
+  window.addEventListener('resize', updateCanvasDisplaySize)
+  window.addEventListener('keydown', handleGlobalKeyDown)
+  await handleFullscreenChange()
   await handleRouteQuery()
   // 最后再加载会话列表（包含新连接的会话）
   // loadSessions 会自动恢复屏幕流
@@ -801,7 +831,10 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  window.removeEventListener('resize', updateCanvasDisplaySize)
+  window.removeEventListener('keydown', handleGlobalKeyDown)
+  document.body.classList.remove('remote-control-fullscreen')
+  document.documentElement.classList.remove('remote-control-fullscreen')
   // 停止所有屏幕流
   screenStreamStopFns.value.forEach((stopFn) => stopFn())
   screenStreamStopFns.value.clear()
@@ -812,6 +845,16 @@ watch(currentSessionId, (newSessionId) => {
   if (newSessionId) {
     startSessionScreenStream(newSessionId)
   }
+})
+
+watch(currentSession, () => {
+  nextTick(() => updateCanvasDisplaySize())
+})
+
+watch(isFullscreen, (value) => {
+  document.body.classList.toggle('remote-control-fullscreen', value)
+  document.documentElement.classList.toggle('remote-control-fullscreen', value)
+  nextTick(() => updateCanvasDisplaySize())
 })
 </script>
 
@@ -826,6 +869,59 @@ watch(currentSessionId, (newSessionId) => {
 
 .remote-control-page.has-session {
   max-width: none;
+}
+
+.remote-control-page.fullscreen-mode {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  max-width: none;
+  background: #0a0e27;
+}
+
+.remote-control-page.fullscreen-mode .header,
+.remote-control-page.fullscreen-mode .main-section {
+  display: none;
+}
+
+.remote-control-page.fullscreen-mode .content-wrapper {
+  gap: 0;
+  height: 100%;
+}
+
+.remote-control-page.fullscreen-mode .screen-section {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  position: relative;
+}
+
+.remote-control-page.fullscreen-mode .screen-wrapper {
+  width: 100vw;
+  height: 100vh;
+}
+
+.remote-control-page.fullscreen-mode .screen-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 15;
+  padding: 12px 72px 12px 16px;
+  border-bottom: none;
+  background: linear-gradient(180deg, rgba(10, 14, 39, 0.88) 0%, rgba(10, 14, 39, 0.45) 70%, rgba(10, 14, 39, 0) 100%);
+  pointer-events: none;
+}
+
+.remote-control-page.fullscreen-mode .session-tabs {
+  pointer-events: auto;
+}
+
+.remote-control-page.fullscreen-mode .screen-toolbar {
+  display: none;
 }
 
 .no-session-container {
@@ -1085,6 +1181,28 @@ watch(currentSessionId, (newSessionId) => {
   position: relative;
   overflow: auto;
   min-height: 0;
+}
+
+.fullscreen-exit-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 20;
+  padding: 8px 14px;
+  font-size: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  background: rgba(10, 14, 39, 0.72);
+  color: #e2e8f0;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+}
+
+.fullscreen-exit-btn:hover {
+  border-color: #00d4ff;
+  color: #00d4ff;
+  background: rgba(10, 14, 39, 0.88);
 }
 
 .screen-wrapper:-webkit-full-screen {
