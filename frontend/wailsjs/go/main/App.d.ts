@@ -13,6 +13,10 @@ export function CreateSession(arg1:string,arg2:number,arg3:string,arg4:boolean,a
 
 export function DeleteDevice(arg1:godesk.DeleteDeviceRequest):Promise<any>;
 
+export function DeleteLocalFile(arg1:string):Promise<any>;
+
+export function DeleteRemoteFile(arg1:string,arg2:string,arg3:boolean):Promise<any>;
+
 export function DeviceInfo():Promise<any>;
 
 export function DownloadFile(arg1:string,arg2:string,arg3:string):Promise<any>;
@@ -28,6 +32,8 @@ export function GetControlSessionByDeviceCode(arg1:number):Promise<any>;
 export function GetControlSessions():Promise<any>;
 
 export function GetDeviceList():Promise<any>;
+
+export function GetFileDeleteResult(arg1:string):Promise<any>;
 
 export function GetFileRenameResult(arg1:string):Promise<any>;
 

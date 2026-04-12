@@ -22,6 +22,14 @@ export function DeleteDevice(arg1) {
   return window['go']['main']['App']['DeleteDevice'](arg1);
 }
 
+export function DeleteLocalFile(arg1) {
+  return window['go']['main']['App']['DeleteLocalFile'](arg1);
+}
+
+export function DeleteRemoteFile(arg1, arg2, arg3) {
+  return window['go']['main']['App']['DeleteRemoteFile'](arg1, arg2, arg3);
+}
+
 export function DeviceInfo() {
   return window['go']['main']['App']['DeviceInfo']();
 }
@@ -52,6 +60,10 @@ export function GetControlSessions() {
 
 export function GetDeviceList() {
   return window['go']['main']['App']['GetDeviceList']();
+}
+
+export function GetFileDeleteResult(arg1) {
+  return window['go']['main']['App']['GetFileDeleteResult'](arg1);
 }
 
 export function GetFileRenameResult(arg1) {

@@ -11,6 +11,7 @@ import (
 	"godesk-client/internal/service/session"
 	"godesk-client/internal/utils"
 	pb "godesk-client/proto"
+	"os"
 	"path/filepath"
 	"runtime"
 	"time"
@@ -182,6 +183,10 @@ func (in *Service) handleMessage(req *pb.ChannelRequest) {
 		in.handleFileRenameRequest(req)
 	case "file_rename_response":
 		in.handleFileRenameResponse(req)
+	case "file_delete_request":
+		in.handleFileDeleteRequest(req)
+	case "file_delete_response":
+		in.handleFileDeleteResponse(req)
 	case "file_transfer_start":
 		in.handleFileTransferStart(req)
 	case "file_transfer_data":
@@ -763,8 +768,6 @@ func (in *Service) Close() {
 	}
 }
 
-// ========== 文件管理相关方法 ==========
-
 // SendFileListRequest 发送文件列表请求（控制端调用）
 func SendFileListRequest(targetUUID string, targetCode uint64, path string) error {
 	if stream == nil {
@@ -873,6 +876,44 @@ func SendFileRenameRequest(targetUUID string, requestId string, oldPath string, 
 	}
 
 	logger.Info("[sys] file rename request sent.", zap.String("targetUUID", targetUUID), zap.String("requestId", requestId))
+	return nil
+}
+
+// SendFileDeleteRequest 发送文件删除请求
+func SendFileDeleteRequest(targetUUID string, requestId string, path string, force bool) error {
+	if stream == nil {
+		logger.Error("[sys] stream is nil, cannot send file delete request")
+		return fmt.Errorf("stream is nil")
+	}
+
+	reqData := &pb.FileDeleteRequestData{
+		RequestId: requestId,
+		Path:      path,
+		Force:     force,
+		Timestamp: time.Now().UnixMilli(),
+	}
+
+	data, err := json.Marshal(reqData)
+	if err != nil {
+		logger.Error("[sys] marshal file delete request error.", zap.Error(err))
+		return err
+	}
+
+	req := &pb.ChannelRequest{
+		SendClientUuid:   myUUID,
+		TargetClientUuid: targetUUID,
+		Key:              "file_delete_request",
+		Data:             data,
+	}
+
+	logger.Info("[sys] sending file delete request.", zap.String("targetUUID", targetUUID), zap.String("requestId", requestId), zap.String("path", path), zap.Bool("force", force))
+
+	if err := stream.Send(req); err != nil {
+		logger.Error("[sys] send file delete request error.", zap.Error(err))
+		return err
+	}
+
+	logger.Info("[sys] file delete request sent.", zap.String("targetUUID", targetUUID), zap.String("requestId", requestId))
 	return nil
 }
 
@@ -1003,7 +1044,77 @@ func (in *Service) handleFileRenameResponse(req *pb.ChannelRequest) {
 	cache.SetFileRenameResult(data.RequestId, data.Code, data.Message, data.NewPath)
 }
 
-// ========== 文件传输相关方法 ==========
+// handleFileDeleteRequest 处理文件删除请求（被控端收到）
+func (in *Service) handleFileDeleteRequest(req *pb.ChannelRequest) {
+	var data pb.FileDeleteRequestData
+	if err := json.Unmarshal(req.Data, &data); err != nil {
+		logger.Error("[sys] unmarshal file delete request error.", zap.Error(err))
+		return
+	}
+
+	logger.Info("[sys] received file delete request.", zap.String("requestId", data.RequestId), zap.String("path", data.Path), zap.Bool("force", data.Force))
+
+	respCode := int32(0)
+	respMsg := "success"
+
+	if _, err := os.Stat(data.Path); os.IsNotExist(err) {
+		respCode = 1
+		respMsg = "file not found"
+	} else {
+		err := file.DeleteFile(data.Path)
+		if err != nil {
+			if os.IsPermission(err) {
+				respCode = 3
+				respMsg = "permission denied"
+			} else {
+				respCode = 4
+				respMsg = err.Error()
+			}
+			logger.Error("[sys] delete file error.", zap.Error(err))
+		}
+	}
+
+	respData := &pb.FileDeleteResponseData{
+		RequestId:   data.RequestId,
+		Code:        respCode,
+		Message:     respMsg,
+		DeletedPath: data.Path,
+		Timestamp:   time.Now().UnixMilli(),
+	}
+
+	jsonData, err := json.Marshal(respData)
+	if err != nil {
+		logger.Error("[sys] marshal file delete response error.", zap.Error(err))
+		return
+	}
+
+	resp := &pb.ChannelRequest{
+		SendClientUuid:   myUUID,
+		TargetClientUuid: req.SendClientUuid,
+		Key:              "file_delete_response",
+		Data:             jsonData,
+	}
+
+	if err := stream.Send(resp); err != nil {
+		logger.Error("[sys] send file delete response error.", zap.Error(err))
+		return
+	}
+
+	logger.Info("[sys] file delete response sent.", zap.String("requestId", data.RequestId), zap.Int32("code", respCode), zap.String("deletedPath", data.Path))
+}
+
+// handleFileDeleteResponse 处理文件删除响应（控制端收到）
+func (in *Service) handleFileDeleteResponse(req *pb.ChannelRequest) {
+	var data pb.FileDeleteResponseData
+	if err := json.Unmarshal(req.Data, &data); err != nil {
+		logger.Error("[sys] unmarshal file delete response error.", zap.Error(err))
+		return
+	}
+
+	logger.Info("[sys] received file delete response.", zap.String("requestId", data.RequestId), zap.Int32("code", data.Code), zap.String("message", data.Message), zap.String("deletedPath", data.DeletedPath))
+
+	cache.SetFileDeleteResult(data.RequestId, data.Code, data.Message, data.DeletedPath)
+}
 
 // handleFileTransferStart 处理文件传输开始
 func (in *Service) handleFileTransferStart(req *pb.ChannelRequest) {

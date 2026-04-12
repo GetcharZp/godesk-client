@@ -7,7 +7,7 @@ require (
 	github.com/go-vgo/robotgo v1.0.1
 	github.com/kbinani/screenshot v0.0.0-20250624051815-089614a94018
 	github.com/up-zero/gotool v0.0.0-20260402041903-fc63843f0377
-	github.com/wailsapp/wails/v2 v2.12.0
+	github.com/wailsapp/wails/v2 v2.11.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/sys v0.38.0
 	google.golang.org/grpc v1.70.0
@@ -17,7 +17,6 @@ require (
 )
 
 require (
-	git.sr.ht/~jackmordaunt/go-toast/v2 v2.0.3 // indirect
 	github.com/bep/debounce v1.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dblohm7/wingoes v0.0.0-20250822163801-6d8e6105c62d // indirect

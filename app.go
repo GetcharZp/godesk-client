@@ -533,6 +533,62 @@ func (a *App) GetFileRenameResult(requestId string) any {
 	}, nil)
 }
 
+// DeleteLocalFile 删除本地文件
+func (a *App) DeleteLocalFile(path string) any {
+	if err := file.DeleteFile(path); err != nil {
+		return resp(nil, err)
+	}
+	return resp(map[string]any{
+		"deletedPath": path,
+	}, nil)
+}
+
+// DeleteRemoteFile 删除远程文件
+func (a *App) DeleteRemoteFile(sessionId string, path string, force bool) any {
+	sess := session.GetSession(sessionId)
+	if sess == nil || sess.TargetUUID == "" {
+		return resp(nil, fmt.Errorf("session not found or targetUUID is empty"))
+	}
+
+	requestId := fmt.Sprintf("%d", time.Now().UnixMilli())
+
+	if sess.TargetUUID == channel.GetMyUUID() {
+		if err := file.DeleteFile(path); err != nil {
+			return resp(nil, err)
+		}
+		return resp(map[string]any{
+			"requestId":   requestId,
+			"code":        0,
+			"deletedPath": path,
+		}, nil)
+	}
+
+	if err := channel.SendFileDeleteRequest(sess.TargetUUID, requestId, path, force); err != nil {
+		return resp(nil, err)
+	}
+
+	return resp(map[string]any{
+		"requestId": requestId,
+	}, nil)
+}
+
+// GetFileDeleteResult 获取文件删除结果
+func (a *App) GetFileDeleteResult(requestId string) any {
+	result := cache.GetFileDeleteResult(requestId)
+	if result == nil {
+		return resp(map[string]any{
+			"exists": false,
+		}, nil)
+	}
+	return resp(map[string]any{
+		"exists":      true,
+		"code":        result.Code,
+		"message":     result.Message,
+		"deletedPath": result.DeletedPath,
+		"complete":    true,
+	}, nil)
+}
+
 // CancelFileTransfer 取消文件传输
 func (a *App) CancelFileTransfer(sessionId string, transferId string, reason string) any {
 	sess := session.GetSession(sessionId)

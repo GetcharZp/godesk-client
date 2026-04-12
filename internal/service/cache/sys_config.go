@@ -277,3 +277,39 @@ func ClearFileRenameResult(requestId string) {
 	defer fileRenameResultsMutex.Unlock()
 	delete(fileRenameResults, requestId)
 }
+
+var (
+	fileDeleteResults      = make(map[string]*FileDeleteResult)
+	fileDeleteResultsMutex sync.Mutex
+)
+
+type FileDeleteResult struct {
+	Code        int32
+	Message     string
+	DeletedPath string
+}
+
+func SetFileDeleteResult(requestId string, code int32, message string, deletedPath string) {
+	fileDeleteResultsMutex.Lock()
+	defer fileDeleteResultsMutex.Unlock()
+	fileDeleteResults[requestId] = &FileDeleteResult{
+		Code:        code,
+		Message:     message,
+		DeletedPath: deletedPath,
+	}
+}
+
+func GetFileDeleteResult(requestId string) *FileDeleteResult {
+	fileDeleteResultsMutex.Lock()
+	defer fileDeleteResultsMutex.Unlock()
+	if result, ok := fileDeleteResults[requestId]; ok {
+		return result
+	}
+	return nil
+}
+
+func ClearFileDeleteResult(requestId string) {
+	fileDeleteResultsMutex.Lock()
+	defer fileDeleteResultsMutex.Unlock()
+	delete(fileDeleteResults, requestId)
+}

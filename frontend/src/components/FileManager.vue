@@ -159,6 +159,7 @@
       :style="{ left: localContextMenuX + 'px', top: localContextMenuY + 'px' }"
     >
       <div class="context-menu-item" @click="startLocalRenameFromMenu">重命名</div>
+      <div class="context-menu-item danger" @click="deleteLocalFileFromMenu">删除</div>
     </div>
 
     <div
@@ -167,6 +168,20 @@
       :style="{ left: remoteContextMenuX + 'px', top: remoteContextMenuY + 'px' }"
     >
       <div class="context-menu-item" @click="startRemoteRenameFromMenu">重命名</div>
+      <div class="context-menu-item danger" @click="deleteRemoteFileFromMenu">删除</div>
+    </div>
+
+    <div v-if="showDeleteConfirm" class="delete-confirm-overlay" @click="cancelDelete">
+      <div class="delete-confirm-dialog" @click.stop>
+        <div class="delete-confirm-title">确认删除</div>
+        <div class="delete-confirm-message">
+          确定要删除 "{{ deleteTargetFile?.name }}" 吗？{{ deleteTargetFile?.isDir ? '文件夹内所有内容将被删除。' : '' }}
+        </div>
+        <div class="delete-confirm-buttons">
+          <button class="btn-cancel" @click="cancelDelete">取消</button>
+          <button class="btn-confirm-delete" @click="confirmDelete">删除</button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -224,6 +239,10 @@ const editingLocalFile = ref(null)
 const editingRemoteFile = ref(null)
 const editingFileName = ref('')
 const originalFileName = ref('')
+
+const showDeleteConfirm = ref(false)
+const deleteTargetFile = ref(null)
+const deleteTargetType = ref('')
 
 const transferId = ref('')
 
@@ -787,6 +806,27 @@ const getFileRenameResultApi = (requestId) => {
   return Promise.resolve({ code: -1 })
 }
 
+const deleteLocalFileApi = (path) => {
+  if (window.go?.main?.App?.DeleteLocalFile) {
+    return window.go.main.App.DeleteLocalFile(path)
+  }
+  return Promise.resolve({ code: -1 })
+}
+
+const deleteRemoteFileApi = (sessionId, path, force) => {
+  if (window.go?.main?.App?.DeleteRemoteFile) {
+    return window.go.main.App.DeleteRemoteFile(sessionId, path, force)
+  }
+  return Promise.resolve({ code: -1 })
+}
+
+const getFileDeleteResultApi = (requestId) => {
+  if (window.go?.main?.App?.GetFileDeleteResult) {
+    return window.go.main.App.GetFileDeleteResult(requestId)
+  }
+  return Promise.resolve({ code: -1 })
+}
+
 const showLocalContextMenu = (e, file) => {
   e.preventDefault()
   e.stopPropagation()
@@ -822,6 +862,89 @@ const startRemoteRenameFromMenu = () => {
   if (remoteContextMenuFile.value) {
     selectedRemoteFile.value = remoteContextMenuFile.value
     startEditingRemote()
+  }
+}
+
+const deleteLocalFileFromMenu = () => {
+  localContextMenuVisible.value = false
+  if (localContextMenuFile.value) {
+    deleteTargetFile.value = localContextMenuFile.value
+    deleteTargetType.value = 'local'
+    showDeleteConfirm.value = true
+  }
+}
+
+const deleteRemoteFileFromMenu = () => {
+  remoteContextMenuVisible.value = false
+  if (remoteContextMenuFile.value) {
+    deleteTargetFile.value = remoteContextMenuFile.value
+    deleteTargetType.value = 'remote'
+    showDeleteConfirm.value = true
+  }
+}
+
+const cancelDelete = () => {
+  showDeleteConfirm.value = false
+  deleteTargetFile.value = null
+  deleteTargetType.value = ''
+}
+
+const confirmDelete = async () => {
+  if (!deleteTargetFile.value) return
+
+  const file = deleteTargetFile.value
+  const isLocal = deleteTargetType.value === 'local'
+
+  showDeleteConfirm.value = false
+  deleteTargetFile.value = null
+  deleteTargetType.value = ''
+
+  try {
+    if (isLocal) {
+      const res = await deleteLocalFileApi(file.path)
+      if (res.code === 200) {
+        message.success('删除成功')
+        refreshLocalFiles()
+      } else {
+        message.error('删除失败: ' + (res.msg || '未知错误'))
+      }
+    } else {
+      const res = await deleteRemoteFileApi(connectedDevice.value.sessionId, file.path, true)
+      if (res.code === 200) {
+        if (res.data?.code === 0) {
+          message.success('删除成功')
+          refreshRemoteFiles()
+        } else if (res.data?.requestId) {
+          const requestId = res.data.requestId
+          let attempts = 0
+          const maxAttempts = 30
+          const checkResult = async () => {
+            attempts++
+            const result = await getFileDeleteResultApi(requestId)
+            if (result.code === 200 && result.data?.exists) {
+              if (result.data.code === 0) {
+                message.success('删除成功')
+                refreshRemoteFiles()
+              } else {
+                message.error('删除失败: ' + (result.data.message || '未知错误'))
+              }
+            } else if (attempts < maxAttempts) {
+              setTimeout(checkResult, 500)
+            } else {
+              message.error('删除超时')
+            }
+          }
+          checkResult()
+        } else {
+          message.error('删除失败: ' + (res.data?.message || '未知错误'))
+        }
+      } else {
+        message.error('删除失败: ' + (res.msg || '未知错误'))
+      }
+    }
+  } catch (e) {
+    console.error('Delete file error:', e)
+    message.error('删除失败')
   }
 }
 
@@ -1178,6 +1301,92 @@ const finishRemoteEdit = async () => {
   background: rgba(0, 212, 255, 0.15);
   color: #00d4ff;
   text-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
+}
+
+.context-menu-item.danger {
+  color: #ff6b6b;
+}
+
+.context-menu-item.danger:hover {
+  background: rgba(255, 107, 107, 0.15);
+  color: #ff6b6b;
+  text-shadow: 0 0 8px rgba(255, 107, 107, 0.5);
+}
+
+.delete-confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(5px);
+}
+
+.delete-confirm-dialog {
+  background: linear-gradient(135deg, #1a2040 0%, #151b3d 100%);
+  border: 1px solid #2d3561;
+  border-radius: 12px;
+  padding: 24px;
+  min-width: 320px;
+  max-width: 400px;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 212, 255, 0.1);
+}
+
+.delete-confirm-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #e0e7ff;
+  margin-bottom: 16px;
+}
+
+.delete-confirm-message {
+  color: #94a3b8;
+  font-size: 14px;
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.delete-confirm-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn-cancel {
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid #2d3561;
+  border-radius: 8px;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.btn-cancel:hover {
+  border-color: #00d4ff;
+  color: #00d4ff;
+}
+
+.btn-confirm-delete {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.btn-confirm-delete:hover {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
 }
 
 :deep(.ant-btn) {
