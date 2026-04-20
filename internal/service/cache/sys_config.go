@@ -313,3 +313,39 @@ func ClearFileDeleteResult(requestId string) {
 	defer fileDeleteResultsMutex.Unlock()
 	delete(fileDeleteResults, requestId)
 }
+
+var (
+	fileCreateFolderResults      = make(map[string]*FileCreateFolderResult)
+	fileCreateFolderResultsMutex sync.Mutex
+)
+
+type FileCreateFolderResult struct {
+	Code       int32
+	Message    string
+	FolderPath string
+}
+
+func SetFileCreateFolderResult(requestId string, code int32, message string, folderPath string) {
+	fileCreateFolderResultsMutex.Lock()
+	defer fileCreateFolderResultsMutex.Unlock()
+	fileCreateFolderResults[requestId] = &FileCreateFolderResult{
+		Code:       code,
+		Message:    message,
+		FolderPath: folderPath,
+	}
+}
+
+func GetFileCreateFolderResult(requestId string) *FileCreateFolderResult {
+	fileCreateFolderResultsMutex.Lock()
+	defer fileCreateFolderResultsMutex.Unlock()
+	if result, ok := fileCreateFolderResults[requestId]; ok {
+		return result
+	}
+	return nil
+}
+
+func ClearFileCreateFolderResult(requestId string) {
+	fileCreateFolderResultsMutex.Lock()
+	defer fileCreateFolderResultsMutex.Unlock()
+	delete(fileCreateFolderResults, requestId)
+}

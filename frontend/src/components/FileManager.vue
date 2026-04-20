@@ -36,6 +36,9 @@
               <ArrowUpOutlined />
             </a-button>
             <a-input v-model:value="localPath" readonly class="path-input" />
+            <a-button size="small" class="create-folder-btn" @click="startCreateLocalFolder" title="新建文件夹">
+              <FolderAddOutlined />
+            </a-button>
             <a-button size="small" @click="refreshLocalFiles">
               <ReloadOutlined />
             </a-button>
@@ -97,6 +100,9 @@
               <ArrowUpOutlined />
             </a-button>
             <a-input v-model:value="remotePath" readonly class="path-input" />
+            <a-button size="small" class="create-folder-btn" @click="startCreateRemoteFolder" title="新建文件夹">
+              <FolderAddOutlined />
+            </a-button>
             <a-button size="small" @click="refreshRemoteFiles">
               <ReloadOutlined />
             </a-button>
@@ -183,6 +189,25 @@
         </div>
       </div>
     </div>
+
+    <div v-if="showCreateFolderDialog" class="delete-confirm-overlay" @click="cancelCreateFolder">
+      <div class="delete-confirm-dialog" @click.stop>
+        <div class="delete-confirm-title">新建文件夹</div>
+        <div class="create-folder-input-group">
+          <input
+            v-model="newFolderName"
+            class="folder-name-input"
+            placeholder="请输入文件夹名称"
+            @keyup.enter="confirmCreateFolder"
+            ref="createFolderInput"
+          />
+        </div>
+        <div class="delete-confirm-buttons">
+          <button class="btn-cancel" @click="cancelCreateFolder">取消</button>
+          <button class="btn-confirm-create" @click="confirmCreateFolder">创建</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -191,6 +216,7 @@ import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { message } from 'ant-design-vue'
 import {
   FolderOutlined,
+  FolderAddOutlined,
   FileOutlined,
   ArrowUpOutlined,
   ArrowRightOutlined,
@@ -243,6 +269,11 @@ const originalFileName = ref('')
 const showDeleteConfirm = ref(false)
 const deleteTargetFile = ref(null)
 const deleteTargetType = ref('')
+
+const showCreateFolderDialog = ref(false)
+const newFolderName = ref('')
+const createFolderType = ref('')
+const createFolderInput = ref(null)
 
 const transferId = ref('')
 
@@ -827,6 +858,27 @@ const getFileDeleteResultApi = (requestId) => {
   return Promise.resolve({ code: -1 })
 }
 
+const createLocalFolderApi = (parentPath, folderName) => {
+  if (window.go?.main?.App?.CreateLocalFolder) {
+    return window.go.main.App.CreateLocalFolder(parentPath, folderName)
+  }
+  return Promise.resolve({ code: -1 })
+}
+
+const createRemoteFolderApi = (sessionId, parentPath, folderName) => {
+  if (window.go?.main?.App?.CreateRemoteFolder) {
+    return window.go.main.App.CreateRemoteFolder(sessionId, parentPath, folderName)
+  }
+  return Promise.resolve({ code: -1 })
+}
+
+const getFileCreateFolderResultApi = (requestId) => {
+  if (window.go?.main?.App?.GetFileCreateFolderResult) {
+    return window.go.main.App.GetFileCreateFolderResult(requestId)
+  }
+  return Promise.resolve({ code: -1 })
+}
+
 const showLocalContextMenu = (e, file) => {
   e.preventDefault()
   e.stopPropagation()
@@ -945,6 +997,93 @@ const confirmDelete = async () => {
   } catch (e) {
     console.error('Delete file error:', e)
     message.error('删除失败')
+  }
+}
+
+const startCreateLocalFolder = () => {
+  createFolderType.value = 'local'
+  newFolderName.value = ''
+  showCreateFolderDialog.value = true
+  nextTick(() => {
+    createFolderInput.value?.focus()
+  })
+}
+
+const startCreateRemoteFolder = () => {
+  createFolderType.value = 'remote'
+  newFolderName.value = ''
+  showCreateFolderDialog.value = true
+  nextTick(() => {
+    createFolderInput.value?.focus()
+  })
+}
+
+const cancelCreateFolder = () => {
+  showCreateFolderDialog.value = false
+  newFolderName.value = ''
+  createFolderType.value = ''
+}
+
+const confirmCreateFolder = async () => {
+  const folderName = newFolderName.value.trim()
+  if (!folderName) {
+    message.error('请输入文件夹名称')
+    return
+  }
+
+  const isLocal = createFolderType.value === 'local'
+  const parentPath = isLocal ? localPath.value : remotePath.value
+
+  showCreateFolderDialog.value = false
+  newFolderName.value = ''
+  createFolderType.value = ''
+
+  try {
+    if (isLocal) {
+      const res = await createLocalFolderApi(parentPath, folderName)
+      if (res.code === 200) {
+        message.success('创建成功')
+        refreshLocalFiles()
+      } else {
+        message.error('创建失败: ' + (res.msg || '未知错误'))
+      }
+    } else {
+      const res = await createRemoteFolderApi(connectedDevice.value.sessionId, parentPath, folderName)
+      if (res.code === 200) {
+        if (res.data?.code === 0) {
+          message.success('创建成功')
+          refreshRemoteFiles()
+        } else if (res.data?.requestId) {
+          const requestId = res.data.requestId
+          let attempts = 0
+          const maxAttempts = 30
+          const checkResult = async () => {
+            attempts++
+            const result = await getFileCreateFolderResultApi(requestId)
+            if (result.code === 200 && result.data?.exists) {
+              if (result.data.code === 0) {
+                message.success('创建成功')
+                refreshRemoteFiles()
+              } else {
+                message.error('创建失败: ' + (result.data.message || '未知错误'))
+              }
+            } else if (attempts < maxAttempts) {
+              setTimeout(checkResult, 500)
+            } else {
+              message.error('创建超时')
+            }
+          }
+          checkResult()
+        } else {
+          message.error('创建失败: ' + (res.data?.message || '未知错误'))
+        }
+      } else {
+        message.error('创建失败: ' + (res.msg || '未知错误'))
+      }
+    }
+  } catch (e) {
+    console.error('Create folder error:', e)
+    message.error('创建失败')
   }
 }
 
@@ -1145,6 +1284,19 @@ const finishRemoteEdit = async () => {
   padding: 12px;
   border-bottom: 1px solid #2d3561;
   background: rgba(21, 27, 61, 0.5);
+}
+
+.path-bar .create-folder-btn {
+  background: linear-gradient(135deg, #1a2040 0%, #151b3d 100%);
+  border: 1px solid #2d3561;
+  color: #00d4ff;
+  transition: all 0.3s ease;
+}
+
+.path-bar .create-folder-btn:hover {
+  border-color: #00d4ff;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+  color: #33ddff;
 }
 
 .path-input {
@@ -1387,6 +1539,54 @@ const finishRemoteEdit = async () => {
 .btn-confirm-delete:hover {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+}
+
+.btn-confirm-create {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+  border: none;
+  border-radius: 8px;
+  color: #0a0e27;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-confirm-create:hover {
+  background: linear-gradient(135deg, #33ddff 0%, #00b8e6 100%);
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+}
+
+.context-menu-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #2d3561, transparent);
+  margin: 6px 10px;
+}
+
+.create-folder-input-group {
+  margin-bottom: 20px;
+}
+
+.folder-name-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(10, 14, 39, 0.6);
+  border: 1px solid #2d3561;
+  border-radius: 8px;
+  color: #e0e7ff;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.folder-name-input:focus {
+  border-color: #00d4ff;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+}
+
+.folder-name-input::placeholder {
+  color: #64748b;
 }
 
 :deep(.ant-btn) {

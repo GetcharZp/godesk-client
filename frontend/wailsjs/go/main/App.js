@@ -14,6 +14,14 @@ export function CheckFileExists(arg1) {
   return window['go']['main']['App']['CheckFileExists'](arg1);
 }
 
+export function CreateLocalFolder(arg1, arg2) {
+  return window['go']['main']['App']['CreateLocalFolder'](arg1, arg2);
+}
+
+export function CreateRemoteFolder(arg1, arg2, arg3) {
+  return window['go']['main']['App']['CreateRemoteFolder'](arg1, arg2, arg3);
+}
+
 export function CreateSession(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['main']['App']['CreateSession'](arg1, arg2, arg3, arg4, arg5);
 }
@@ -60,6 +68,10 @@ export function GetControlSessions() {
 
 export function GetDeviceList() {
   return window['go']['main']['App']['GetDeviceList']();
+}
+
+export function GetFileCreateFolderResult(arg1) {
+  return window['go']['main']['App']['GetFileCreateFolderResult'](arg1);
 }
 
 export function GetFileDeleteResult(arg1) {

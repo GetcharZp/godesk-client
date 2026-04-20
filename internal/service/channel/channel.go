@@ -187,6 +187,10 @@ func (in *Service) handleMessage(req *pb.ChannelRequest) {
 		in.handleFileDeleteRequest(req)
 	case "file_delete_response":
 		in.handleFileDeleteResponse(req)
+	case "file_create_folder_request":
+		in.handleFileCreateFolderRequest(req)
+	case "file_create_folder_response":
+		in.handleFileCreateFolderResponse(req)
 	case "file_transfer_start":
 		in.handleFileTransferStart(req)
 	case "file_transfer_data":
@@ -917,6 +921,45 @@ func SendFileDeleteRequest(targetUUID string, requestId string, path string, for
 	return nil
 }
 
+// SendFileCreateFolderRequest 发送创建文件夹请求
+func SendFileCreateFolderRequest(targetUUID string, requestId string, parentPath string, folderName string, mode int32) error {
+	if stream == nil {
+		logger.Error("[sys] stream is nil, cannot send file create folder request")
+		return fmt.Errorf("stream is nil")
+	}
+
+	reqData := &pb.FileCreateFolderRequestData{
+		RequestId:  requestId,
+		ParentPath: parentPath,
+		FolderName: folderName,
+		Mode:       mode,
+		Timestamp:  time.Now().UnixMilli(),
+	}
+
+	data, err := json.Marshal(reqData)
+	if err != nil {
+		logger.Error("[sys] marshal file create folder request error.", zap.Error(err))
+		return err
+	}
+
+	req := &pb.ChannelRequest{
+		SendClientUuid:   myUUID,
+		TargetClientUuid: targetUUID,
+		Key:              "file_create_folder_request",
+		Data:             data,
+	}
+
+	logger.Info("[sys] sending file create folder request.", zap.String("targetUUID", targetUUID), zap.String("requestId", requestId), zap.String("parentPath", parentPath), zap.String("folderName", folderName))
+
+	if err := stream.Send(req); err != nil {
+		logger.Error("[sys] send file create folder request error.", zap.Error(err))
+		return err
+	}
+
+	logger.Info("[sys] file create folder request sent.", zap.String("targetUUID", targetUUID), zap.String("requestId", requestId))
+	return nil
+}
+
 // handleFileListRequest 处理文件列表请求（被控端收到）
 func (in *Service) handleFileListRequest(req *pb.ChannelRequest) {
 	var data pb.FileListRequestData
@@ -1114,6 +1157,92 @@ func (in *Service) handleFileDeleteResponse(req *pb.ChannelRequest) {
 	logger.Info("[sys] received file delete response.", zap.String("requestId", data.RequestId), zap.Int32("code", data.Code), zap.String("message", data.Message), zap.String("deletedPath", data.DeletedPath))
 
 	cache.SetFileDeleteResult(data.RequestId, data.Code, data.Message, data.DeletedPath)
+}
+
+// handleFileCreateFolderRequest 处理创建文件夹请求（被控端收到）
+func (in *Service) handleFileCreateFolderRequest(req *pb.ChannelRequest) {
+	var data pb.FileCreateFolderRequestData
+	if err := json.Unmarshal(req.Data, &data); err != nil {
+		logger.Error("[sys] unmarshal file create folder request error.", zap.Error(err))
+		return
+	}
+
+	logger.Info("[sys] received file create folder request.", zap.String("requestId", data.RequestId), zap.String("parentPath", data.ParentPath), zap.String("folderName", data.FolderName))
+
+	respCode := int32(0)
+	respMsg := "success"
+	var folderPath string
+
+	parentInfo, err := os.Stat(data.ParentPath)
+	if os.IsNotExist(err) {
+		respCode = 1
+		respMsg = "parent directory not found"
+	} else if !parentInfo.IsDir() {
+		respCode = 1
+		respMsg = "parent path is not a directory"
+	} else {
+		folderPath = filepath.Join(data.ParentPath, data.FolderName)
+		if _, err := os.Stat(folderPath); err == nil {
+			respCode = 2
+			respMsg = "folder already exists"
+		} else {
+			mode := os.FileMode(0755)
+			if data.Mode > 0 {
+				mode = os.FileMode(data.Mode)
+			}
+			if err := os.MkdirAll(folderPath, mode); err != nil {
+				if os.IsPermission(err) {
+					respCode = 3
+					respMsg = "permission denied"
+				} else {
+					respCode = 4
+					respMsg = err.Error()
+				}
+				logger.Error("[sys] create folder error.", zap.Error(err))
+			}
+		}
+	}
+
+	respData := &pb.FileCreateFolderResponseData{
+		RequestId:  data.RequestId,
+		Code:       respCode,
+		Message:    respMsg,
+		FolderPath: folderPath,
+		Timestamp:  time.Now().UnixMilli(),
+	}
+
+	jsonData, err := json.Marshal(respData)
+	if err != nil {
+		logger.Error("[sys] marshal file create folder response error.", zap.Error(err))
+		return
+	}
+
+	resp := &pb.ChannelRequest{
+		SendClientUuid:   myUUID,
+		TargetClientUuid: req.SendClientUuid,
+		Key:              "file_create_folder_response",
+		Data:             jsonData,
+	}
+
+	if err := stream.Send(resp); err != nil {
+		logger.Error("[sys] send file create folder response error.", zap.Error(err))
+		return
+	}
+
+	logger.Info("[sys] file create folder response sent.", zap.String("requestId", data.RequestId), zap.Int32("code", respCode), zap.String("folderPath", folderPath))
+}
+
+// handleFileCreateFolderResponse 处理创建文件夹响应（控制端收到）
+func (in *Service) handleFileCreateFolderResponse(req *pb.ChannelRequest) {
+	var data pb.FileCreateFolderResponseData
+	if err := json.Unmarshal(req.Data, &data); err != nil {
+		logger.Error("[sys] unmarshal file create folder response error.", zap.Error(err))
+		return
+	}
+
+	logger.Info("[sys] received file create folder response.", zap.String("requestId", data.RequestId), zap.Int32("code", data.Code), zap.String("message", data.Message), zap.String("folderPath", data.FolderPath))
+
+	cache.SetFileCreateFolderResult(data.RequestId, data.Code, data.Message, data.FolderPath)
 }
 
 // handleFileTransferStart 处理文件传输开始

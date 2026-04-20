@@ -589,6 +589,64 @@ func (a *App) GetFileDeleteResult(requestId string) any {
 	}, nil)
 }
 
+// CreateLocalFolder 创建本地文件夹
+func (a *App) CreateLocalFolder(parentPath string, folderName string) any {
+	folderPath := filepath.Join(parentPath, folderName)
+	if err := file.CreateFolder(parentPath, folderName); err != nil {
+		return resp(nil, err)
+	}
+	return resp(map[string]any{
+		"folderPath": folderPath,
+	}, nil)
+}
+
+// CreateRemoteFolder 创建远程文件夹
+func (a *App) CreateRemoteFolder(sessionId string, parentPath string, folderName string) any {
+	sess := session.GetSession(sessionId)
+	if sess == nil || sess.TargetUUID == "" {
+		return resp(nil, fmt.Errorf("session not found or targetUUID is empty"))
+	}
+
+	requestId := fmt.Sprintf("%d", time.Now().UnixMilli())
+
+	if sess.TargetUUID == channel.GetMyUUID() {
+		if err := file.CreateFolder(parentPath, folderName); err != nil {
+			return resp(nil, err)
+		}
+		folderPath := filepath.Join(parentPath, folderName)
+		return resp(map[string]any{
+			"requestId":  requestId,
+			"code":       0,
+			"folderPath": folderPath,
+		}, nil)
+	}
+
+	if err := channel.SendFileCreateFolderRequest(sess.TargetUUID, requestId, parentPath, folderName, 0755); err != nil {
+		return resp(nil, err)
+	}
+
+	return resp(map[string]any{
+		"requestId": requestId,
+	}, nil)
+}
+
+// GetFileCreateFolderResult 获取创建文件夹结果
+func (a *App) GetFileCreateFolderResult(requestId string) any {
+	result := cache.GetFileCreateFolderResult(requestId)
+	if result == nil {
+		return resp(map[string]any{
+			"exists": false,
+		}, nil)
+	}
+	return resp(map[string]any{
+		"exists":     true,
+		"code":       result.Code,
+		"message":    result.Message,
+		"folderPath": result.FolderPath,
+		"complete":   true,
+	}, nil)
+}
+
 // CancelFileTransfer 取消文件传输
 func (a *App) CancelFileTransfer(sessionId string, transferId string, reason string) any {
 	sess := session.GetSession(sessionId)

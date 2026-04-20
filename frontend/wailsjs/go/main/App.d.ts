@@ -9,6 +9,10 @@ export function CancelFileTransfer(arg1:string,arg2:string,arg3:string):Promise<
 
 export function CheckFileExists(arg1:string):Promise<any>;
 
+export function CreateLocalFolder(arg1:string,arg2:string):Promise<any>;
+
+export function CreateRemoteFolder(arg1:string,arg2:string,arg3:string):Promise<any>;
+
 export function CreateSession(arg1:string,arg2:number,arg3:string,arg4:boolean,arg5:string):Promise<any>;
 
 export function DeleteDevice(arg1:godesk.DeleteDeviceRequest):Promise<any>;
@@ -32,6 +36,8 @@ export function GetControlSessionByDeviceCode(arg1:number):Promise<any>;
 export function GetControlSessions():Promise<any>;
 
 export function GetDeviceList():Promise<any>;
+
+export function GetFileCreateFolderResult(arg1:string):Promise<any>;
 
 export function GetFileDeleteResult(arg1:string):Promise<any>;
 
