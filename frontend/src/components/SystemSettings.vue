@@ -94,19 +94,19 @@ const handleSave = async () => {
 }
 
 .page-title {
-  font-size: 24px;
-  color: #00d4ff;
+  font-size: 20px;
+  color: var(--text-accent);
   font-weight: 500;
-  text-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+  text-shadow: 0 0 15px var(--accent-primary-glow-strong);
   letter-spacing: 0.5px;
 }
 
 .settings-form {
-  background: linear-gradient(135deg, #151b3d 0%, #1a2040 100%);
+  background: var(--bg-card);
   padding: 32px;
   border-radius: 12px;
-  border: 1px solid #2d3561;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-primary);
+  box-shadow: var(--shadow-glow);
   margin-bottom: 24px;
 }
 
@@ -117,7 +117,7 @@ const handleSave = async () => {
 .form-label {
   display: block;
   font-size: 14px;
-  color: #e0e7ff;
+  color: var(--text-primary);
   margin-bottom: 10px;
   font-weight: 500;
   letter-spacing: 0.3px;
@@ -131,27 +131,27 @@ const handleSave = async () => {
 
 .form-input {
   padding: 12px 16px;
-  background: #0a0e27;
-  border: 1px solid #2d3561;
+  background: var(--bg-input);
+  border: 1px solid var(--border-primary);
   border-radius: 8px;
   font-size: 14px;
-  color: #e0e7ff;
+  color: var(--text-primary);
   transition: all 0.3s ease;
 }
 
 .form-input::placeholder {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #00d4ff;
-  box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+  border-color: var(--border-active);
+  box-shadow: 0 0 15px var(--accent-primary-glow);
 }
 
 .input-hint {
   font-size: 12px;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .form-actions {
@@ -162,24 +162,24 @@ const handleSave = async () => {
 
 .btn-save {
   padding: 12px 28px;
-  background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
-  color: #0a0e27;
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-dark) 100%);
+  color: var(--text-on-accent);
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
   transition: all 0.3s ease;
-  box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+  box-shadow: var(--shadow-button);
 }
 
 .btn-save:hover:not(:disabled) {
-  box-shadow: 0 0 25px rgba(0, 212, 255, 0.5);
+  box-shadow: 0 0 25px var(--accent-primary-glow-strong);
   transform: translateY(-2px);
 }
 
 .btn-save:disabled {
-  background: linear-gradient(135deg, #3d4571 0%, #2d3561 100%);
+  background: linear-gradient(135deg, var(--scrollbar-thumb) 0%, var(--border-primary) 100%);
   cursor: not-allowed;
   box-shadow: none;
 }
@@ -187,8 +187,8 @@ const handleSave = async () => {
 .btn-reset {
   padding: 12px 28px;
   background: transparent;
-  color: #94a3b8;
-  border: 1px solid #2d3561;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-primary);
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
@@ -196,23 +196,23 @@ const handleSave = async () => {
 }
 
 .btn-reset:hover {
-  color: #00d4ff;
-  border-color: #00d4ff;
-  box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+  color: var(--text-accent);
+  border-color: var(--border-active);
+  box-shadow: 0 0 15px var(--accent-primary-glow);
 }
 
 .settings-info {
-  background: rgba(16, 185, 129, 0.08);
+  background: var(--success-bg);
   padding: 20px 24px;
   border-radius: 8px;
-  border: 1px solid #10b981;
+  border: 1px solid var(--success);
 }
 
 .settings-info h3 {
   font-size: 14px;
-  color: #10b981;
+  color: var(--success);
   margin-bottom: 12px;
-  text-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+  text-shadow: 0 0 8px var(--success-glow);
 }
 
 .settings-info ul {
@@ -222,7 +222,7 @@ const handleSave = async () => {
 
 .settings-info li {
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--text-secondary);
   line-height: 1.8;
 }
 </style>

@@ -38,14 +38,14 @@ func main() {
 			WindowIsTranslucent:               false,
 			DisableWindowIcon:                 false,
 			DisableFramelessWindowDecorations: false,
-			Theme:                             windows.Dark,
+			Theme:                             windows.SystemDefault,
 			CustomTheme: &windows.ThemeSettings{
 				DarkModeTitleBar:   windows.RGB(10, 14, 39),
 				DarkModeTitleText:  windows.RGB(0, 212, 255),
 				DarkModeBorder:     windows.RGB(45, 53, 97),
-				LightModeTitleBar:  windows.RGB(240, 240, 240),
-				LightModeTitleText: windows.RGB(20, 20, 20),
-				LightModeBorder:    windows.RGB(200, 200, 200),
+				LightModeTitleBar:  windows.RGB(248, 250, 252),
+				LightModeTitleText: windows.RGB(0, 136, 204),
+				LightModeBorder:    windows.RGB(226, 232, 240),
 			},
 		},
 	})

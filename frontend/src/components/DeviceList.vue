@@ -226,29 +226,28 @@ onMounted(() => {
 }
 
 .page-title {
-  color: #00d4ff;
-  font-size: 24px;
+  color: var(--text-accent);
+  font-size: 20px;
   font-weight: 500;
-  text-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+  text-shadow: 0 0 15px var(--accent-primary-glow-strong);
   letter-spacing: 0.5px;
 }
 
 .add-btn {
   padding: 10px 20px;
-  background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
-  color: #0a0e27;
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-dark) 100%);
+  color: var(--text-on-accent);
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
   transition: all 0.3s ease;
-  box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+  box-shadow: var(--shadow-button);
 }
 
 .add-btn:hover {
-  background: linear-gradient(135deg, #00e5ff 0%, #00b3e6 100%);
-  box-shadow: 0 0 25px rgba(0, 212, 255, 0.5);
+  box-shadow: 0 0 25px var(--accent-primary-glow-strong);
   transform: translateY(-2px);
 }
 
@@ -259,31 +258,31 @@ onMounted(() => {
 .search-bar input {
   width: 100%;
   padding: 12px 16px;
-  background: #0a0e27;
-  border: 1px solid #2d3561;
+  background: var(--bg-input);
+  border: 1px solid var(--border-primary);
   border-radius: 8px;
   font-size: 14px;
-  color: #e0e7ff;
+  color: var(--text-primary);
   transition: all 0.3s ease;
 }
 
 .search-bar input::placeholder {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .search-bar input:hover,
 .search-bar input:focus {
-  border-color: #00d4ff;
-  box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+  border-color: var(--border-active);
+  box-shadow: 0 0 15px var(--accent-primary-glow);
   outline: none;
 }
 
 .device-categories {
-  background: linear-gradient(135deg, #151b3d 0%, #1a2040 100%);
+  background: var(--bg-card);
   padding: 24px;
   border-radius: 12px;
-  border: 1px solid #2d3561;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-primary);
+  box-shadow: var(--shadow-glow);
 }
 
 .category {
@@ -296,11 +295,11 @@ onMounted(() => {
 
 .category h3 {
   font-size: 16px;
-  color: #00d4ff;
+  color: var(--text-accent);
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #2d3561;
-  text-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+  border-bottom: 1px solid var(--border-primary);
+  text-shadow: 0 0 8px var(--accent-primary-glow);
 }
 
 .device-items {
@@ -311,8 +310,8 @@ onMounted(() => {
 
 .device-item {
   padding: 16px 20px;
-  background: rgba(10, 14, 39, 0.5);
-  border: 1px solid #2d3561;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
   border-radius: 8px;
   font-size: 14px;
   display: flex;
@@ -322,26 +321,26 @@ onMounted(() => {
 }
 
 .device-item:hover {
-  background: rgba(0, 212, 255, 0.08);
-  border-color: #00d4ff;
-  box-shadow: 0 0 15px rgba(0, 212, 255, 0.15);
+  background: var(--bg-card-hover);
+  border-color: var(--border-active);
+  box-shadow: 0 0 15px var(--accent-primary-glow);
 }
 
 .device-code {
   font-family: 'Courier New', monospace;
   font-weight: bold;
-  color: #00d4ff;
+  color: var(--text-accent);
   min-width: 100px;
-  text-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+  text-shadow: 0 0 8px var(--accent-primary-glow);
 }
 
 .device-remark {
   flex: 1;
-  color: #e0e7ff;
+  color: var(--text-primary);
 }
 
 .device-os {
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 12px;
   min-width: 80px;
 }
@@ -350,16 +349,16 @@ onMounted(() => {
   font-size: 12px;
   padding: 4px 12px;
   border-radius: 12px;
-  background: rgba(100, 116, 139, 0.2);
-  color: #64748b;
+  background: var(--bg-status-offline);
+  color: var(--text-muted);
   border: 1px solid transparent;
 }
 
 .device-status.online {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
-  border-color: #10b981;
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+  background: var(--success-bg);
+  color: var(--success);
+  border-color: var(--success);
+  box-shadow: 0 0 10px var(--success-glow);
 }
 
 .device-actions {
@@ -369,7 +368,7 @@ onMounted(() => {
 
 .btn-control {
   padding: 6px 14px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
   color: white;
   border: none;
   border-radius: 6px;
@@ -380,13 +379,13 @@ onMounted(() => {
 }
 
 .btn-control:hover {
-  box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 15px var(--success-glow);
   transform: translateY(-1px);
 }
 
 .btn-file {
   padding: 6px 14px;
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  background: linear-gradient(135deg, var(--purple) 0%, var(--purple-dark) 100%);
   color: white;
   border: none;
   border-radius: 6px;
@@ -397,14 +396,14 @@ onMounted(() => {
 }
 
 .btn-file:hover {
-  box-shadow: 0 0 15px rgba(124, 58, 237, 0.5);
+  box-shadow: 0 0 15px var(--purple-glow);
   transform: translateY(-1px);
 }
 
 .btn-edit {
   padding: 6px 14px;
-  background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
-  color: #0a0e27;
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-dark) 100%);
+  color: var(--text-on-accent);
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -414,13 +413,13 @@ onMounted(() => {
 }
 
 .btn-edit:hover {
-  box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+  box-shadow: 0 0 15px var(--accent-primary-glow-strong);
   transform: translateY(-1px);
 }
 
 .btn-delete {
   padding: 6px 14px;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(135deg, var(--danger) 0%, var(--danger-dark) 100%);
   color: white;
   border: none;
   border-radius: 6px;
@@ -431,13 +430,13 @@ onMounted(() => {
 }
 
 .btn-delete:hover {
-  box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 15px var(--danger-glow);
   transform: translateY(-1px);
 }
 
 .empty-tip {
   text-align: center;
-  color: #64748b;
+  color: var(--text-muted);
   padding: 60px 20px;
   font-size: 14px;
 }

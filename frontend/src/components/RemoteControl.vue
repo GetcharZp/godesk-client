@@ -879,7 +879,7 @@ watch(isFullscreen, (value) => {
   padding: 0;
   height: 100vh;
   max-width: none;
-  background: #0a0e27;
+  background: var(--bg-tertiary);
 }
 
 .remote-control-page.fullscreen-mode .header,
@@ -912,7 +912,7 @@ watch(isFullscreen, (value) => {
   z-index: 15;
   padding: 12px 72px 12px 16px;
   border-bottom: none;
-  background: linear-gradient(180deg, rgba(10, 14, 39, 0.88) 0%, rgba(10, 14, 39, 0.45) 70%, rgba(10, 14, 39, 0) 100%);
+  background: linear-gradient(180deg, var(--bg-modal-mask) 0%, rgba(10, 14, 39, 0.45) 70%, rgba(10, 14, 39, 0) 100%);
   pointer-events: none;
 }
 
@@ -947,11 +947,11 @@ watch(isFullscreen, (value) => {
 }
 
 .page-title {
-  color: #00d4ff;
+  color: var(--text-accent);
   margin: 0;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 500;
-  text-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+  text-shadow: 0 0 15px var(--accent-primary-glow-strong);
   letter-spacing: 0.5px;
 }
 
@@ -990,8 +990,8 @@ watch(isFullscreen, (value) => {
   top: 8px;
   width: 28px;
   height: 28px;
-  border: 1px solid #2d3561;
-  background: linear-gradient(135deg, #151b3d 0%, #1a2040 100%);
+  border: 1px solid var(--border-primary);
+  background: var(--bg-card);
   border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
@@ -1000,13 +1000,13 @@ watch(isFullscreen, (value) => {
   justify-content: center;
   z-index: 10;
   transition: all 0.3s ease;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .sidebar-toggle:hover {
-  border-color: #00d4ff;
-  color: #00d4ff;
-  box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+  border-color: var(--border-active);
+  color: var(--text-accent);
+  box-shadow: 0 0 10px var(--accent-primary-glow);
 }
 
 .main-section.collapsed .sidebar-toggle {
@@ -1033,10 +1033,10 @@ watch(isFullscreen, (value) => {
 
 .screen-section {
   flex: 1;
-  background: linear-gradient(135deg, #151b3d 0%, #1a2040 100%);
+  background: var(--bg-card);
   border-radius: 12px;
-  border: 1px solid #2d3561;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-primary);
+  box-shadow: var(--shadow-glow);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1048,8 +1048,8 @@ watch(isFullscreen, (value) => {
   align-items: center;
   justify-content: space-between;
   padding: 12px 20px;
-  border-bottom: 1px solid #2d3561;
-  background: linear-gradient(90deg, #151b3d 0%, #1a2040 100%);
+  border-bottom: 1px solid var(--border-primary);
+  background: var(--bg-secondary);
   flex-shrink: 0;
 }
 
@@ -1065,25 +1065,25 @@ watch(isFullscreen, (value) => {
   align-items: center;
   gap: 8px;
   padding: 8px 14px;
-  background: rgba(10, 14, 39, 0.5);
-  border: 1px solid #2d3561;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .session-tab:hover {
-  background: rgba(0, 212, 255, 0.1);
-  border-color: #00d4ff;
+  background: var(--bg-item-hover);
+  border-color: var(--border-active);
 }
 
 .session-tab.active {
-  background: rgba(0, 212, 255, 0.15);
-  border-color: #00d4ff;
-  color: #00d4ff;
-  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+  background: var(--bg-item-hover);
+  border-color: var(--border-active);
+  color: var(--text-accent);
+  box-shadow: 0 0 10px var(--accent-primary-glow);
 }
 
 .tab-name {
@@ -1094,23 +1094,23 @@ watch(isFullscreen, (value) => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: #64748b;
+  background-color: var(--text-muted);
 }
 
 .tab-status.connected {
-  background-color: #10b981;
-  box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+  background-color: var(--success);
+  box-shadow: 0 0 6px var(--success-glow);
 }
 
 .tab-status.connecting {
-  background-color: #f59e0b;
+  background-color: var(--warning);
   box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
 }
 
 .tab-status.error,
 .tab-status.disconnected {
-  background-color: #ef4444;
-  box-shadow: 0 0 6px rgba(239, 68, 68, 0.5);
+  background-color: var(--danger);
+  box-shadow: 0 0 6px var(--danger-glow);
 }
 
 .tab-close {
@@ -1141,35 +1141,35 @@ watch(isFullscreen, (value) => {
 .toolbar-btn {
   padding: 6px 14px;
   font-size: 12px;
-  border: 1px solid #2d3561;
+  border: 1px solid var(--border-primary);
   border-radius: 6px;
-  background: rgba(10, 14, 39, 0.5);
+  background: var(--bg-tertiary);
   cursor: pointer;
   transition: all 0.3s ease;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .toolbar-btn:hover {
-  border-color: #00d4ff;
-  color: #00d4ff;
-  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+  border-color: var(--border-active);
+  color: var(--text-accent);
+  box-shadow: 0 0 10px var(--accent-primary-glow);
 }
 
 .toolbar-btn.active {
-  background: rgba(0, 212, 255, 0.15);
-  border-color: #00d4ff;
-  color: #00d4ff;
+  background: var(--bg-item-hover);
+  border-color: var(--border-active);
+  color: var(--text-accent);
 }
 
 .toolbar-btn.danger {
-  color: #ef4444;
+  color: var(--danger);
   border-color: rgba(239, 68, 68, 0.3);
 }
 
 .toolbar-btn.danger:hover {
   background: rgba(239, 68, 68, 0.15);
-  border-color: #ef4444;
-  box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+  border-color: var(--danger);
+  box-shadow: 0 0 10px var(--danger-glow);
 }
 
 .screen-wrapper {
@@ -1177,7 +1177,7 @@ watch(isFullscreen, (value) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(ellipse at center, #0f1428 0%, #0a0e27 100%);
+  background: var(--bg-primary);
   position: relative;
   overflow: auto;
   min-height: 0;
@@ -1192,21 +1192,20 @@ watch(isFullscreen, (value) => {
   font-size: 12px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 999px;
-  background: rgba(10, 14, 39, 0.72);
-  color: #e2e8f0;
+  background: var(--bg-modal-mask);
+  color: var(--text-primary);
   cursor: pointer;
   backdrop-filter: blur(8px);
   transition: all 0.2s ease;
 }
 
 .fullscreen-exit-btn:hover {
-  border-color: #00d4ff;
-  color: #00d4ff;
-  background: rgba(10, 14, 39, 0.88);
+  border-color: var(--border-active);
+  color: var(--text-accent);
 }
 
 .screen-wrapper:-webkit-full-screen {
-  background: radial-gradient(ellipse at center, #0f1428 0%, #0a0e27 100%);
+  background: var(--bg-primary);
 }
 
 .screen-canvas {
@@ -1225,19 +1224,19 @@ watch(isFullscreen, (value) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: rgba(10, 14, 39, 0.9);
-  color: #e0e7ff;
+  background-color: var(--bg-modal-mask);
+  color: var(--text-primary);
 }
 
 .screen-overlay.error {
-  color: #ef4444;
+  color: var(--danger);
 }
 
 .loading-spinner {
   width: 36px;
   height: 36px;
-  border: 3px solid rgba(0, 212, 255, 0.2);
-  border-top-color: #00d4ff;
+  border: 3px solid var(--accent-primary-glow);
+  border-top-color: var(--accent-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 16px;
@@ -1250,36 +1249,36 @@ watch(isFullscreen, (value) => {
 .btn-retry {
   margin-top: 16px;
   padding: 10px 24px;
-  background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
-  color: #0a0e27;
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-dark) 100%);
+  color: var(--text-on-accent);
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
   transition: all 0.3s ease;
-  box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+  box-shadow: var(--shadow-button);
 }
 
 .btn-retry:hover {
-  box-shadow: 0 0 25px rgba(0, 212, 255, 0.5);
+  box-shadow: 0 0 25px var(--accent-primary-glow-strong);
   transform: translateY(-2px);
 }
 
 .section-card {
-  background: linear-gradient(135deg, #151b3d 0%, #1a2040 100%);
+  background: var(--bg-card);
   padding: 24px;
   border-radius: 12px;
-  border: 1px solid #2d3561;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-primary);
+  box-shadow: var(--shadow-glow);
 }
 
 .section-card h3 {
   font-size: 16px;
-  color: #00d4ff;
+  color: var(--text-accent);
   margin: 0 0 16px 0;
   padding-bottom: 12px;
-  border-bottom: 1px solid #2d3561;
-  text-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+  border-bottom: 1px solid var(--border-primary);
+  text-shadow: 0 0 8px var(--accent-primary-glow);
 }
 
 .device-info-row {
@@ -1295,7 +1294,7 @@ watch(isFullscreen, (value) => {
 
 .info-label {
   font-size: 14px;
-  color: #94a3b8;
+  color: var(--text-secondary);
   min-width: 50px;
 }
 
@@ -1304,12 +1303,12 @@ watch(isFullscreen, (value) => {
   font-family: 'Courier New', monospace;
   font-size: 16px;
   font-weight: 600;
-  color: #00d4ff;
-  background: rgba(10, 14, 39, 0.5);
-  border: 1px solid #2d3561;
+  color: var(--text-accent);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
   padding: 10px 14px;
   border-radius: 6px;
-  text-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+  text-shadow: 0 0 8px var(--accent-primary-glow);
 }
 
 .info-value.password {
@@ -1319,18 +1318,18 @@ watch(isFullscreen, (value) => {
 .btn-copy, .btn-toggle {
   padding: 8px 14px;
   font-size: 12px;
-  border: 1px solid #2d3561;
+  border: 1px solid var(--border-primary);
   border-radius: 6px;
-  background: rgba(10, 14, 39, 0.5);
+  background: var(--bg-tertiary);
   cursor: pointer;
-  color: #94a3b8;
+  color: var(--text-secondary);
   transition: all 0.3s ease;
 }
 
 .btn-copy:hover, .btn-toggle:hover {
-  border-color: #00d4ff;
-  color: #00d4ff;
-  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+  border-color: var(--border-active);
+  color: var(--text-accent);
+  box-shadow: 0 0 10px var(--accent-primary-glow);
 }
 
 .btn-copy:disabled {
@@ -1357,30 +1356,30 @@ watch(isFullscreen, (value) => {
 .form-item label {
   display: block;
   font-size: 14px;
-  color: #94a3b8;
+  color: var(--text-secondary);
   margin-bottom: 8px;
 }
 
 .form-item input {
   width: 100%;
   padding: 10px 14px;
-  background: #0a0e27;
-  border: 1px solid #2d3561;
+  background: var(--bg-input);
+  border: 1px solid var(--border-primary);
   border-radius: 6px;
   font-size: 14px;
-  color: #e0e7ff;
+  color: var(--text-primary);
   box-sizing: border-box;
   transition: all 0.3s ease;
 }
 
 .form-item input::placeholder {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .form-item input:focus {
-  border-color: #00d4ff;
+  border-color: var(--border-active);
   outline: none;
-  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+  box-shadow: 0 0 10px var(--accent-primary-glow);
 }
 
 .btn-toggle-pwd {
@@ -1392,12 +1391,12 @@ watch(isFullscreen, (value) => {
   border: none;
   background: none;
   cursor: pointer;
-  color: #64748b;
+  color: var(--text-muted);
   transition: color 0.2s;
 }
 
 .btn-toggle-pwd:hover {
-  color: #00d4ff;
+  color: var(--text-accent);
 }
 
 .form-actions {
@@ -1408,24 +1407,24 @@ watch(isFullscreen, (value) => {
 .btn-primary {
   flex: 1;
   padding: 12px 18px;
-  background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
-  color: #0a0e27;
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-dark) 100%);
+  color: var(--text-on-accent);
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
   transition: all 0.3s ease;
-  box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+  box-shadow: var(--shadow-button);
 }
 
 .btn-primary:hover:not(:disabled) {
-  box-shadow: 0 0 25px rgba(0, 212, 255, 0.5);
+  box-shadow: 0 0 25px var(--accent-primary-glow-strong);
   transform: translateY(-2px);
 }
 
 .btn-primary:disabled {
-  background: linear-gradient(135deg, #3d4571 0%, #2d3561 100%);
+  background: linear-gradient(135deg, var(--scrollbar-thumb) 0%, var(--border-primary) 100%);
   cursor: not-allowed;
   box-shadow: none;
 }
@@ -1434,8 +1433,8 @@ watch(isFullscreen, (value) => {
   flex: 1;
   padding: 12px 18px;
   background: transparent;
-  color: #94a3b8;
-  border: 1px solid #2d3561;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-primary);
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
@@ -1443,9 +1442,9 @@ watch(isFullscreen, (value) => {
 }
 
 .btn-secondary:hover:not(:disabled) {
-  border-color: #00d4ff;
-  color: #00d4ff;
-  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+  border-color: var(--border-active);
+  color: var(--text-accent);
+  box-shadow: 0 0 10px var(--accent-primary-glow);
 }
 
 .session-list {
@@ -1459,8 +1458,8 @@ watch(isFullscreen, (value) => {
   align-items: center;
   gap: 14px;
   padding: 14px 16px;
-  background: rgba(10, 14, 39, 0.5);
-  border: 1px solid #2d3561;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -1468,21 +1467,21 @@ watch(isFullscreen, (value) => {
 }
 
 .session-item:hover {
-  background: rgba(0, 212, 255, 0.08);
-  border-color: #2d3561;
+  background: var(--bg-card-hover);
+  border-color: var(--border-primary);
 }
 
 .session-item.active {
-  border-left-color: #00d4ff;
-  background: rgba(0, 212, 255, 0.1);
-  border-color: #00d4ff;
-  box-shadow: 0 0 15px rgba(0, 212, 255, 0.15);
+  border-left-color: var(--border-active);
+  background: var(--bg-item-hover);
+  border-color: var(--border-active);
+  box-shadow: 0 0 15px var(--accent-primary-glow);
 }
 
 .session-code {
   flex: 1;
   font-size: 14px;
-  color: #e0e7ff;
+  color: var(--text-primary);
 }
 
 .session-status {
@@ -1492,22 +1491,22 @@ watch(isFullscreen, (value) => {
 }
 
 .session-status.connected {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
-  border: 1px solid #10b981;
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid var(--success);
 }
 
 .session-status.connecting {
   background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
-  border: 1px solid #f59e0b;
+  color: var(--warning);
+  border: 1px solid var(--warning);
 }
 
 .session-status.error,
 .session-status.disconnected {
   background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-  border: 1px solid #ef4444;
+  color: var(--danger);
+  border: 1px solid var(--danger);
 }
 
 .session-actions {
@@ -1518,28 +1517,28 @@ watch(isFullscreen, (value) => {
 .btn-view, .btn-disconnect {
   padding: 6px 14px;
   font-size: 12px;
-  border: 1px solid #2d3561;
+  border: 1px solid var(--border-primary);
   border-radius: 6px;
-  background: rgba(10, 14, 39, 0.5);
+  background: var(--bg-tertiary);
   cursor: pointer;
   transition: all 0.3s ease;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .btn-view:hover {
-  border-color: #00d4ff;
-  color: #00d4ff;
-  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+  border-color: var(--border-active);
+  color: var(--text-accent);
+  box-shadow: 0 0 10px var(--accent-primary-glow);
 }
 
 .btn-disconnect {
-  color: #ef4444;
+  color: var(--danger);
   border-color: rgba(239, 68, 68, 0.3);
 }
 
 .btn-disconnect:hover {
   background: rgba(239, 68, 68, 0.15);
-  border-color: #ef4444;
-  box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+  border-color: var(--danger);
+  box-shadow: 0 0 10px var(--danger-glow);
 }
 </style>

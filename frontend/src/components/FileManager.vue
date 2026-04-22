@@ -1176,8 +1176,8 @@ const finishRemoteEdit = async () => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #0a0e27 0%, #151b3d 100%);
-  color: #e0e7ff;
+  background: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 .connection-panel {
@@ -1186,16 +1186,16 @@ const finishRemoteEdit = async () => {
   align-items: center;
   height: 100%;
   padding: 20px;
-  background: radial-gradient(ellipse at center, #151b3d 0%, #0a0e27 100%);
+  background: var(--bg-primary);
 }
 
 .connection-card {
   width: 100%;
   max-width: 400px;
-  background: rgba(26, 32, 64, 0.8);
-  border: 1px solid #2d3561;
+  background: var(--bg-modal);
+  border: 1px solid var(--border-primary);
   border-radius: 12px;
-  box-shadow: 0 0 30px rgba(0, 212, 255, 0.1);
+  box-shadow: var(--shadow-card);
   backdrop-filter: blur(10px);
 }
 
@@ -1210,15 +1210,15 @@ const finishRemoteEdit = async () => {
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  background: linear-gradient(90deg, #151b3d 0%, #1a2040 100%);
-  border-bottom: 1px solid #2d3561;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-primary);
+  box-shadow: var(--shadow-glow);
 }
 
 .device-info {
   font-weight: 500;
-  color: #00d4ff;
-  text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+  color: var(--text-accent);
+  text-shadow: 0 0 10px var(--accent-primary-glow-strong);
   font-size: 14px;
   letter-spacing: 0.5px;
 }
@@ -1227,16 +1227,16 @@ const finishRemoteEdit = async () => {
   flex: 1;
   display: flex;
   overflow: hidden;
-  background: #0a0e27;
+  background: var(--bg-tertiary);
 }
 
 .transfer-progress {
   margin: 12px;
   padding: 16px;
-  background: linear-gradient(135deg, #151b3d 0%, #1a2040 100%);
-  border: 1px solid #2d3561;
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
   border-radius: 8px;
-  box-shadow: 0 0 20px rgba(0, 212, 255, 0.1);
+  box-shadow: 0 0 20px var(--accent-primary-glow);
 }
 
 .progress-header {
@@ -1245,13 +1245,13 @@ const finishRemoteEdit = async () => {
   align-items: center;
   margin-bottom: 12px;
   font-size: 13px;
-  color: #e0e7ff;
+  color: var(--text-primary);
 }
 
 .progress-info {
   text-align: right;
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--text-secondary);
   margin-top: 8px;
 }
 
@@ -1260,21 +1260,21 @@ const finishRemoteEdit = async () => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  border: 1px solid #2d3561;
+  border: 1px solid var(--border-primary);
   margin: 12px;
   border-radius: 8px;
   overflow: hidden;
-  background: linear-gradient(180deg, #151b3d 0%, #0f1428 100%);
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  background: var(--bg-secondary);
+  box-shadow: var(--shadow-glow);
 }
 
 .section-header {
   padding: 12px 16px;
-  background: linear-gradient(90deg, #1a2040 0%, #151b3d 100%);
-  border-bottom: 1px solid #2d3561;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-primary);
   font-weight: 500;
-  color: #00d4ff;
-  text-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+  color: var(--text-accent);
+  text-shadow: 0 0 8px var(--accent-primary-glow);
   letter-spacing: 0.5px;
 }
 
@@ -1282,38 +1282,37 @@ const finishRemoteEdit = async () => {
   display: flex;
   gap: 8px;
   padding: 12px;
-  border-bottom: 1px solid #2d3561;
-  background: rgba(21, 27, 61, 0.5);
+  border-bottom: 1px solid var(--border-primary);
+  background: var(--bg-tertiary);
 }
 
 .path-bar .create-folder-btn {
-  background: linear-gradient(135deg, #1a2040 0%, #151b3d 100%);
-  border: 1px solid #2d3561;
-  color: #00d4ff;
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  color: var(--text-accent);
   transition: all 0.3s ease;
 }
 
 .path-bar .create-folder-btn:hover {
-  border-color: #00d4ff;
-  box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
-  color: #33ddff;
+  border-color: var(--border-active);
+  box-shadow: 0 0 10px var(--accent-primary-glow);
 }
 
 .path-input {
   flex: 1;
-  background: #0a0e27;
-  border: 1px solid #2d3561;
-  color: #e0e7ff;
+  background: var(--bg-input);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
   border-radius: 6px;
 }
 
 .path-input :deep(input) {
   background: transparent !important;
-  color: #e0e7ff !important;
+  color: var(--text-primary) !important;
 }
 
 .path-input :deep(input::placeholder) {
-  color: #64748b !important;
+  color: var(--text-muted) !important;
 }
 
 .file-list {
@@ -1321,7 +1320,7 @@ const finishRemoteEdit = async () => {
   overflow-y: auto;
   padding: 8px;
   outline: none;
-  background: #0a0e27;
+  background: var(--bg-tertiary);
 }
 
 .file-list::-webkit-scrollbar {
@@ -1329,16 +1328,16 @@ const finishRemoteEdit = async () => {
 }
 
 .file-list::-webkit-scrollbar-track {
-  background: #0a0e27;
+  background: var(--scrollbar-track);
 }
 
 .file-list::-webkit-scrollbar-thumb {
-  background: #2d3561;
+  background: var(--scrollbar-thumb);
   border-radius: 4px;
 }
 
 .file-list::-webkit-scrollbar-thumb:hover {
-  background: #3d4571;
+  background: var(--scrollbar-thumb-hover);
 }
 
 .loading,
@@ -1347,7 +1346,7 @@ const finishRemoteEdit = async () => {
   justify-content: center;
   align-items: center;
   height: 100px;
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 14px;
 }
 
@@ -1363,33 +1362,33 @@ const finishRemoteEdit = async () => {
 }
 
 .file-item:hover {
-  background: rgba(0, 212, 255, 0.08);
-  border-color: #2d3561;
-  box-shadow: 0 0 10px rgba(0, 212, 255, 0.1);
+  background: var(--bg-card-hover);
+  border-color: var(--border-primary);
+  box-shadow: 0 0 10px var(--accent-primary-glow);
 }
 
 .file-item.selected {
-  background: rgba(0, 212, 255, 0.15);
-  border-color: #00d4ff;
-  box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+  background: var(--bg-item-hover);
+  border-color: var(--border-active);
+  box-shadow: 0 0 15px var(--accent-primary-glow);
 }
 
 .file-item.editing {
   background: rgba(124, 58, 237, 0.15);
-  border-color: #7c3aed;
-  box-shadow: 0 0 15px rgba(124, 58, 237, 0.2);
+  border-color: var(--purple);
+  box-shadow: 0 0 15px var(--purple-glow);
 }
 
 .file-icon {
   margin-right: 10px;
-  color: #64748b;
+  color: var(--text-muted);
   flex-shrink: 0;
   font-size: 16px;
 }
 
 .file-icon.folder {
-  color: #00d4ff;
-  text-shadow: 0 0 8px rgba(0, 212, 255, 0.4);
+  color: var(--text-accent);
+  text-shadow: 0 0 8px var(--accent-primary-glow);
 }
 
 .file-name {
@@ -1397,25 +1396,25 @@ const finishRemoteEdit = async () => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #e0e7ff;
+  color: var(--text-primary);
   font-size: 13px;
 }
 
 .file-name-edit {
   flex: 1;
-  border: 2px solid #00d4ff;
+  border: 2px solid var(--border-active);
   border-radius: 6px;
   padding: 4px 10px;
   font-size: 13px;
   outline: none;
-  background: #0a0e27;
-  color: #e0e7ff;
+  background: var(--bg-input);
+  color: var(--text-primary);
   min-width: 0;
-  box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+  box-shadow: 0 0 15px var(--accent-primary-glow);
 }
 
 .file-size {
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 12px;
   margin-left: 10px;
   flex-shrink: 0;
@@ -1431,10 +1430,10 @@ const finishRemoteEdit = async () => {
 
 .context-menu {
   position: fixed;
-  background: linear-gradient(135deg, #1a2040 0%, #151b3d 100%);
-  border: 1px solid #2d3561;
+  background: var(--bg-dropdown);
+  border: 1px solid var(--border-primary);
   border-radius: 8px;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 212, 255, 0.1);
+  box-shadow: var(--shadow-card);
   z-index: 1000;
   min-width: 140px;
   padding: 6px 0;
@@ -1445,24 +1444,24 @@ const finishRemoteEdit = async () => {
   padding: 10px 18px;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: #e0e7ff;
+  color: var(--text-primary);
   font-size: 13px;
 }
 
 .context-menu-item:hover {
-  background: rgba(0, 212, 255, 0.15);
-  color: #00d4ff;
-  text-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
+  background: var(--bg-item-hover);
+  color: var(--text-accent);
+  text-shadow: 0 0 8px var(--accent-primary-glow-strong);
 }
 
 .context-menu-item.danger {
-  color: #ff6b6b;
+  color: var(--danger);
 }
 
 .context-menu-item.danger:hover {
-  background: rgba(255, 107, 107, 0.15);
-  color: #ff6b6b;
-  text-shadow: 0 0 8px rgba(255, 107, 107, 0.5);
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger);
+  text-shadow: 0 0 8px var(--danger-glow);
 }
 
 .delete-confirm-overlay {
@@ -1471,7 +1470,7 @@ const finishRemoteEdit = async () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--bg-modal-mask);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1480,24 +1479,24 @@ const finishRemoteEdit = async () => {
 }
 
 .delete-confirm-dialog {
-  background: linear-gradient(135deg, #1a2040 0%, #151b3d 100%);
-  border: 1px solid #2d3561;
+  background: var(--bg-modal);
+  border: 1px solid var(--border-primary);
   border-radius: 12px;
   padding: 24px;
   min-width: 320px;
   max-width: 400px;
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 212, 255, 0.1);
+  box-shadow: var(--shadow-card);
 }
 
 .delete-confirm-title {
   font-size: 18px;
   font-weight: 600;
-  color: #e0e7ff;
+  color: var(--text-primary);
   margin-bottom: 16px;
 }
 
 .delete-confirm-message {
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 14px;
   margin-bottom: 24px;
   line-height: 1.6;
@@ -1512,22 +1511,22 @@ const finishRemoteEdit = async () => {
 .btn-cancel {
   padding: 10px 20px;
   background: transparent;
-  border: 1px solid #2d3561;
+  border: 1px solid var(--border-primary);
   border-radius: 8px;
-  color: #94a3b8;
+  color: var(--text-secondary);
   cursor: pointer;
   font-size: 14px;
   transition: all 0.3s ease;
 }
 
 .btn-cancel:hover {
-  border-color: #00d4ff;
-  color: #00d4ff;
+  border-color: var(--border-active);
+  color: var(--text-accent);
 }
 
 .btn-confirm-delete {
   padding: 10px 20px;
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  background: linear-gradient(135deg, var(--danger-dark) 0%, #b91c1c 100%);
   border: none;
   border-radius: 8px;
   color: white;
@@ -1537,16 +1536,16 @@ const finishRemoteEdit = async () => {
 }
 
 .btn-confirm-delete:hover {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+  background: linear-gradient(135deg, var(--danger) 0%, var(--danger-dark) 100%);
+  box-shadow: 0 0 15px var(--danger-glow);
 }
 
 .btn-confirm-create {
   padding: 10px 20px;
-  background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-dark) 100%);
   border: none;
   border-radius: 8px;
-  color: #0a0e27;
+  color: var(--text-on-accent);
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
@@ -1554,13 +1553,12 @@ const finishRemoteEdit = async () => {
 }
 
 .btn-confirm-create:hover {
-  background: linear-gradient(135deg, #33ddff 0%, #00b8e6 100%);
-  box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+  box-shadow: 0 0 15px var(--accent-primary-glow-strong);
 }
 
 .context-menu-divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent, #2d3561, transparent);
+  background: linear-gradient(90deg, transparent, var(--border-primary), transparent);
   margin: 6px 10px;
 }
 
@@ -1571,75 +1569,73 @@ const finishRemoteEdit = async () => {
 .folder-name-input {
   width: 100%;
   padding: 12px 16px;
-  background: rgba(10, 14, 39, 0.6);
-  border: 1px solid #2d3561;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
   border-radius: 8px;
-  color: #e0e7ff;
+  color: var(--text-primary);
   font-size: 14px;
   outline: none;
   transition: all 0.3s ease;
 }
 
 .folder-name-input:focus {
-  border-color: #00d4ff;
-  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+  border-color: var(--border-active);
+  box-shadow: 0 0 10px var(--accent-primary-glow);
 }
 
 .folder-name-input::placeholder {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 :deep(.ant-btn) {
-  background: linear-gradient(135deg, #1a2040 0%, #151b3d 100%);
-  border: 1px solid #2d3561;
-  color: #e0e7ff;
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
   transition: all 0.3s ease;
 }
 
 :deep(.ant-btn:hover) {
-  background: linear-gradient(135deg, #2d3561 0%, #1a2040 100%);
-  border-color: #00d4ff;
-  color: #00d4ff;
-  box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+  background: var(--bg-secondary);
+  border-color: var(--border-active);
+  color: var(--text-accent);
+  box-shadow: 0 0 15px var(--accent-primary-glow);
 }
 
 :deep(.ant-btn-primary) {
-  background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-dark) 100%);
   border: none;
-  color: #0a0e27;
+  color: var(--text-on-accent);
   font-weight: 500;
 }
 
 :deep(.ant-btn-primary:hover) {
-  background: linear-gradient(135deg, #00e5ff 0%, #00b3e6 100%);
-  box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+  box-shadow: 0 0 20px var(--accent-primary-glow-strong);
 }
 
 :deep(.ant-btn-dangerous) {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: linear-gradient(135deg, var(--danger) 0%, var(--danger-dark) 100%);
   border: none;
   color: #fff;
 }
 
 :deep(.ant-btn-dangerous:hover) {
-  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 20px var(--danger-glow);
 }
 
 :deep(.ant-input) {
-  background: #0a0e27;
-  border: 1px solid #2d3561;
-  color: #e0e7ff;
+  background: var(--bg-input);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
 }
 
 :deep(.ant-input:hover),
 :deep(.ant-input:focus) {
-  border-color: #00d4ff;
-  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+  border-color: var(--border-active);
+  box-shadow: 0 0 10px var(--accent-primary-glow);
 }
 
 :deep(.ant-input-password) {
-  background: #0a0e27;
+  background: var(--bg-input);
 }
 
 :deep(.ant-input-password :deep(input)) {
@@ -1647,35 +1643,35 @@ const finishRemoteEdit = async () => {
 }
 
 :deep(.ant-card) {
-  background: rgba(26, 32, 64, 0.8);
-  border: 1px solid #2d3561;
-  color: #e0e7ff;
+  background: var(--bg-modal);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
 }
 
 :deep(.ant-card-head) {
   background: transparent;
-  border-bottom: 1px solid #2d3561;
-  color: #00d4ff;
+  border-bottom: 1px solid var(--border-primary);
+  color: var(--text-accent);
 }
 
 :deep(.ant-card-head-title) {
-  color: #00d4ff;
-  text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+  color: var(--text-accent);
+  text-shadow: 0 0 10px var(--accent-primary-glow-strong);
 }
 
 :deep(.ant-form-item-label > label) {
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 :deep(.ant-progress-bg) {
-  background: linear-gradient(90deg, #00d4ff 0%, #7c3aed 100%);
+  background: linear-gradient(90deg, var(--accent-primary) 0%, var(--purple) 100%);
 }
 
 :deep(.ant-progress-text) {
-  color: #00d4ff;
+  color: var(--text-accent);
 }
 
 :deep(.ant-spin-dot-item) {
-  background-color: #00d4ff;
+  background-color: var(--accent-primary);
 }
 </style>
