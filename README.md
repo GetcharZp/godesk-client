@@ -41,3 +41,7 @@ wails build
 + 远程控制界面
 
     ![remote-control](assets/remote-control.png)
+
++ 设备列表界面
+
+    ![device-list](assets/device-list.png)
