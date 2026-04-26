@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sync"
 	"time"
 
 	"github.com/go-vgo/robotgo"
@@ -27,17 +28,32 @@ var (
 	cancelFunc     context.CancelFunc
 	heartbeatTimer *time.Timer
 	myUUID         string // 本机UUID
+
+	streamConnected bool
+	streamMux       sync.RWMutex
 )
+
+func setStreamConnected(connected bool) {
+	streamMux.Lock()
+	defer streamMux.Unlock()
+	streamConnected = connected
+}
+
+func IsStreamConnected() bool {
+	streamMux.RLock()
+	defer streamMux.RUnlock()
+	return streamConnected
+}
 
 func (in *Service) ClientInit(c pb.ChannelServiceClient) {
 	var err error
 
-	// 获取系统配置
+	setStreamConnected(false)
+
 	sysConfig := cache.GetSysConfig()
 
 	myUUID = sysConfig.Uuid
 
-	// 创建带有 AccessToken 的 context
 	baseCtx := context.Background()
 	if sysConfig.AccessToken != "" {
 		md := metadata.New(map[string]string{
@@ -53,13 +69,12 @@ func (in *Service) ClientInit(c pb.ChannelServiceClient) {
 		return
 	}
 
-	// 发送设备注册消息
+	setStreamConnected(true)
+
 	in.sendRegister()
 
-	// 启动接收数据协程
 	go in.ReceiveDataHandle()
 
-	// 启动心跳定时器
 	go in.startHeartbeat()
 }
 
@@ -138,11 +153,13 @@ func (in *Service) ReceiveDataHandle() {
 	for {
 		select {
 		case <-ctx.Done():
+			setStreamConnected(false)
 			return
 		default:
 			req, err := stream.Recv()
 			if err != nil {
 				logger.Error("[sys] stream receive error.", zap.Error(err))
+				setStreamConnected(false)
 				return
 			}
 			in.handleMessage(req)

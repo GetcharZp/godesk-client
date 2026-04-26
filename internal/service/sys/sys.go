@@ -1,12 +1,14 @@
 package sys
 
-import "godesk-client/internal/define"
+import (
+	"godesk-client/internal/define"
+	"godesk-client/internal/service/channel"
+)
 
-// GetConnectionStatus 获取连接状态
 func (a *Service) GetConnectionStatus() bool {
 	isConnected := false
 	if define.GrpcConn != nil {
-		isConnected = define.GrpcConn.GetState().String() == "READY"
+		isConnected = define.GrpcConn.GetState().String() == "READY" && channel.IsStreamConnected()
 	}
 	return isConnected
 }

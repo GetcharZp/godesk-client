@@ -19,25 +19,29 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-var rpcClientOnce sync.Once
+var (
+	rpcClientOnce sync.Once
+	connMux       sync.Mutex
+)
 
 func NewService() {
-	// 初始化日志
 	logger.NewLogger()
-	// 初始化数据库
 	models.InitDB()
 
-	// 加载会话
 	session.LoadSessions()
 
-	// 初始化 RPC 客户端
-	rpcClientOnce.Do(newRpcClient)
-	// 重连监视
+	rpcClientOnce.Do(initRpcClient)
 	go handleReconnect()
 }
 
-func newRpcClient() {
-	// 从配置中获取服务地址
+func initRpcClient() {
+	createRpcClient()
+}
+
+func createRpcClient() {
+	connMux.Lock()
+	defer connMux.Unlock()
+
 	sysConfig := cache.GetSysConfig()
 	var err error
 
@@ -54,12 +58,15 @@ func newRpcClient() {
 
 func handleReconnect() {
 	for {
-		if define.GrpcConn == nil || define.GrpcConn.GetState() != connectivity.Ready {
+		grpcReady := define.GrpcConn != nil && define.GrpcConn.GetState() == connectivity.Ready
+		streamReady := channel.IsStreamConnected()
+
+		if !grpcReady || !streamReady {
 			if define.GrpcConn != nil {
 				define.GrpcConn.Close()
 			}
-			logger.Info("[sys] reconnect to server.")
-			newRpcClient()
+			logger.Info("[sys] reconnect to server.", zap.Bool("grpcReady", grpcReady), zap.Bool("streamReady", streamReady))
+			createRpcClient()
 		}
 		time.Sleep(3 * time.Second)
 	}
