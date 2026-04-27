@@ -8,7 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/kbinani/screenshot"
+	"github.com/getcharzp/goscap"
 	"go.uber.org/zap"
 )
 
@@ -27,6 +27,7 @@ type FrameData struct {
 // ScreenManager 屏幕管理器
 type ScreenManager struct {
 	onFrame     func(frame *FrameData)
+	cap         goscap.Capturer
 	isCapturing int32 // 0 = false, 1 = true
 	sequenceID  uint64
 	quality     int
@@ -42,7 +43,14 @@ var (
 // GetScreenManager 获取屏幕管理器单例
 func GetScreenManager() *ScreenManager {
 	screenManagerOnce.Do(func() {
+		// 初始化捕获器
+		cap, err := goscap.NewCapturerForDisplay(0)
+		if err != nil {
+			logger.Error("[screen] create capturer error", zap.Error(err))
+			return
+		}
 		screenManager = &ScreenManager{
+			cap:     cap,
 			quality: 80, // JPEG 质量
 		}
 	})
@@ -60,9 +68,13 @@ func (m *ScreenManager) StartCapture(onFrame func(frame *FrameData)) {
 	atomic.StoreUint64(&m.sequenceID, 0)
 
 	// 获取屏幕尺寸
-	bounds := screenshot.GetDisplayBounds(0)
-	m.width = bounds.Dx()
-	m.height = bounds.Dy()
+	img, err := m.cap.Capture()
+	if err != nil {
+		logger.Error("[screen] capture error", zap.Error(err))
+		return
+	}
+	m.width = img.Bounds().Dx()
+	m.height = img.Bounds().Dy()
 
 	// 启动屏幕捕获循环
 	go m.captureLoop()
@@ -83,9 +95,9 @@ func (m *ScreenManager) captureLoop() {
 			}
 
 			// 直接捕获屏幕
-			img, err := screenshot.CaptureDisplay(0)
+			img, err := m.cap.Capture()
 			if err != nil {
-				logger.Error("[screen] capture display error", zap.Error(err))
+				logger.Error("[screen] capture error", zap.Error(err))
 				continue
 			}
 

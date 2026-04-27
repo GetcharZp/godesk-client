@@ -3,9 +3,9 @@ module godesk-client
 go 1.24.0
 
 require (
+	github.com/getcharzp/goscap v0.0.0-20260425152542-68deab1b1280
 	github.com/glebarez/sqlite v1.11.0
 	github.com/go-vgo/robotgo v1.0.1
-	github.com/kbinani/screenshot v0.0.0-20250624051815-089614a94018
 	github.com/up-zero/gotool v0.0.0-20260402041903-fc63843f0377
 	github.com/wailsapp/wails/v2 v2.11.0
 	go.uber.org/zap v1.27.0
@@ -17,6 +17,7 @@ require (
 )
 
 require (
+	github.com/BurntSushi/xgb v0.0.0-20210121224620-deaf085860bc // indirect
 	github.com/bep/debounce v1.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dblohm7/wingoes v0.0.0-20250822163801-6d8e6105c62d // indirect
@@ -39,7 +40,6 @@ require (
 	github.com/leaanthony/slicer v1.6.0 // indirect
 	github.com/leaanthony/u v1.1.1 // indirect
 	github.com/lufia/plan9stats v0.0.0-20251013123823-9fd1530e3ec3 // indirect
-	github.com/lxn/win v0.0.0-20210218163916-a377121e959e // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
@@ -80,5 +80,7 @@ require (
 	modernc.org/memory v1.11.0 // indirect
 	modernc.org/sqlite v1.40.1 // indirect
 )
+
+replace golang.org/x/sys => golang.org/x/sys v0.38.0
 
 // replace github.com/wailsapp/wails/v2 v2.9.2 => E:\repository\go\pkg\mod
