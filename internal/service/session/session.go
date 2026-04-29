@@ -1,6 +1,7 @@
 package session
 
 import (
+	"encoding/base64"
 	"godesk-client/internal/logger"
 	"sync"
 	"time"
@@ -8,16 +9,16 @@ import (
 	"go.uber.org/zap"
 )
 
-// FrameData 帧数据（支持多种编码格式）
 type FrameData struct {
-	SequenceID uint64 `json:"sequenceId"`
-	FrameData  []byte `json:"frameData"`
-	Codec      string `json:"codec"`
-	Width      int32  `json:"width"`
-	Height     int32  `json:"height"`
-	Timestamp  int64  `json:"timestamp"`
-	FrameType  int32  `json:"frameType"`
-	ExtraData  []byte `json:"extraData"`
+	SequenceID  uint64 `json:"sequenceId"`
+	FrameData   []byte `json:"frameData"`
+	FrameData64 string `json:"frameData64"`
+	Codec       string `json:"codec"`
+	Width       int32  `json:"width"`
+	Height      int32  `json:"height"`
+	Timestamp   int64  `json:"timestamp"`
+	FrameType   int32  `json:"frameType"`
+	ExtraData   []byte `json:"extraData"`
 }
 
 type Session struct {
@@ -30,14 +31,12 @@ type Session struct {
 	ScreenHeight int32  `json:"screenHeight"`
 	CreatedAt    int64  `json:"createdAt"`
 	UpdatedAt    int64  `json:"updatedAt"`
-	TargetUUID   string `json:"targetUuid"`  // 被控端UUID，用于接收屏幕数据
-	SessionType  string `json:"sessionType"` // 会话类型: "control" 远程控制, "file" 文件访问
+	TargetUUID   string `json:"targetUuid"`
+	SessionType  string `json:"sessionType"`
 
-	// 帧数据（支持视频流）
 	lastFrameData *FrameData   `json:"-"`
 	frameMux      sync.RWMutex `json:"-"`
 
-	// 兼容旧版本的图像数据
 	LastImageData []byte       `json:"-"`
 	imageMux      sync.RWMutex `json:"-"`
 }
@@ -51,16 +50,13 @@ func CreateSession(sessionId string, deviceCode uint64, deviceName string, viewO
 	sessionsMux.Lock()
 	defer sessionsMux.Unlock()
 
-	// 检查是否已存在相同 deviceCode 和 sessionType 的会话
 	for _, existingSession := range sessions {
 		if existingSession.DeviceCode == deviceCode && existingSession.SessionType == sessionType {
-			// 更新现有会话
 			existingSession.SessionId = sessionId
 			existingSession.DeviceName = deviceName
 			existingSession.ViewOnly = viewOnly
 			existingSession.Status = "connecting"
 			existingSession.UpdatedAt = time.Now().Unix()
-			saveSessions()
 			logger.Info("[session] updated existing.", zap.String("sessionId", sessionId), zap.Uint64("deviceCode", deviceCode), zap.String("sessionType", sessionType))
 			return existingSession
 		}
@@ -78,7 +74,6 @@ func CreateSession(sessionId string, deviceCode uint64, deviceName string, viewO
 	}
 
 	sessions[sessionId] = session
-	saveSessions()
 
 	logger.Info("[session] created.", zap.String("sessionId", sessionId), zap.Uint64("deviceCode", deviceCode), zap.String("sessionType", sessionType))
 
@@ -153,12 +148,10 @@ func RemoveSession(sessionId string) {
 	defer sessionsMux.Unlock()
 
 	delete(sessions, sessionId)
-	saveSessions()
 
 	logger.Info("[session] removed.", zap.String("sessionId", sessionId))
 }
 
-// SetLastImageData 设置最后的图像数据（兼容旧版本）
 func (s *Session) SetLastImageData(data []byte) {
 	s.imageMux.Lock()
 	defer s.imageMux.Unlock()
@@ -166,21 +159,23 @@ func (s *Session) SetLastImageData(data []byte) {
 	s.UpdatedAt = time.Now().Unix()
 }
 
-// GetLastImageData 获取最后的图像数据（兼容旧版本）
 func (s *Session) GetLastImageData() []byte {
 	s.imageMux.RLock()
 	defer s.imageMux.RUnlock()
 	return s.LastImageData
 }
 
-// SetLastFrameData 设置最后的帧数据（支持视频流）
 func (s *Session) SetLastFrameData(frame *FrameData) {
 	s.frameMux.Lock()
 	defer s.frameMux.Unlock()
+
+	if frame != nil && frame.FrameData != nil && frame.FrameData64 == "" {
+		frame.FrameData64 = base64.StdEncoding.EncodeToString(frame.FrameData)
+	}
+
 	s.lastFrameData = frame
 	s.UpdatedAt = time.Now().Unix()
 
-	// 同时更新兼容字段（如果是 JPEG 格式）
 	if frame != nil && frame.Codec == "jpeg" {
 		s.imageMux.Lock()
 		s.LastImageData = frame.FrameData
@@ -188,20 +183,13 @@ func (s *Session) SetLastFrameData(frame *FrameData) {
 	}
 }
 
-// GetLastFrameData 获取最后的帧数据（支持视频流）
 func (s *Session) GetLastFrameData() *FrameData {
 	s.frameMux.RLock()
 	defer s.frameMux.RUnlock()
 	return s.lastFrameData
 }
 
-func saveSessions() {
-	// 会话不持久化到配置文件，只保存在内存中
-	// 应用重启后会话列表为空
-}
-
 func LoadSessions() {
-	// 会话不持久化，启动时列表为空
 	sessionsMux.Lock()
 	defer sessionsMux.Unlock()
 	sessions = make(map[string]*Session)
