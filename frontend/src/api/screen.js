@@ -1,6 +1,5 @@
 // 屏幕流 API
 
-// 获取会话的最新图像数据
 export const getSessionImage = (sessionId) => {
     if (window.go?.main?.App?.GetSessionImage) {
         return window.go.main.App.GetSessionImage(sessionId)
@@ -8,7 +7,6 @@ export const getSessionImage = (sessionId) => {
     return Promise.resolve({ code: 200, data: null })
 }
 
-// 存储每个会话的轮询状态
 const streamStates = new Map()
 
 const MIN_POLL_INTERVAL = 33
@@ -22,6 +20,9 @@ export const startScreenStream = (sessionId, onFrame) => {
         if (existingState.pollTimer) {
             clearTimeout(existingState.pollTimer)
         }
+        if (existingState.currentObjectUrl) {
+            URL.revokeObjectURL(existingState.currentObjectUrl)
+        }
         streamStates.delete(sessionId)
     }
 
@@ -31,9 +32,40 @@ export const startScreenStream = (sessionId, onFrame) => {
         pollTimer: null,
         currentInterval: MIN_POLL_INTERVAL,
         staticCount: 0,
-        lastFrameTime: Date.now()
+        lastFrameTime: Date.now(),
+        currentObjectUrl: null
     }
     streamStates.set(sessionId, state)
+
+    const revokeCurrentObjectUrl = () => {
+        if (state.currentObjectUrl) {
+            URL.revokeObjectURL(state.currentObjectUrl)
+            state.currentObjectUrl = null
+        }
+    }
+
+    const loadSessionImageUrl = async (imageUrl) => {
+        if (!imageUrl) {
+            throw new Error('image url is empty')
+        }
+
+        const response = await fetch(imageUrl, {
+            cache: 'no-store'
+        })
+        if (!response.ok) {
+            throw new Error(`image request failed: ${response.status}`)
+        }
+
+        const contentType = response.headers.get('content-type') || ''
+        if (!contentType.includes('image/jpeg')) {
+            throw new Error(`unexpected content-type: ${contentType || 'unknown'}`)
+        }
+
+        const imageBlob = await response.blob()
+        revokeCurrentObjectUrl()
+        state.currentObjectUrl = URL.createObjectURL(imageBlob)
+        return state.currentObjectUrl
+    }
 
     const poll = async () => {
         if (!state.isRunning) return
@@ -49,8 +81,8 @@ export const startScreenStream = (sessionId, onFrame) => {
                     state.currentInterval = MIN_POLL_INTERVAL
                     state.lastFrameTime = Date.now()
 
-                    if (onFrame && data.imageData) {
-                        const imageUrl = 'data:image/jpeg;base64,' + data.imageData
+                    if (onFrame && data.codec === 'jpeg' && data.hasImage) {
+                        const imageUrl = await loadSessionImageUrl(data.imageUrl)
                         onFrame(imageUrl, data)
                     }
                 } else {
@@ -83,6 +115,7 @@ export const startScreenStream = (sessionId, onFrame) => {
         if (state.pollTimer) {
             clearTimeout(state.pollTimer)
         }
+        revokeCurrentObjectUrl()
         streamStates.delete(sessionId)
     }
 }
@@ -93,6 +126,9 @@ export const stopScreenStream = (sessionId) => {
         state.isRunning = false
         if (state.pollTimer) {
             clearTimeout(state.pollTimer)
+        }
+        if (state.currentObjectUrl) {
+            URL.revokeObjectURL(state.currentObjectUrl)
         }
         streamStates.delete(sessionId)
     }

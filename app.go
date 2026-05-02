@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"godesk-client/internal"
 	"godesk-client/internal/define"
@@ -14,6 +13,7 @@ import (
 	"godesk-client/internal/service/device"
 	"godesk-client/internal/service/file"
 	"godesk-client/internal/service/models"
+	"godesk-client/internal/service/screen"
 	"godesk-client/internal/service/session"
 	"godesk-client/internal/service/sys"
 	"godesk-client/internal/service/user"
@@ -42,6 +42,10 @@ func (a *App) startup(ctx context.Context) {
 	(&device.Service{}).ClientInit()
 	(&user.Service{}).ClientInit()
 	(&channel.Service{}).ClientInit(pb.NewChannelServiceClient(define.GrpcConn))
+}
+
+func (a *App) shutdown(ctx context.Context) {
+	(&screen.HTTPService{}).Stop(ctx)
 }
 
 // Greet returns a greeting for the given name
@@ -186,12 +190,15 @@ func (a *App) GetFileSessionByDeviceCode(deviceCode uint64) any {
 
 // CreateSession 创建会话
 func (a *App) CreateSession(sessionId string, deviceCode uint64, deviceName string, viewOnly bool, sessionType string) any {
-	return resp(session.CreateSession(sessionId, deviceCode, deviceName, viewOnly, sessionType), nil)
+	sess := session.CreateSession(sessionId, deviceCode, deviceName, viewOnly, sessionType)
+	(&screen.HTTPService{}).EnsureRunningForControlSessions()
+	return resp(sess, nil)
 }
 
 // RemoveSession 移除会话
 func (a *App) RemoveSession(sessionId string) any {
 	session.RemoveSession(sessionId)
+	(&screen.HTTPService{}).EnsureRunningForControlSessions()
 	return resp(nil, nil)
 }
 
@@ -204,18 +211,15 @@ func (a *App) GetSessionImage(sessionId string) any {
 
 	frameData := sess.GetLastFrameData()
 	if frameData != nil {
-		imageData := frameData.FrameData64
-		if imageData == "" && frameData.FrameData != nil {
-			imageData = base64.StdEncoding.EncodeToString(frameData.FrameData)
-		}
 		return resp(map[string]any{
 			"sessionId": sess.SessionId,
-			"imageData": imageData,
 			"sequence":  frameData.SequenceID,
 			"width":     frameData.Width,
 			"height":    frameData.Height,
 			"codec":     frameData.Codec,
 			"timestamp": frameData.Timestamp,
+			"hasImage":  len(frameData.FrameData) > 0,
+			"imageUrl":  (&screen.HTTPService{}).GetSessionImageURL(sess.SessionId, frameData.SequenceID),
 		}, nil)
 	}
 
@@ -226,11 +230,12 @@ func (a *App) GetSessionImage(sessionId string) any {
 
 	return resp(map[string]any{
 		"sessionId": sess.SessionId,
-		"imageData": base64.StdEncoding.EncodeToString(imageData),
 		"sequence":  sess.UpdatedAt,
 		"width":     sess.ScreenWidth,
 		"height":    sess.ScreenHeight,
 		"codec":     "jpeg",
+		"hasImage":  len(imageData) > 0,
+		"imageUrl":  (&screen.HTTPService{}).GetSessionImageURL(sess.SessionId, uint64(sess.UpdatedAt)),
 	}, nil)
 }
 

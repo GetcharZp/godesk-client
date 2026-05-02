@@ -260,6 +260,15 @@ const currentSession = computed(() => {
   return activeSessions.value.find(s => s.sessionId === currentSessionId.value)
 })
 
+const renderCurrentSessionImage = () => {
+  const session = currentSession.value
+  if (!session || !session.lastImageUrl || !screenCanvas.value) {
+    return
+  }
+
+  renderImageToCanvas(session.lastImageUrl)
+}
+
 const updateCanvasDisplaySize = () => {
   const canvas = screenCanvas.value
   if (!canvas) return
@@ -586,6 +595,9 @@ const renderImageToCanvas = (imageUrl) => {
     ctx.imageSmoothingQuality = 'high'
     ctx.drawImage(img, 0, 0)
   }
+  img.onerror = (error) => {
+    console.error('Failed to load session image:', imageUrl, error)
+  }
   img.src = imageUrl
 }
 
@@ -844,11 +856,15 @@ onUnmounted(() => {
 watch(currentSessionId, (newSessionId) => {
   if (newSessionId) {
     startSessionScreenStream(newSessionId)
+    nextTick(() => renderCurrentSessionImage())
   }
 })
 
 watch(currentSession, () => {
-  nextTick(() => updateCanvasDisplaySize())
+  nextTick(() => {
+    updateCanvasDisplaySize()
+    renderCurrentSessionImage()
+  })
 })
 
 watch(isFullscreen, (value) => {

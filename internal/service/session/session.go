@@ -1,7 +1,6 @@
 package session
 
 import (
-	"encoding/base64"
 	"godesk-client/internal/logger"
 	"sync"
 	"time"
@@ -10,15 +9,14 @@ import (
 )
 
 type FrameData struct {
-	SequenceID  uint64 `json:"sequenceId"`
-	FrameData   []byte `json:"frameData"`
-	FrameData64 string `json:"frameData64"`
-	Codec       string `json:"codec"`
-	Width       int32  `json:"width"`
-	Height      int32  `json:"height"`
-	Timestamp   int64  `json:"timestamp"`
-	FrameType   int32  `json:"frameType"`
-	ExtraData   []byte `json:"extraData"`
+	SequenceID uint64 `json:"sequenceId"`
+	FrameData  []byte `json:"frameData"`
+	Codec      string `json:"codec"`
+	Width      int32  `json:"width"`
+	Height     int32  `json:"height"`
+	Timestamp  int64  `json:"timestamp"`
+	FrameType  int32  `json:"frameType"`
+	ExtraData  []byte `json:"extraData"`
 }
 
 type Session struct {
@@ -143,6 +141,19 @@ func GetSessionsByType(sessionType string) []*Session {
 	return result
 }
 
+func CountSessionsByType(sessionType string) int {
+	sessionsMux.RLock()
+	defer sessionsMux.RUnlock()
+
+	count := 0
+	for _, session := range sessions {
+		if session.SessionType == sessionType {
+			count++
+		}
+	}
+	return count
+}
+
 func RemoveSession(sessionId string) {
 	sessionsMux.Lock()
 	defer sessionsMux.Unlock()
@@ -168,10 +179,6 @@ func (s *Session) GetLastImageData() []byte {
 func (s *Session) SetLastFrameData(frame *FrameData) {
 	s.frameMux.Lock()
 	defer s.frameMux.Unlock()
-
-	if frame != nil && frame.FrameData != nil && frame.FrameData64 == "" {
-		frame.FrameData64 = base64.StdEncoding.EncodeToString(frame.FrameData)
-	}
 
 	s.lastFrameData = frame
 	s.UpdatedAt = time.Now().Unix()

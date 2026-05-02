@@ -3,6 +3,7 @@ package control
 import (
 	"godesk-client/internal/logger"
 	"godesk-client/internal/service/channel"
+	"godesk-client/internal/service/screen"
 	"godesk-client/internal/service/session"
 	"time"
 
@@ -22,6 +23,7 @@ func (in *Service) SendControlRequest(targetDeviceCode uint64, targetPassword st
 	}
 	sess := session.CreateSession(sessionID, targetDeviceCode, "", !requestControl, sessionType)
 	sess.Status = "connecting"
+	(&screen.HTTPService{}).EnsureRunningForControlSessions()
 
 	// 发送控制开始请求（通过channel服务的DataStream）
 	if err := channel.SendControlStartedRequest(targetDeviceCode, targetPassword, requestControl); err != nil {
@@ -55,6 +57,7 @@ func (in *Service) GetSession(sessionId string) *session.Session {
 // RemoveSession 移除会话
 func (in *Service) RemoveSession(sessionId string) {
 	session.RemoveSession(sessionId)
+	(&screen.HTTPService{}).EnsureRunningForControlSessions()
 }
 
 // Service 控制服务
