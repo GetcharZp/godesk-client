@@ -378,6 +378,8 @@ const doConnect = async (deviceCode, password) => {
   if (existingSession) {
     await loadSessions()
     currentSessionId.value = existingSession.sessionId
+    await nextTick()
+    startSessionScreenStream(existingSession.sessionId)
     message.info('该设备已连接，已切换到该会话')
     return true
   }
@@ -497,6 +499,15 @@ const startRemoteFile = () => {
   })
 }
 
+const stopAllSessionScreenStreams = () => {
+  screenStreamStopFns.value.forEach((stopFn) => {
+    if (stopFn) {
+      stopFn()
+    }
+  })
+  screenStreamStopFns.value.clear()
+}
+
 const selectSession = (sessionId) => {
   currentSessionId.value = sessionId
   // 启动该会话的屏幕流
@@ -516,6 +527,13 @@ const startSessionScreenStream = (sessionId) => {
 
   // 获取 canvas 元素用于视频解码渲染
   const canvas = currentSessionId.value === sessionId ? screenCanvas.value : null
+
+  screenStreamStopFns.value.forEach((stopFn, existingSessionId) => {
+    if (existingSessionId !== sessionId && stopFn) {
+      stopFn()
+      screenStreamStopFns.value.delete(existingSessionId)
+    }
+  })
 
   const stopFn = startScreenStream(sessionId, (imageUrl, data) => {
     // 更新会话的图像数据
@@ -660,6 +678,7 @@ const disconnectCurrent = () => {
 const reconnect = () => {
   if (currentSession.value) {
     currentSession.value.status = 'connecting'
+    startSessionScreenStream(currentSession.value.sessionId)
   }
 }
 
@@ -848,8 +867,7 @@ onUnmounted(() => {
   document.body.classList.remove('remote-control-fullscreen')
   document.documentElement.classList.remove('remote-control-fullscreen')
   // 停止所有屏幕流
-  screenStreamStopFns.value.forEach((stopFn) => stopFn())
-  screenStreamStopFns.value.clear()
+  stopAllSessionScreenStreams()
 })
 
 // 监听当前会话变化，启动屏幕流

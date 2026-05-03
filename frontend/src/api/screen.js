@@ -29,6 +29,7 @@ export const startScreenStream = (sessionId, onFrame) => {
     const state = {
         isRunning: true,
         lastSequence: 0,
+        lastTimestamp: 0,
         pollTimer: null,
         currentInterval: MIN_POLL_INTERVAL,
         staticCount: 0,
@@ -74,9 +75,27 @@ export const startScreenStream = (sessionId, onFrame) => {
             const res = await getSessionImage(sessionId)
             if (res && res.code === 200 && res.data) {
                 const data = res.data
+                const nextSequence = data.sequence || 0
+                const nextTimestamp = data.timestamp || 0
+                const isSequenceReset =
+                    state.lastSequence > 0 &&
+                    nextSequence > 0 &&
+                    nextSequence < state.lastSequence &&
+                    nextTimestamp > state.lastTimestamp
 
-                if (data.sequence > state.lastSequence || state.lastSequence === 0) {
-                    state.lastSequence = data.sequence || 0
+                if (nextSequence > state.lastSequence || state.lastSequence === 0 || isSequenceReset) {
+                    if (isSequenceReset) {
+                        console.info('Screen stream sequence reset detected, restarting frame acceptance', {
+                            sessionId,
+                            previousSequence: state.lastSequence,
+                            nextSequence,
+                            previousTimestamp: state.lastTimestamp,
+                            nextTimestamp
+                        })
+                    }
+
+                    state.lastSequence = nextSequence
+                    state.lastTimestamp = nextTimestamp
                     state.staticCount = 0
                     state.currentInterval = MIN_POLL_INTERVAL
                     state.lastFrameTime = Date.now()
