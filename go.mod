@@ -3,13 +3,13 @@ module godesk-client
 go 1.24.0
 
 require (
-	github.com/getcharzp/goscap v0.0.0-20260425152542-68deab1b1280
+	github.com/getcharzp/goscap v0.0.0-20260504003731-9d662884a2ea
 	github.com/glebarez/sqlite v1.11.0
 	github.com/go-vgo/robotgo v1.0.1
 	github.com/up-zero/gotool v0.0.0-20260402041903-fc63843f0377
 	github.com/wailsapp/wails/v2 v2.11.0
 	go.uber.org/zap v1.27.0
-	golang.org/x/sys v0.38.0
+	golang.org/x/sys v0.43.0
 	google.golang.org/grpc v1.70.0
 	google.golang.org/protobuf v1.36.5
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
@@ -26,7 +26,7 @@ require (
 	github.com/gen2brain/shm v0.1.1 // indirect
 	github.com/glebarez/go-sqlite v1.22.0 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
-	github.com/godbus/dbus/v5 v5.2.0 // indirect
+	github.com/godbus/dbus/v5 v5.2.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/jchv/go-winloader v0.0.0-20210711035445-715c2860da7e // indirect
