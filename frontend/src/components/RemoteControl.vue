@@ -172,18 +172,16 @@
                 <button class="tab-close" @click.stop="closeSession(session.sessionId)">×</button>
               </div>
             </div>
-            <div class="screen-toolbar" v-if="currentSession">
+            <div class="screen-toolbar" v-if="currentSession && !isFullscreen">
               <button class="toolbar-btn" :class="{ active: currentSession.viewOnly }" @click="toggleViewOnly">
                 仅查看
               </button>
               <button class="toolbar-btn" @click="toggleFullscreen">
-                {{ isFullscreen ? '退出全屏' : '全屏' }}
+                全屏
               </button>
               <button class="toolbar-btn" @click="refreshScreen">刷新</button>
               <button class="toolbar-btn danger" @click="disconnectCurrent">断开</button>
             </div>
-          </div>
-          <div class="screen-wrapper" ref="screenWrapper">
             <button
               v-if="isFullscreen"
               class="fullscreen-exit-btn"
@@ -191,6 +189,8 @@
             >
               退出全屏
             </button>
+          </div>
+          <div class="screen-wrapper" ref="screenWrapper">
             <template v-if="currentSession">
               <canvas
                 ref="screenCanvas"
@@ -931,31 +931,27 @@ watch(isFullscreen, (value) => {
   border-radius: 0;
   box-shadow: none;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .remote-control-page.fullscreen-mode .screen-wrapper {
   width: 100vw;
-  height: 100vh;
+  flex: 1;
+  min-height: 0;
 }
 
 .remote-control-page.fullscreen-mode .screen-header {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  position: relative;
   z-index: 15;
-  padding: 12px 72px 12px 16px;
-  border-bottom: none;
-  background: linear-gradient(180deg, var(--bg-modal-mask) 0%, rgba(10, 14, 39, 0.45) 70%, rgba(10, 14, 39, 0) 100%);
-  pointer-events: none;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-primary);
+  background: var(--bg-tertiary);
+  flex-shrink: 0;
 }
 
 .remote-control-page.fullscreen-mode .session-tabs {
   pointer-events: auto;
-}
-
-.remote-control-page.fullscreen-mode .screen-toolbar {
-  display: none;
 }
 
 .no-session-container {
@@ -1218,24 +1214,21 @@ watch(isFullscreen, (value) => {
 }
 
 .fullscreen-exit-btn {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 20;
-  padding: 8px 14px;
+  padding: 6px 14px;
   font-size: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 999px;
-  background: var(--bg-modal-mask);
-  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
   cursor: pointer;
-  backdrop-filter: blur(8px);
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .fullscreen-exit-btn:hover {
   border-color: var(--border-active);
   color: var(--text-accent);
+  box-shadow: 0 0 10px var(--accent-primary-glow);
 }
 
 .screen-wrapper:-webkit-full-screen {
