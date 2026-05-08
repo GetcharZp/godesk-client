@@ -3,7 +3,7 @@ module godesk-client
 go 1.24.0
 
 require (
-	github.com/getcharzp/goscap v0.0.0-20260504003731-9d662884a2ea
+	github.com/getcharzp/goscap v0.0.0-20260507130811-c8c2b37ff9d1
 	github.com/glebarez/sqlite v1.11.0
 	github.com/go-vgo/robotgo v1.0.1
 	github.com/up-zero/gotool v0.0.0-20260402041903-fc63843f0377
