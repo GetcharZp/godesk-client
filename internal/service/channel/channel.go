@@ -2,7 +2,6 @@ package channel
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"godesk-client/internal/logger"
 	"godesk-client/internal/service/cache"
@@ -20,6 +19,7 @@ import (
 	"github.com/go-vgo/robotgo"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -92,7 +92,7 @@ func (in *Service) sendRegister() {
 		DeviceName: sysConfig.Username,
 	}
 
-	data, err := json.Marshal(registerData)
+	data, err := proto.Marshal(registerData)
 	if err != nil {
 		logger.Error("[sys] marshal register data error.", zap.Error(err))
 		return
@@ -132,7 +132,7 @@ func (in *Service) sendHeartbeat() {
 		Timestamp: time.Now().UnixMilli(),
 	}
 
-	data, err := json.Marshal(heartbeatData)
+	data, err := proto.Marshal(heartbeatData)
 	if err != nil {
 		logger.Error("[sys] marshal heartbeat data error.", zap.Error(err))
 		return
@@ -224,7 +224,7 @@ func (in *Service) handleMessage(req *pb.ChannelRequest) {
 // handleControlStartedRequest 处理控制开始请求（被控端收到）
 func (in *Service) handleControlStartedRequest(req *pb.ChannelRequest) {
 	var data pb.ControlStartedRequestData
-	if err := json.Unmarshal(req.Data, &data); err != nil {
+	if err := proto.Unmarshal(req.Data, &data); err != nil {
 		logger.Error("[sys] unmarshal control started request error.", zap.Error(err))
 		return
 	}
@@ -265,7 +265,7 @@ func (in *Service) sendControlStartedResponse(targetUUID string, code int32, uui
 		TargetCode: targetCode,
 	}
 
-	data, _ := json.Marshal(resp)
+	data, _ := proto.Marshal(resp)
 	req := &pb.ChannelRequest{
 		SendClientUuid:   myUUID,
 		TargetClientUuid: targetUUID,
@@ -280,7 +280,7 @@ func (in *Service) sendControlStartedResponse(targetUUID string, code int32, uui
 // handleControlStartedResponse 处理控制开始响应（控制端收到）
 func (in *Service) handleControlStartedResponse(req *pb.ChannelRequest) {
 	var data pb.ControlStartedResponseData
-	if err := json.Unmarshal(req.Data, &data); err != nil {
+	if err := proto.Unmarshal(req.Data, &data); err != nil {
 		logger.Error("[sys] unmarshal control started response error.", zap.Error(err))
 		return
 	}
@@ -315,7 +315,7 @@ func (in *Service) handleControlEndedRequest(req *pb.ChannelRequest) {
 
 	// 发送响应
 	resp := &pb.ControlEndedResponseData{Code: 0}
-	data, _ := json.Marshal(resp)
+	data, _ := proto.Marshal(resp)
 	in.SendMessage(&pb.ChannelRequest{
 		SendClientUuid:   myUUID,
 		TargetClientUuid: req.SendClientUuid,
@@ -342,7 +342,7 @@ func (in *Service) sendScreenStreamData(targetUUID string, frame *screen.FrameDa
 		ExtraData:  frame.ExtraData,
 	}
 
-	data, err := json.Marshal(streamData)
+	data, err := proto.Marshal(streamData)
 	if err != nil {
 		logger.Error("[sys] marshal screen stream data error.", zap.Error(err))
 		return
@@ -365,7 +365,7 @@ func (in *Service) sendScreenStreamData(targetUUID string, frame *screen.FrameDa
 // handleScreenStreamData 处理屏幕流数据（控制端收到）
 func (in *Service) handleScreenStreamData(req *pb.ChannelRequest) {
 	var data pb.ScreenStreamData
-	if err := json.Unmarshal(req.Data, &data); err != nil {
+	if err := proto.Unmarshal(req.Data, &data); err != nil {
 		logger.Error("[sys] unmarshal screen stream data error.", zap.Error(err))
 		return
 	}
@@ -411,7 +411,7 @@ func (in *Service) handleScreenStreamData(req *pb.ChannelRequest) {
 // handleMouseMove 处理鼠标移动事件（被控端收到）
 func (in *Service) handleMouseMove(req *pb.ChannelRequest) {
 	var data pb.MouseMoveData
-	if err := json.Unmarshal(req.Data, &data); err != nil {
+	if err := proto.Unmarshal(req.Data, &data); err != nil {
 		logger.Error("[sys] unmarshal mouse move error.", zap.Error(err))
 		return
 	}
@@ -425,7 +425,7 @@ func (in *Service) handleMouseMove(req *pb.ChannelRequest) {
 // handleMouseClick 处理鼠标点击事件（被控端收到）
 func (in *Service) handleMouseClick(req *pb.ChannelRequest) {
 	var data pb.MouseClickData
-	if err := json.Unmarshal(req.Data, &data); err != nil {
+	if err := proto.Unmarshal(req.Data, &data); err != nil {
 		logger.Error("[sys] unmarshal mouse click error.", zap.Error(err))
 		return
 	}
@@ -465,7 +465,7 @@ func (in *Service) handleMouseClick(req *pb.ChannelRequest) {
 // handleMouseScroll 处理鼠标滚轮事件（被控端收到）
 func (in *Service) handleMouseScroll(req *pb.ChannelRequest) {
 	var data pb.MouseScrollData
-	if err := json.Unmarshal(req.Data, &data); err != nil {
+	if err := proto.Unmarshal(req.Data, &data); err != nil {
 		logger.Error("[sys] unmarshal mouse scroll error.", zap.Error(err))
 		return
 	}
@@ -482,7 +482,7 @@ func (in *Service) handleMouseScroll(req *pb.ChannelRequest) {
 // handleKeyDown 处理键盘按下事件（被控端收到）
 func (in *Service) handleKeyDown(req *pb.ChannelRequest) {
 	var data pb.KeyDownData
-	if err := json.Unmarshal(req.Data, &data); err != nil {
+	if err := proto.Unmarshal(req.Data, &data); err != nil {
 		logger.Error("[sys] unmarshal key down error.", zap.Error(err))
 		return
 	}
@@ -500,7 +500,7 @@ func (in *Service) handleKeyDown(req *pb.ChannelRequest) {
 // handleKeyUp 处理键盘释放事件（被控端收到）
 func (in *Service) handleKeyUp(req *pb.ChannelRequest) {
 	var data pb.KeyUpData
-	if err := json.Unmarshal(req.Data, &data); err != nil {
+	if err := proto.Unmarshal(req.Data, &data); err != nil {
 		logger.Error("[sys] unmarshal key up error.", zap.Error(err))
 		return
 	}
@@ -541,7 +541,7 @@ func SendControlStartedRequest(targetDeviceCode uint64, targetPassword string, r
 		Timestamp:      time.Now().UnixMilli(),
 	}
 
-	data, err := json.Marshal(reqData)
+	data, err := proto.Marshal(reqData)
 	if err != nil {
 		logger.Error("[sys] marshal control started request error.", zap.Error(err))
 		return err
@@ -577,7 +577,7 @@ func SendControlEndedRequest(targetDeviceCode uint64, targetUUID string) error {
 		Timestamp:  time.Now().UnixMilli(),
 	}
 
-	data, err := json.Marshal(reqData)
+	data, err := proto.Marshal(reqData)
 	if err != nil {
 		logger.Error("[sys] marshal control ended request error.", zap.Error(err))
 		return err
@@ -614,7 +614,7 @@ func SendMouseMove(targetUUID string, x, y int32) error {
 		Timestamp: time.Now().UnixMilli(),
 	}
 
-	data, err := json.Marshal(reqData)
+	data, err := proto.Marshal(reqData)
 	if err != nil {
 		logger.Error("[sys] marshal mouse move error.", zap.Error(err))
 		return err
@@ -651,7 +651,7 @@ func SendMouseClick(targetUUID string, x, y, button int32, action string) error 
 		Timestamp: time.Now().UnixMilli(),
 	}
 
-	data, err := json.Marshal(reqData)
+	data, err := proto.Marshal(reqData)
 	if err != nil {
 		logger.Error("[sys] marshal mouse click error.", zap.Error(err))
 		return err
@@ -687,7 +687,7 @@ func SendMouseScroll(targetUUID string, x, y int32, deltaX, deltaY float64) erro
 		Timestamp: time.Now().UnixMilli(),
 	}
 
-	data, err := json.Marshal(reqData)
+	data, err := proto.Marshal(reqData)
 	if err != nil {
 		logger.Error("[sys] marshal mouse scroll error.", zap.Error(err))
 		return err
@@ -722,7 +722,7 @@ func SendKeyDown(targetUUID string, key string, modifiers []string) error {
 		Timestamp: time.Now().UnixMilli(),
 	}
 
-	data, err := json.Marshal(reqData)
+	data, err := proto.Marshal(reqData)
 	if err != nil {
 		logger.Error("[sys] marshal key down error.", zap.Error(err))
 		return err
@@ -757,7 +757,7 @@ func SendKeyUp(targetUUID string, key string, modifiers []string) error {
 		Timestamp: time.Now().UnixMilli(),
 	}
 
-	data, err := json.Marshal(reqData)
+	data, err := proto.Marshal(reqData)
 	if err != nil {
 		logger.Error("[sys] marshal key up error.", zap.Error(err))
 		return err
@@ -838,7 +838,7 @@ func SendFileListRequest(targetUUID string, targetCode uint64, path string) erro
 		Timestamp:  time.Now().UnixMilli(),
 	}
 
-	data, err := json.Marshal(reqData)
+	data, err := proto.Marshal(reqData)
 	if err != nil {
 		logger.Error("[sys] marshal file list request error.", zap.Error(err))
 		return err
@@ -876,7 +876,7 @@ func SendFileRenameRequest(targetUUID string, requestId string, oldPath string, 
 		Timestamp: time.Now().UnixMilli(),
 	}
 
-	data, err := json.Marshal(reqData)
+	data, err := proto.Marshal(reqData)
 	if err != nil {
 		logger.Error("[sys] marshal file rename request error.", zap.Error(err))
 		return err
@@ -914,7 +914,7 @@ func SendFileDeleteRequest(targetUUID string, requestId string, path string, for
 		Timestamp: time.Now().UnixMilli(),
 	}
 
-	data, err := json.Marshal(reqData)
+	data, err := proto.Marshal(reqData)
 	if err != nil {
 		logger.Error("[sys] marshal file delete request error.", zap.Error(err))
 		return err
@@ -953,7 +953,7 @@ func SendFileCreateFolderRequest(targetUUID string, requestId string, parentPath
 		Timestamp:  time.Now().UnixMilli(),
 	}
 
-	data, err := json.Marshal(reqData)
+	data, err := proto.Marshal(reqData)
 	if err != nil {
 		logger.Error("[sys] marshal file create folder request error.", zap.Error(err))
 		return err
@@ -980,7 +980,7 @@ func SendFileCreateFolderRequest(targetUUID string, requestId string, parentPath
 // handleFileListRequest 处理文件列表请求（被控端收到）
 func (in *Service) handleFileListRequest(req *pb.ChannelRequest) {
 	var data pb.FileListRequestData
-	if err := json.Unmarshal(req.Data, &data); err != nil {
+	if err := proto.Unmarshal(req.Data, &data); err != nil {
 		logger.Error("[sys] unmarshal file list request error.", zap.Error(err))
 		return
 	}
@@ -1015,7 +1015,7 @@ func (in *Service) handleFileListRequest(req *pb.ChannelRequest) {
 		Timestamp:   time.Now().UnixMilli(),
 	}
 
-	respData, _ := json.Marshal(resp)
+	respData, _ := proto.Marshal(resp)
 	in.SendMessage(&pb.ChannelRequest{
 		SendClientUuid:   myUUID,
 		TargetClientUuid: req.SendClientUuid,
@@ -1028,7 +1028,7 @@ func (in *Service) handleFileListRequest(req *pb.ChannelRequest) {
 // handleFileListResponse 处理文件列表响应（控制端收到）
 func (in *Service) handleFileListResponse(req *pb.ChannelRequest) {
 	var data pb.FileListResponseData
-	if err := json.Unmarshal(req.Data, &data); err != nil {
+	if err := proto.Unmarshal(req.Data, &data); err != nil {
 		logger.Error("[sys] unmarshal file list response error.", zap.Error(err))
 		return
 	}
@@ -1041,7 +1041,7 @@ func (in *Service) handleFileListResponse(req *pb.ChannelRequest) {
 // handleFileRenameRequest 处理文件重命名请求（被控端收到）
 func (in *Service) handleFileRenameRequest(req *pb.ChannelRequest) {
 	var data pb.FileRenameRequestData
-	if err := json.Unmarshal(req.Data, &data); err != nil {
+	if err := proto.Unmarshal(req.Data, &data); err != nil {
 		logger.Error("[sys] unmarshal file rename request error.", zap.Error(err))
 		return
 	}
@@ -1070,7 +1070,7 @@ func (in *Service) handleFileRenameRequest(req *pb.ChannelRequest) {
 		Timestamp: time.Now().UnixMilli(),
 	}
 
-	jsonData, err := json.Marshal(respData)
+	jsonData, err := proto.Marshal(respData)
 	if err != nil {
 		logger.Error("[sys] marshal file rename response error.", zap.Error(err))
 		return
@@ -1094,7 +1094,7 @@ func (in *Service) handleFileRenameRequest(req *pb.ChannelRequest) {
 // handleFileRenameResponse 处理文件重命名响应（控制端收到）
 func (in *Service) handleFileRenameResponse(req *pb.ChannelRequest) {
 	var data pb.FileRenameResponseData
-	if err := json.Unmarshal(req.Data, &data); err != nil {
+	if err := proto.Unmarshal(req.Data, &data); err != nil {
 		logger.Error("[sys] unmarshal file rename response error.", zap.Error(err))
 		return
 	}
@@ -1107,7 +1107,7 @@ func (in *Service) handleFileRenameResponse(req *pb.ChannelRequest) {
 // handleFileDeleteRequest 处理文件删除请求（被控端收到）
 func (in *Service) handleFileDeleteRequest(req *pb.ChannelRequest) {
 	var data pb.FileDeleteRequestData
-	if err := json.Unmarshal(req.Data, &data); err != nil {
+	if err := proto.Unmarshal(req.Data, &data); err != nil {
 		logger.Error("[sys] unmarshal file delete request error.", zap.Error(err))
 		return
 	}
@@ -1142,7 +1142,7 @@ func (in *Service) handleFileDeleteRequest(req *pb.ChannelRequest) {
 		Timestamp:   time.Now().UnixMilli(),
 	}
 
-	jsonData, err := json.Marshal(respData)
+	jsonData, err := proto.Marshal(respData)
 	if err != nil {
 		logger.Error("[sys] marshal file delete response error.", zap.Error(err))
 		return
@@ -1166,7 +1166,7 @@ func (in *Service) handleFileDeleteRequest(req *pb.ChannelRequest) {
 // handleFileDeleteResponse 处理文件删除响应（控制端收到）
 func (in *Service) handleFileDeleteResponse(req *pb.ChannelRequest) {
 	var data pb.FileDeleteResponseData
-	if err := json.Unmarshal(req.Data, &data); err != nil {
+	if err := proto.Unmarshal(req.Data, &data); err != nil {
 		logger.Error("[sys] unmarshal file delete response error.", zap.Error(err))
 		return
 	}
@@ -1179,7 +1179,7 @@ func (in *Service) handleFileDeleteResponse(req *pb.ChannelRequest) {
 // handleFileCreateFolderRequest 处理创建文件夹请求（被控端收到）
 func (in *Service) handleFileCreateFolderRequest(req *pb.ChannelRequest) {
 	var data pb.FileCreateFolderRequestData
-	if err := json.Unmarshal(req.Data, &data); err != nil {
+	if err := proto.Unmarshal(req.Data, &data); err != nil {
 		logger.Error("[sys] unmarshal file create folder request error.", zap.Error(err))
 		return
 	}
@@ -1228,7 +1228,7 @@ func (in *Service) handleFileCreateFolderRequest(req *pb.ChannelRequest) {
 		Timestamp:  time.Now().UnixMilli(),
 	}
 
-	jsonData, err := json.Marshal(respData)
+	jsonData, err := proto.Marshal(respData)
 	if err != nil {
 		logger.Error("[sys] marshal file create folder response error.", zap.Error(err))
 		return
@@ -1252,7 +1252,7 @@ func (in *Service) handleFileCreateFolderRequest(req *pb.ChannelRequest) {
 // handleFileCreateFolderResponse 处理创建文件夹响应（控制端收到）
 func (in *Service) handleFileCreateFolderResponse(req *pb.ChannelRequest) {
 	var data pb.FileCreateFolderResponseData
-	if err := json.Unmarshal(req.Data, &data); err != nil {
+	if err := proto.Unmarshal(req.Data, &data); err != nil {
 		logger.Error("[sys] unmarshal file create folder response error.", zap.Error(err))
 		return
 	}
@@ -1265,7 +1265,7 @@ func (in *Service) handleFileCreateFolderResponse(req *pb.ChannelRequest) {
 // handleFileTransferStart 处理文件传输开始
 func (in *Service) handleFileTransferStart(req *pb.ChannelRequest) {
 	var data pb.FileTransferStartData
-	if err := json.Unmarshal(req.Data, &data); err != nil {
+	if err := proto.Unmarshal(req.Data, &data); err != nil {
 		logger.Error("[sys] unmarshal file transfer start error.", zap.Error(err))
 		return
 	}
@@ -1342,7 +1342,7 @@ func (in *Service) sendFileData(targetUUID string, transferInfo *pb.FileTransfer
 // handleFileTransferData 处理文件传输数据块
 func (in *Service) handleFileTransferData(req *pb.ChannelRequest) {
 	var data pb.FileTransferData
-	if err := json.Unmarshal(req.Data, &data); err != nil {
+	if err := proto.Unmarshal(req.Data, &data); err != nil {
 		logger.Error("[sys] unmarshal file transfer data error.", zap.Error(err))
 		return
 	}
@@ -1406,7 +1406,7 @@ func (in *Service) handleFileTransferData(req *pb.ChannelRequest) {
 // handleFileTransferComplete 处理文件传输完成
 func (in *Service) handleFileTransferComplete(req *pb.ChannelRequest) {
 	var data pb.FileTransferCompleteData
-	if err := json.Unmarshal(req.Data, &data); err != nil {
+	if err := proto.Unmarshal(req.Data, &data); err != nil {
 		logger.Error("[sys] unmarshal file transfer complete error.", zap.Error(err))
 		return
 	}
@@ -1423,7 +1423,7 @@ func (in *Service) handleFileTransferComplete(req *pb.ChannelRequest) {
 // handleFileTransferCancel 处理文件传输取消
 func (in *Service) handleFileTransferCancel(req *pb.ChannelRequest) {
 	var data pb.FileTransferCancelData
-	if err := json.Unmarshal(req.Data, &data); err != nil {
+	if err := proto.Unmarshal(req.Data, &data); err != nil {
 		logger.Error("[sys] unmarshal file transfer cancel error.", zap.Error(err))
 		return
 	}
@@ -1444,7 +1444,7 @@ func (in *Service) sendFileTransferComplete(targetUUID, transferId string, code 
 		Message:    msg,
 		Timestamp:  time.Now().UnixMilli(),
 	}
-	respData, _ := json.Marshal(resp)
+	respData, _ := proto.Marshal(resp)
 	in.SendMessage(&pb.ChannelRequest{
 		SendClientUuid:   myUUID,
 		TargetClientUuid: targetUUID,
@@ -1470,7 +1470,7 @@ func SendFileTransferStart(targetUUID string, transferId, direction, sourcePath,
 		Timestamp:  time.Now().UnixMilli(),
 	}
 
-	data, err := json.Marshal(reqData)
+	data, err := proto.Marshal(reqData)
 	if err != nil {
 		logger.Error("[sys] marshal file transfer start error.", zap.Error(err))
 		return err
@@ -1509,7 +1509,7 @@ func SendFileTransferData(targetUUID string, transferId string, chunkIndex int32
 		TotalSize:  totalSize,
 	}
 
-	jsonData, err := json.Marshal(reqData)
+	jsonData, err := proto.Marshal(reqData)
 	if err != nil {
 		logger.Error("[sys] marshal file transfer data error.", zap.Error(err))
 		return err
@@ -1543,7 +1543,7 @@ func SendFileTransferCancel(targetUUID string, transferId string, reason string)
 		Timestamp:  time.Now().UnixMilli(),
 	}
 
-	data, err := json.Marshal(reqData)
+	data, err := proto.Marshal(reqData)
 	if err != nil {
 		logger.Error("[sys] marshal file transfer cancel error.", zap.Error(err))
 		return err
